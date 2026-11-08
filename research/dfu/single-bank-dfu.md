@@ -53,8 +53,10 @@ BOOTCONF lock による MCUboot の IRoT 化は boot partition を書き込み�
 - 不正署名、誤 target、途中切断、電源断、容量超過を拒否し、loader から再更新する。
 - 三つの入口と無効 slot0 からの recovery を確認する。
 - installer 更新と通常 app の再投入、鍵 provisioning 失敗時の復旧を試す。
-- `.mrb` と peer-manager 保存領域が通常 firmware DFU で壊れないことを確認する。
+- 新 firmware に結合した bytecode が起動し、peer-manager 保存領域が意図せず壊れないことを確認する。
 
 いずれも未実施です。single-bank なので更新前 app への自動 rollback を受け入れ条件にしません。
+
+MCUmgr の group・transport・buffer、OPEN default と認証の境界、bm_installs/flash map は [管理機能](../nrf-bm/mcumgr.md)、loader への name 引継ぎは [retention storage](../nrf-bm/storage-and-fs.md)へ分離しています。
 
 [調査索引へ戻る](../README.md)

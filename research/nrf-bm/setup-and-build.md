@@ -64,6 +64,8 @@ loader の有無による `BOOT_FIRMWARE_LOADER` / `SINGLE_APPLICATION_SLOT` の
 
 ## サンプルの選び方
 
+用途・S115 適用・Ruby backend への対応は [全27 samples](samples.md)、SDK の API と設定は [component 索引](component-catalog.md)を参照してください。[board 統合](board-integration.md)では削除された DT node と board-config の境界も扱います。
+
 | 分類 | 調べるサンプルと目的 |
 |---|---|
 | boot | `mcuboot_recovery_entry`（MCUmgr 経由の loader 遷移）、`mcuboot_recovery_retention`（bootmode 要求） |

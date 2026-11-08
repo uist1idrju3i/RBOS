@@ -23,6 +23,7 @@
 - [ ] idle と deferred event が常時 ready の task に妨げられないようにする。
 - [ ] SoftDevice priority 0/1 と GRTC channel0 を予約する。
 - [ ] peripheral、DPPI、IRQ の完全な予約表を対象 SoftDevice の仕様と照合する。
+- [ ] SDH 配送 model と SD RAM usage、BM queue の容量と drain 時間を .config/map/実測で確認する。[SDK 調査](../nrf-bm/component-catalog.md)参照。
 
 出典: [scheduler](../mrubyc/task-scheduler.md)、[設定とメモリ](../mrubyc/configuration-and-memory.md)、[IRQ](../nrf-bm/softdevice-and-interrupts.md)。
 
@@ -36,6 +37,8 @@
 - [ ] 特権 API の全 callback に認可検査を入れる。
 - [ ] debug API と system-only API を分離する。
 - [ ] user task による他 task の停止・例外送信と拒否動作を試す。
+- [ ] application/shell UARTE30 の重複、NFC TIMER24、GRTC 予約、各 callback の実行 context を照合する。
+- [ ] bonding を採用する場合、初期 BLE でも BM_ZMS/SD backend と peer partition の予算を確保する。
 
 出典: [C API](../mrubyc/c-api.md)、[OpenBlink 参照と制限](../openblink/api-binding-patterns.md)。
 
@@ -51,6 +54,7 @@
 - [ ] 固有 ED25519 key と KMU provisioning を用意する。
 - [ ] BOOTCONF lock 前に復旧手順と製造時の消去条件を確認する。
 - [ ] 切断、不正署名、容量超過、各 write 時の電源断を試す。
+- [ ] MCUmgr の OPEN default と必要 command の許可、retention clipboard の CRC/寿命・容量を確認する。[管理機能](../nrf-bm/mcumgr.md)参照。
 
 出典: [bytecode 埋め込み](../dfu/embedded-bytecode.md)、[DFU](../dfu/single-bank-dfu.md)、[MCUboot の境界](../dfu/mcuboot.md)。
 
