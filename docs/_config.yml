@@ -1,0 +1,14 @@
+title: RBOS
+description: Ruby を主役にする組み込み OS の研究開発
+lang: ja
+url: https://uist1idrju3i.github.io
+baseurl: /RBOS
+theme: minima
+header_pages:
+  - architecture.md
+  - roadmap.md
+  - development.md
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor

@@ -81,6 +81,8 @@ RBOS のビルド手順は未整備です。SDK の環境構築案は [SDK 調�
 
 ## ドキュメント
 
+- [公開サイト](https://uist1idrju3i.github.io/RBOS/)（Pages 有効化後に利用可能）。公開用ファイルは [docs/](docs/) にあります。Settings → Pages で Deploy from a branch、main /docs を指定します。
+
 - [調査索引・固定版・判断履歴](research/README.md)
 - [段階的な移植計画](research/implementation/porting-plan.md)
 - [実装前チェックリスト](research/implementation/checklist.md)
