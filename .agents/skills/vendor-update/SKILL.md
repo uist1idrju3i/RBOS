@@ -5,16 +5,16 @@ description: RBOSの依存（vendor/のshallow submodule）を追加・更新し
 
 # vendor-update（依存関係の更新）
 
-application、library、依存を更新するときは、対象の変更履歴とライセンスを確認し、更新前後の結果を比べます。Dependabot は未導入なので、更新は手動で確認します。
+application、library、依存を更新するときは、対象の変更履歴とライセンスを確認し、更新前後の結果を比べます。Dependabot が GitHub Actions と submodule の更新を週1回検出します。更新 PR を自動採用せず、以下の手順でレビューし、日本語で採否と検査結果を記録します。
 
 ## 対象と変更履歴の参照先
 
 | 依存 | 現在値の確認方法 | 変更履歴の参照先 | 更新の検知 |
 |---|---|---|---|
-| yomiyasu | `git -C vendor/yomiyasu rev-parse HEAD` と `.gitmodules` | `nanaism/yomiyasu` の release と変更履歴 | 手動確認 |
-| mrubyc | `git -C vendor/mrubyc rev-parse HEAD` と `.gitmodules` | `mrubyc/mrubyc` の release と変更履歴 | 手動確認 |
-| sdk-nrf-bm | `git -C vendor/sdk-nrf-bm rev-parse HEAD` と `.gitmodules` | `nrfconnect/sdk-nrf-bm` の tag と west workspace の変更 | 手動確認 |
-| mruby | `git -C vendor/mruby rev-parse HEAD` と `.gitmodules` | `mruby/mruby` の release と `doc/mruby4.0.md` | 手動確認 |
+| yomiyasu | `git -C vendor/yomiyasu rev-parse HEAD` と `.gitmodules` | `nanaism/yomiyasu` の release と変更履歴 | Dependabot（週1回）と手動レビュー |
+| mrubyc | `git -C vendor/mrubyc rev-parse HEAD` と `.gitmodules` | `mrubyc/mrubyc` の release と変更履歴 | Dependabot（週1回）と手動レビュー |
+| sdk-nrf-bm | `git -C vendor/sdk-nrf-bm rev-parse HEAD` と `.gitmodules` | `nrfconnect/sdk-nrf-bm` の tag と west workspace の変更 | Dependabot（週1回）と手動レビュー |
+| mruby | `git -C vendor/mruby rev-parse HEAD` と `.gitmodules` | `mruby/mruby` の release と `doc/mruby4.0.md` | Dependabot（週1回）と手動レビュー |
 
 MCUboot は sdk-nrf-bm が import する NCS manifest の mcuboot から取得します。SDK 更新時に west の固定 revision、変更履歴、署名設定を確認します。
 
