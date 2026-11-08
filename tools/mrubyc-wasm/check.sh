@@ -22,12 +22,17 @@ done
 make -C "$build/mrubyc/mrblib" MRBC="$mrbc" all
 make -C "$build/mrubyc/src" autogen
 mapfile -t sources < <(find "$build/mrubyc/src" -maxdepth 1 -name '*.c' | sort)
+mapfile -t bindings < <(find "$root/src/rbos" -type f -name '*.c' | sort)
 emcc -O1 -Wall -Wextra -Wno-unused-parameter \
   -include "$root/tools/mrubyc-wasm/runner_config.h" \
+  -I"$root/include" \
   -I"$build/mrubyc/src" -I"$build/mrubyc/hal/emscripten" \
   -DMAX_VM_COUNT=32 -sASYNCIFY -sNODERAWFS=1 -sENVIRONMENT=node \
   -sEXIT_RUNTIME=1 -sALLOW_MEMORY_GROWTH=1 \
+  -sASSERTIONS=1 -sSTACK_OVERFLOW_CHECK=1 -sCHECK_NULL_WRITES=1 \
+  -sSTACK_SIZE=1048576 -sASYNCIFY_STACK_SIZE=65536 \
   "$root/tools/mrubyc-wasm/main.c" "${sources[@]}" \
+  "${bindings[@]}" "$root/tools/mrubyc-wasm/backend.c" \
   "$build/mrubyc/hal/emscripten/hal.c" -o "$build/runner.js"
 
 for source in "$root"/tests/mruby/*.rb; do
@@ -59,8 +64,15 @@ import sys
 data = bytearray(Path(sys.argv[1]).read_bytes())
 data[4:8] = b'0000'
 Path(sys.argv[2]).write_bytes(data)
+data[:4] = b'NOPE'
+Path(sys.argv[2]).with_name('wrong-magic.mrb').write_bytes(data)
+data[:8] = b'RITE0400'
+data[8:12] = (len(data) + 1).to_bytes(4, 'big')
+Path(sys.argv[2]).with_name('wrong-size.mrb').write_bytes(data)
 PY
 expect_failure 2 'Failed to load bytecode:' "$build/wrong-version.mrb"
+expect_failure 2 'Invalid bytecode header:' "$build/wrong-magic.mrb"
+expect_failure 2 'Invalid declared bytecode size:' "$build/wrong-size.mrb"
 
 count=0
 if [[ -d "$root/src" ]]; then

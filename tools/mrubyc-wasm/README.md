@@ -29,7 +29,7 @@ host build のキャッシュは mruby の submodule SHA ごとに分けます�
 ## 検査範囲
 
 - `tests/mruby/` では複数 task、sleep_ms、priority、pass、Mutex、join/value、rescue、空プログラムを実行します。
-- 未捕捉例外の fixture は exit 1 と例外メッセージを照合します。引数なし・存在しない file・空 file・不一致 RITE version は exit 2 と診断を照合します。timeout は失敗です。
+- 未捕捉例外の fixture は exit 1 と例外メッセージを照合します。引数なし・存在しない file・空 file・不一致 RITE version・magic・宣言サイズは exit 2 と診断を照合します。timeout は失敗です。
 - 将来の `src/**/*.rb` はすべて個別に compile します。まだ存在しなければ 0 件として成功します。これらは無限 loop や native API を含み得るため、自動実行しません。
 
 runner は `.mrb` ごとに task を作り、Node.js の NODERAWFS で読みます。ASYNCIFY を有効にし、emscripten HAL の MRBC_NO_TIMER と MRBC_SCHEDULER_EXIT に従います。検査用 heap は 1 MiB、MAX_VM_COUNT は 32、実行 timeout は 30 秒です。BM のメモリ設定ではありません。
@@ -37,6 +37,24 @@ runner は `.mrb` ごとに task を作り、Node.js の NODERAWFS で読みま�
 例外時に VM は `mrbc_run()` へ 2 を返し（`vendor/mrubyc/src/vm.c:3307-3335`）、scheduler はその終了状態を保持します（`vendor/mrubyc/src/rrt0.c:391-400`）。通常の task は終了時に例外を解放するため（`vendor/mrubyc/src/vm.c:362-371`）、runner は公開 hook `MRBC_ABORT_BY_EXCEPTION` で解放前に記録・表示し、同じ参照を解放します。permanence task も scheduler の戻り値で失敗とします。flag_permanence を runner から変更せず、Task.value の通常の戻り値を保ちます（`vendor/mrubyc/src/vm.c:1734-1745`）。
 
 bytecode の buffer は VM 終了まで保持します。runner は信頼するローカル compiler の生成物を対象とし、不正な任意 binary を安全に処理する validator や sandbox ではありません。実行後の資源はプロセス終了時に回収します。
+
+## RBOS の Ruby API を追加する
+
+runner は task 作成前に `rbos_define_classes(rbos_wasm_backend())` を呼びます。共有 binding は `src/rbos/`、backend 契約は `include/rbos/backend.h`、Wasm fake は `tools/mrubyc-wasm/backend.c` に置きます。現在は空の登録関数と context だけで、device operation は未実装です。
+class/method の登録、引数・所有権・権限の検査、fake と Ruby test の追加手順は [ruby-api-binding skill](../../.agents/skills/ruby-api-binding/SKILL.md)にまとめています。同じ C binding を将来の nRF build と共有し、製品開発者が Ruby を主に書ける構成を目指します。
+
+## temporary の browser bridge との比較
+
+比較対象は temporary の commit `c5e206ffe939f02c287ed420dd1febc2eca9a6ad` です。
+
+| 比較対象 | RBOS CI での採否 |
+|---|---|
+| [main.c:7-83](https://github.com/uist1idrju3i/temporary/blob/c5e206ffe939f02c287ed420dd1febc2eca9a6ad/src/main.c#L7-L83) | RITE magic と長さの検査を維持し、header の宣言サイズと実ファイル長の一致も検査。128 KiB pool は採らず、32 VM の試験予算として 1 MiB を維持。プロセス終了で回収するため browser 用 reset/KEEPALIVE は不要 |
+| [Makefile:20-53](https://github.com/uist1idrju3i/temporary/blob/c5e206ffe939f02c287ed420dd1febc2eca9a6ad/Makefile#L20-L53) | ASSERTIONS、STACK_OVERFLOW_CHECK、CHECK_NULL_WRITES と 1 MiB stack・64 KiB Asyncify stack を採用。診断重視で O1 を維持し O3/LTO は見送る。Math の強制有効化、VM 数 5 への縮小は採用しない |
+| 同 Makefile の web/export 設定 | Node の CLI なので browser 用 MODULARIZE/ES6 export/--no-entry は使わない。NODERAWFS と EXIT_RUNTIME=1 を維持し、FILESYSTEM=0/ENVIRONMENT=web は採用しない |
+| [mruby_build_config.rb:1-46](https://github.com/uist1idrju3i/temporary/blob/c5e206ffe939f02c287ed420dd1febc2eca9a6ad/mruby_build_config.rb#L1-L46) | mrbc 専用・disable_libmruby の方針は同じ。CI は host mrbc を cache するため compiler の Wasm 化と browser export 設定は採用しない |
+
+ブラウザー playground と `/docs` の GitHub Pages ファイルは後続作業です。この runner は Node 用で、今回その browser build は行いません。
 
 emsdk の上流: [emscripten-core/emsdk](https://github.com/emscripten-core/emsdk/tree/6.0.12)（MIT）。新規の検査用依存であり、旧版からの更新ではありません。ASYNCIFY と Node filesystem を採用し、ブラウザー配信・BM HAL の emulation は対象外です。
 
