@@ -30,6 +30,10 @@ tools/mrubyc-wasm/check.sh
 引数・型・範囲、値の所有権、エラーと例外、特権操作の caller 検査を揃え、Ruby から試験します。新しい script は compile だけでなく、実行対象への追加も必要です。
 
 - [Ruby API 追加 skill](https://github.com/uist1idrju3i/RBOS/blob/main/.agents/skills/ruby-api-binding/SKILL.md)
+- [製品 Ruby の書き方 ruby-idiomatic](https://github.com/uist1idrju3i/RBOS/blob/main/.agents/skills/ruby-idiomatic/SKILL.md)
+- [周辺機器の契約 io-api-guideline](https://github.com/uist1idrju3i/RBOS/blob/main/.agents/skills/io-api-guideline/SKILL.md)
+- [版と公開準備 semver](https://github.com/uist1idrju3i/RBOS/blob/main/.agents/skills/semver/SKILL.md)
+- [利用者向けの変更履歴](https://github.com/uist1idrju3i/RBOS/blob/main/CHANGELOG.md)
 - [C と Ruby の値・所有権](https://github.com/uist1idrju3i/RBOS/blob/main/research/mrubyc/c-api.md)
 - [共有の登録入口](https://github.com/uist1idrju3i/RBOS/blob/main/src/rbos/bindings.c)
 
