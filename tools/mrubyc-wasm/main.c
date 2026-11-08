@@ -1,8 +1,11 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "mrubyc.h"
+#include "rbos/bindings.h"
+#include "backend.h"
 
 static unsigned char heap[1024 * 1024];
 static int uncaught_exceptions;
@@ -21,6 +24,7 @@ int main(int argc, char **argv)
     return 2;
   }
   mrbc_init(heap, sizeof(heap));
+  rbos_define_classes(rbos_wasm_backend());
 
   for (int i = 1; i < argc; ++i) {
     FILE *file = fopen(argv[i], "rb");
@@ -39,6 +43,13 @@ int main(int argc, char **argv)
     fclose(file);
     if (memcmp(bytes, "RITE", 4) != 0) {
       fprintf(stderr, "Invalid bytecode header: %s\n", argv[i]);
+      return 2;
+    }
+    uint32_t declared_size = ((uint32_t)bytes[8] << 24) |
+                             ((uint32_t)bytes[9] << 16) |
+                             ((uint32_t)bytes[10] << 8) | bytes[11];
+    if (declared_size != (uint32_t)size) {
+      fprintf(stderr, "Invalid declared bytecode size: %s\n", argv[i]);
       return 2;
     }
     if (!mrbc_create_task(bytes, NULL)) {
