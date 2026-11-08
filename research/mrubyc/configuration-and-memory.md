@@ -1,5 +1,7 @@
 # 設定とメモリ管理
 
+全条件 symbol と定義箇所は [compile macro 索引](compile-macros.md)、allocator の layout・cycle・nRF54L15 の予算は [メモリ詳細](memory-and-sizing.md)へ分離しています。設定値を変えた Wasm/nRF binary の総当たり試験は未実施です。
+
 ## vm_config.h の既定値
 
 出典は `vendor/mrubyc/src/vm_config.h:19-153` です。値のない define とコメントアウトされた候補を区別します。

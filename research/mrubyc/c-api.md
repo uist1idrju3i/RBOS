@@ -1,5 +1,7 @@
 # Ruby と C の値の受け渡し
 
+全宣言の索引は [値・class・例外・symbol](c-api-values.md)、[container](c-api-collections.md)、[runtime](c-api-runtime.md)。[API ごとの所有権](c-api-ownership.md)と binding の実例を併読してください。ここは最初に読む契約と設計案に絞ります。
+
 ## クラス・モジュール・メソッド
 
 以下の宣言が固定版に存在します。出典: `vendor/mrubyc/src/class.h:234-246`。
