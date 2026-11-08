@@ -1,0 +1,70 @@
+{
+  "repo_notes": [
+    {
+      "content": "RBOS は Ruby のバイトコードを実行するオペレーティングシステムを目指すリポジトリです。現在は初期段階で、README.md、LICENSE、.gitmodules、vendor/ の shallow submodule、エージェント向けの AGENTS.md・skills・DeepWiki 設定が中心です。未実装の OS 機能を、既にある機能のように説明しないでください。"
+    },
+    {
+      "content": "Wiki は日本語で書いてください。コード、識別子、ファイル名、コマンドは英語のまま記載します。README.md、AGENTS.md、.agents/skills/、.devin/wiki.json の文書も日本語です。"
+    },
+    {
+      "content": "vendor/ 配下（vendor/yomiyasu、vendor/mrubyc、vendor/sdk-nrf-bm、vendor/sdk-mcuboot）は shallow submodule で取り込んだ外部コードです。内部を詳しく説明する必要はありません。RBOS がどの submodule をどの tag/commit で使っているかは .gitmodules と git submodule status を根拠にしてください。"
+    },
+    {
+      "content": "docs/ は GitHub Pages で公開するサイト専用です。内部文書や設計メモを docs/ に置かないでください。公開サイトの内容は AGENTS.md の規則に従います。"
+    },
+    {
+      "content": "確認済みの事実と未確認事項を区別してください。現時点では OS の実装、ビルド、実機検証はありません。実験や測定を行っていない項目を結果として書かないでください。"
+    }
+  ],
+  "pages": [
+    {
+      "title": "概要とプロジェクトの目的",
+      "purpose": "README.md の目的と現在の開発状況を説明する",
+      "page_notes": [
+        {
+          "content": "README.md と .devin/wiki.json の repo_notes を主な根拠にしてください。未実装の機能を既存の機能として書かないでください。"
+        }
+      ]
+    },
+    {
+      "title": "リポジトリ構成と開発ルール",
+      "purpose": "ディレクトリ構成、AGENTS.md の作業規約（main 保護、日本語、vendor/ の扱い、docs/ の役割、スキル）、Codex と Claude Code 向けのスキルリンクを説明する",
+      "parent": "概要とプロジェクトの目的",
+      "page_notes": [
+        {
+          "content": "AGENTS.md、CLAUDE.md、.agents/skills/、.claude/skills/、.github/workflows/agent-docs.yml を根拠にしてください。"
+        }
+      ]
+    },
+    {
+      "title": "vendor依存関係とshallow submodule",
+      "purpose": "vendor/yomiyasu、vendor/mrubyc、vendor/sdk-nrf-bm、vendor/sdk-mcuboot の役割、固定 commit、shallow 設定、更新時の確認を説明する",
+      "parent": "リポジトリ構成と開発ルール",
+      "page_notes": [
+        {
+          "content": ".gitmodules、git submodule status、.agents/skills/vendor-update/SKILL.md、各 vendor の README と LICENSE を根拠にしてください。vendor 内部の実装詳細は説明しないでください。"
+        }
+      ]
+    },
+    {
+      "title": "公開サイト（docs/）",
+      "purpose": "docs/ が GitHub Pages で公開するサイト専用であること、内部文書を置かないこと、公開してよい内容だけを置くことを説明する",
+      "parent": "リポジトリ構成と開発ルール",
+      "page_notes": [
+        {
+          "content": "AGENTS.md の言語と書式の節と .devin/wiki.json の repo_notes を根拠にしてください。docs/ が未作成の場合は、サイト内容を推測して書かないでください。"
+        }
+      ]
+    },
+    {
+      "title": "ライセンス",
+      "purpose": "リポジトリのライセンスと vendor submodule のライセンスを説明する",
+      "parent": "概要とプロジェクトの目的",
+      "page_notes": [
+        {
+          "content": "LICENSE と vendor/yomiyasu、vendor/mrubyc、vendor/sdk-nrf-bm、vendor/sdk-mcuboot の LICENSE・NOTICE を根拠にしてください。"
+        }
+      ]
+    }
+  ]
+}
