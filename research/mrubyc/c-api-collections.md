@@ -134,7 +134,7 @@
 
 | API 宣言 | 戻り値の所有権分類（引数の移譲は所有権文書） | 根拠 |
 |---|---|---|
-| `mrbc_kv_handle *mrbc_kv_new(struct VM *vm, int size)` | 借用 pointer（元の引数/VM/registry の寿命内） | `vendor/mrubyc/src/keyvalue.h:85-85` |
+| `mrbc_kv_handle *mrbc_kv_new(struct VM *vm, int size)` | 新規 handle の所有権。kv_delete で data と handle を解放 | `vendor/mrubyc/src/keyvalue.h:85-85` |
 | `int mrbc_kv_init_handle(struct VM *vm, mrbc_kv_handle *kvh, int size)` | scalar/struct copy。iterator 等の参照先は借用 | `vendor/mrubyc/src/keyvalue.h:86-86` |
 | `void mrbc_kv_delete(mrbc_kv_handle *kvh)` | 戻り値なし。引数/VM の変更・解放は所有権文書 | `vendor/mrubyc/src/keyvalue.h:87-87` |
 | `void mrbc_kv_delete_data(mrbc_kv_handle *kvh)` | 戻り値なし。引数/VM の変更・解放は所有権文書 | `vendor/mrubyc/src/keyvalue.h:88-88` |

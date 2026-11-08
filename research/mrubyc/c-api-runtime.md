@@ -17,7 +17,7 @@
 | `void *mrbc_raw_realloc(void *ptr, unsigned int size)` | raw 所有 buffer / no_free・realloc の条件あり | `vendor/mrubyc/src/alloc.h:72-72` |
 | `unsigned int mrbc_alloc_usable_size(void *ptr)` | scalar/struct copy。iterator 等の参照先は借用 | `vendor/mrubyc/src/alloc.h:75-75` |
 | `void *mrbc_alloc(const struct VM *vm, unsigned int size)` | raw 所有 buffer / no_free・realloc の条件あり | `vendor/mrubyc/src/alloc.h:79-79` |
-| `void *mrbc_calloc(const struct VM *vm, unsigned int nmemb, unsigned int size)` | 借用 pointer（元の引数/VM/registry の寿命内） | `vendor/mrubyc/src/alloc.h:80-80` |
+| `void *mrbc_calloc(const struct VM *vm, unsigned int nmemb, unsigned int size)` | raw 所有 buffer / ゼロ初期化。対応する free が必要 | `vendor/mrubyc/src/alloc.h:80-80` |
 | `void mrbc_free_all(const struct VM *vm)` | 戻り値なし。引数/VM の変更・解放は所有権文書 | `vendor/mrubyc/src/alloc.h:81-81` |
 | `void mrbc_set_vm_id(void *ptr, int vm_id)` | 戻り値なし。引数/VM の変更・解放は所有権文書 | `vendor/mrubyc/src/alloc.h:82-82` |
 | `int mrbc_get_vm_id(void *ptr)` | scalar/struct copy。iterator 等の参照先は借用 | `vendor/mrubyc/src/alloc.h:83-83` |
@@ -89,7 +89,7 @@
 |---|---|---|
 | `void mrbc_tick(void)` | 戻り値なし。引数/VM の変更・解放は所有権文書 | `vendor/mrubyc/src/rrt0.h:114-114` |
 | `mrbc_tcb *mrbc_tcb_new(int regs_size, enum MrbcTaskState task_state, int priority)` | 新規確保。lifecycle 参照 | `vendor/mrubyc/src/rrt0.h:115-115` |
-| `mrbc_tcb *mrbc_create_task(const void *byte_code, mrbc_tcb *tcb)` | 借用 pointer（元の引数/VM/registry の寿命内） | `vendor/mrubyc/src/rrt0.h:116-116` |
+| `mrbc_tcb *mrbc_create_task(const void *byte_code, mrbc_tcb *tcb)` | caller 提供 TCB または NULL 時の内部確保。lifecycle 参照 | `vendor/mrubyc/src/rrt0.h:116-116` |
 | `int mrbc_delete_task(mrbc_tcb *tcb)` | scalar/struct copy。iterator 等の参照先は借用 | `vendor/mrubyc/src/rrt0.h:117-117` |
 | `void mrbc_set_task_name(mrbc_tcb *tcb, const char *name)` | 戻り値なし。引数/VM の変更・解放は所有権文書 | `vendor/mrubyc/src/rrt0.h:118-118` |
 | `mrbc_tcb *mrbc_find_task(const char *name)` | 借用 pointer（元の引数/VM/registry の寿命内） | `vendor/mrubyc/src/rrt0.h:119-119` |

@@ -37,6 +37,7 @@ EMPTY/NIL/FALSE/TRUE/INTEGER/FLOAT/SYMBOL/CLASS/MODULE は refcount の対象外
 | range_first/last と *_p | 借用。container の寿命以上に保持しない |
 | proc_new | 新 Proc を返す。block は self を incref、IREP/callinfo は VM の文脈に依存。外部 callback に無期限保存しない |
 | kv_set | value を移譲。kv_get と iterator は借用。instance/global wrapper の incref の有無と混同しない |
+| kv_new / init_handle / delete / delete_data | new は handle/data の所有権を返す。init_handle は caller の handle を初期化。delete は data と handle、delete_data は data だけを解放。埋込み/stack handle に delete を使わない |
 | *_delete / clear / delete_data / delete_handle | delete は直接 destructor を呼ぶ低層 API。通常 value は decref。delete_handle は element の参照を減らさない特殊操作 |
 | resize、compare、index、size、include、minmax、*_i_* | scalar は所有分なし。pointer/iterator は対象 container の借用。比較・探索も user object/状態に依存し得る |
 
