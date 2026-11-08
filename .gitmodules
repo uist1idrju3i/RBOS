@@ -1,0 +1,12 @@
+[submodule "vendor/yomiyasu"]
+	path = vendor/yomiyasu
+	url = https://github.com/nanaism/yomiyasu
+[submodule "vendor/mrubyc"]
+	path = vendor/mrubyc
+	url = https://github.com/mrubyc/mrubyc
+[submodule "vendor/sdk-nrf-bm"]
+	path = vendor/sdk-nrf-bm
+	url = https://github.com/nrfconnect/sdk-nrf-bm
+[submodule "vendor/sdk-mcuboot"]
+	path = vendor/sdk-mcuboot
+	url = https://github.com/nrfconnect/sdk-mcuboot
