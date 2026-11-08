@@ -45,6 +45,8 @@ slot1 は firmware loader 用で、旧 main application を保持する A/B slot
 | 場所 | 内容 |
 |---|---|
 | `research/` | 実装準備の調査・判断・未確認事項 |
+| `tools/mrubyc-wasm/` | host mrbc と emscripten HAL の共通検査スクリプト |
+| `tests/mruby/` | task・Mutex・例外の Ruby smoke test |
 | `vendor/` | shallow submodule で固定した外部資材 |
 | `.agents/skills/` | 開発支援スキル |
 | `.github/`、`tests/check-skills/` | skill の一覧とリンクを検査する CI・テスト |
@@ -90,6 +92,12 @@ RBOS のビルド手順は未整備です。SDK の環境構築案は [SDK 調�
 文書、Issue、PR、コミットは日本語、識別子とソースコード中のコメントは英語で記述します。
 main に直接 push せず、作業ブランチから PR を作ります。vendor のファイルは直接編集しません。
 仕様の提案では、根拠となる固定版、確認した範囲、未検証の事項を併記してください。
+
+## 開発 / CI
+
+`mruby-wasm` CI は mruby 4.0.0 の mrbc で smoke scripts と将来の `src/**/*.rb` を compile し、smoke scripts を mruby/c の emscripten HAL で実行します。未捕捉例外の検出も検査します。
+emsdk 6.0.12 の環境を読み込めば、ローカルでも `tools/mrubyc-wasm/check.sh` を実行できます。必要なツール・試験範囲は [検査手順](tools/mrubyc-wasm/README.md)を参照してください。
+Nordic の実機動作を検証する CI ではありません。
 
 ## ライセンス
 

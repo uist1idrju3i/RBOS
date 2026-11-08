@@ -41,7 +41,7 @@ RBOS の実装に必要な仕様、参照実装、制約、試験項目をまと
 | 2026-11-08 | ファームウェア A/B とバイトコード A/B は検討して不採用 | [判断の記録](architecture/decisions.md) |
 | 2026-11-08 | central 不使用、S115 固定。OpenBlink 対応は将来 | [判断の記録](architecture/decisions.md) |
 
-方式決定の根拠は利用者の指示です。調査更新日は 2026-11-08 JST です。権限の具体策は未決定です。emscripten HAL を用いた Ruby 検査 CI は次段階の計画で、今回の文書更新では実装しません。
+方式決定の根拠は利用者の指示です。調査更新日は 2026-11-08 JST です。権限の具体策は未決定です。emscripten HAL の Ruby 検査 CI は後続作業で実装しました。[検査手順](../tools/mrubyc-wasm/README.md)を参照してください。
 
 ## 文書一覧
 

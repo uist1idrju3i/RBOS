@@ -73,7 +73,7 @@
 ## P6: CI と長時間試験
 
 - 版固定した nRF toolchain container で SDK build を行う。container の配布元・digest・利用条件は選定前で、現時点で使えると断定しない。
-- mruby/c の emscripten HAL で Ruby の compile・実行検査をする GitHub Actions CI を次段階で作る。ASYNCIFY、timeout、mock API を設計し、実機 IRQ/BLE の代替にはしない。根拠: `vendor/mrubyc/hal/emscripten/hal.h:1-7,27-74`。
+- mruby/c の emscripten HAL による Ruby compile・smoke CI は実装済みです。[共通手順](../../tools/mrubyc-wasm/README.md)と `.github/workflows/mruby-wasm.yml` を使用します。ASYNCIFY と timeout を用い、実機 IRQ/BLE の代替にはしません。native API の mock は今後の課題です。根拠: `vendor/mrubyc/hal/emscripten/hal.h:1-7,27-74`。
 - host で mrbc format、native 引数、権限、queue overflow の試験を行う。
 - map/size、stack/pool high-water、warnings、署名対象、license notice を成果物に残す。
 - DK の HIL で BLE 長時間接続、timer jitter、watchdog、DFU の電源断 fault injection を行う。
