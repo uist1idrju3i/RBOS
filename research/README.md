@@ -67,5 +67,6 @@ RBOS の実装に必要な仕様、参照実装、制約、試験項目をまと
 | 更新と保存 | [single-bank DFU](dfu/single-bank-dfu.md)、[MCUboot](dfu/mcuboot.md)、[埋め込みバイトコード](dfu/embedded-bytecode.md) |
 | 実装準備 | [段階的計画](implementation/porting-plan.md)、[着手前チェックリスト](implementation/checklist.md) |
 | 配布条件 | [ライセンス](licenses.md) |
+| 版と公開 | [SemVer・VERSION・image の制約と承認判断](release/versioning.md) |
 
 先に全体設計と判断の記録を読み、次に担当する分野へ進んでください。各文書末尾からこの索引へ戻れます。

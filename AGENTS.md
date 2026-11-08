@@ -8,6 +8,7 @@ Devin / Codex / Claude Code など、このリポジトリで作業するすべ�
 - `<agent>/<short>` ブランチで作業し、PR を作成します。
 - ルールセットは承認 0 件でのマージを許可するため、エージェントは PR をマージしません。
 - ルールセットやブランチ保護を変更しません。
+- tag の作成と release の公開は管理者が行います。エージェントは行いません。
 - 作業前に `git branch --show-current` を確認し、`main` では作業しません。
 - 誤って `main` にコミットした場合は push も reset もせず、新しいブランチに移して報告します。
 
@@ -37,8 +38,9 @@ Devin / Codex / Claude Code など、このリポジトリで作業するすべ�
 | `ruby-api-binding` | 共有 C binding、backend、Ruby test による class/method 追加 |
 | `ruby-idiomatic` | 製品 Ruby・tests/mruby・サンプル・文書のコード例の読みやすさと mruby/c 互換性 |
 | `io-api-guideline` | 周辺機器 Ruby API の MPIG 契約、pin、RBS、rrt0 待機、Wasm fake 検査 |
+| `semver` | public API の互換性、版の増分、VERSION と image の対応、CHANGELOG、管理者による公開準備 |
 
-RBOS では mruby/c が scheduler です。利用者は Ruby を主に書き、通常は C を編集せずに製品へ組み込めることを目指します。DeviceTree などの board 設定は必要です。API 拡張には [ruby-api-binding](.agents/skills/ruby-api-binding/SKILL.md) を使います。
+RBOS では mruby/c が scheduler です。利用者は Ruby を主に書き、通常は C を編集せずに製品へ組み込めることを目指します。DeviceTree などの board 設定は必要です。API 拡張には [ruby-api-binding](.agents/skills/ruby-api-binding/SKILL.md)、製品 Ruby には [ruby-idiomatic](.agents/skills/ruby-idiomatic/SKILL.md)、周辺機器の契約には [io-api-guideline](.agents/skills/io-api-guideline/SKILL.md)を使います。互換性と公開準備は [semver](.agents/skills/semver/SKILL.md)で確認します。
 
 ## 5. yomiyasu（日本語推敲スキル）
 
@@ -55,6 +57,7 @@ RBOS では mruby/c が scheduler です。利用者は Ruby を主に書き、�
 
 - 自明でない作業は調査して深い計画を立ててから着手します。計画はリポジトリにコミットせず、チャットで共有します。
 - 変更は小さく、主題ごとにまとめます。
+- 利用者に影響する変更は、同じ PR で [CHANGELOG.md](CHANGELOG.md) の Unreleased を更新します。
 - `docs/` は公開サイト専用です。公開サイトのファイル以外を置きません。
 - 文書の根拠に、VM や個人環境のパスを書きません。リポジトリ内のファイル、CI の成果物、公開 URL を示します。
 - 検証結果は、実行した commit、入力とバイナリ、変更した写しの範囲を示します。確認していないことを確認済みと書きません。

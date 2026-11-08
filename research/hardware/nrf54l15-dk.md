@@ -4,11 +4,29 @@
 
 開発対象は Nordic Semiconductor nRF54L15-DK です。SDK v2.0.1 は nRF54L15 DK を対象に含め、同じ DK で nRF54L10/05 を模擬する target も用意します。RBOS は 15 を使います。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/release_notes/release_notes_2.0.1.rst:11-19`。
 
-工事設計認証番号 **220-JP8930** は利用者から提示された値です。本リポジトリでは総務省のデータベースとの照合を実施していません。[技術基準適合証明等を受けた機器の検索](https://www.tele.soumu.go.jp/giteki/SearchServlet?pageID=js01)で、実機の表示、製品型番、適用条件を確認してください。認証番号の記載を、RBOS 全体の認証取得や任意の無線設定の適法性の保証とは扱いません。
-
 主 target は `bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot`。central が必要なら `bm_nrf54l15dk/nrf54l15/cpuapp/s145_softdevice/mcuboot` を評価します。出典: `vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/board.yml:1-68`、`vendor/sdk-nrf-bm/doc/nrf-bm/release_notes/release_notes_2.0.1.rst:24-34`。
 
 SoC の CPU・無線・メモリの製品仕様は [Nordic の nRF54L15 製品ページ](https://www.nordicsemi.com/Products/nRF54L15)、ボードの配線・デバッグ接続は [DK 製品ページ](https://www.nordicsemi.com/Products/Development-hardware/nRF54L15-DK)を一次資料とします。RBOS の実効メモリは製品の総量ではなく、[SDK の領域配置](../architecture/overview.md)から見積もります。
+
+## 技適 DB の照合
+
+2026-11-08、総務省の [技術基準適合証明等を受けた機器の検索](https://www.tele.soumu.go.jp/giteki/SearchServlet?pageID=js01)で「工事設計認証番号（新表記）」に `220-JP8930` を指定し、結果1件を確認しました。検索結果は可変の DB の観察記録であり、SDK source からの推論ではありません。
+
+| 検索結果の項目 | 値 |
+|---|---|
+| 種類 | 相互承認（MRA）による工事設計認証 |
+| 氏名又は名称 | Nordic Semiconductor ASA |
+| 型式又は名称 | nRF54L15 DK |
+| 特定無線設備の種別 | 第2条第19号に規定する特定無線設備 |
+| 番号 | 220-JP8930 |
+| 年月日 | 令和7年4月10日 |
+| スプリアス規定 | 新規定 |
+| 周波数等の維持機能 | 無 |
+| BODYSAR | - |
+| 添付有無 | 有 |
+| 機関名 | LGAI Technological Center, S.A. (APPLUS) |
+
+DB の一致と、実機の表示・個体・認証の適用条件の一致は別です。添付資料の内容や実機の表示はこの照合では確認していません。認証番号の記載を、RBOS 全体の認証取得や任意の無線設定の適法性の保証とは扱いません。
 
 ## GPIO の対応
 

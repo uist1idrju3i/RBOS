@@ -23,6 +23,21 @@
 
 これは MPIG の Integer / platform 固有表現を土台とする RBOS の決定です。Symbol が MPIG の必須型であるという意味ではありません。DT node label・alias・label property のどれを resolver へ渡すか、active-low の扱い、未知の名前・非対応 pin・競合の例外と発生時点は未実装です。unit の識別子へ同じ三形式を自動適用する決定もしていません。[共通 I/O 調査](../io-api/overview.md)と [nRF 対応](../io-api/nrf54l15-mapping.md)を参照してください。
 
+## SemVer と公開権限
+
+利用者が承認した版管理の方針です。根拠となる規格、SDK の制約、parser 実行、ruleset の取得結果は [版管理調査](../release/versioning.md)に分けています。
+
+| 項目 | 承認済み判断 |
+|---|---|
+| public API | Ruby class/method の引数・返り値・例外・待機、対応する Ruby の範囲と mrbc/mruby/c の版、board 設定規約（Symbol pin label 等）を宣言する。C backend 契約は内部。DFU/MCUmgr は実装時点で追加する |
+| 増分 | SemVer 2.0.0 を採用。0.x の非互換変更は 0.MINOR、互換追加・修正は 0.x.PATCH。1.0.0 以降は SemVer の MAJOR/MINOR/PATCH 規則 |
+| 正本 | application を追加する PR で VERSION を作り、CHANGELOG.md と対応させる。EXTRAVERSION が pre-release、署名 image は X.Y.Z+TWEAK。同じ X.Y.Z 内では TWEAK を単調増加し、数値4項目を 0–255 に制限する |
+| 変更記録 | 日本語の Keep a Changelog 1.1.0。利用者に影響する変更は同じ PR の Unreleased を更新する。非推奨を明記し、少なくとも1回の MINOR release の猶予を経て削除する |
+| 公開 | tag 作成・release 公開は管理者のみ。agent は行わない。v* tag の管理者 bypass 設定も管理者が行う。承認は設定変更の完了を意味しない |
+| 最初の版 | 今は採番せず、最初の build 可能な firmware で 0.1.0。過去の release を作らない |
+
+TWEAK の一意化は rollback 対策ではありません。BM MCUmgr の upgrade=true は build を比較しないため、同じ X.Y.Z の rc と正式版の更新経路を別途検証します。HW counter を含む保証は未確認です。
+
 ## 検討して不採用
 
 | 案 | 不採用理由（2026-11-08） |

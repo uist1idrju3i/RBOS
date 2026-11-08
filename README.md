@@ -30,7 +30,7 @@ SDK のビルド、実機動作、DFU、性能・消費電力は本リポジト�
 対象は Nordic Semiconductor **nRF54L15-DK** です。
 主 target は `bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot` を予定しています。
 central は使わないため SoftDevice は **S115 に固定**します。
-工事設計認証番号 `220-JP8930` は依頼者提供情報であり、本リポジトリでは総務省のデータベースとの照合をしていません。
+工事設計認証番号 `220-JP8930` は総務省の DB で nRF54L15 DK の1件と照合しました（2026-11-08）。[照合結果と確認範囲](research/hardware/nrf54l15-dk.md)を参照してください。RBOS 全体の認証や任意の無線設定の適法性を保証するものではありません。
 出典、GPIO、書き込み上の注意は [ボード調査](research/hardware/nrf54l15-dk.md)にまとめています。
 
 ## アーキテクチャ概要
@@ -98,6 +98,8 @@ main に直接 push せず、作業ブランチから PR を作ります。vendo
 ## 開発 / CI
 
 mruby/c が scheduler を担い、製品開発者は Ruby を主に書いて RBOS を使えることを目指します。通常は C の編集を不要にし、DeviceTree などで board を設定する方針です。API を追加する RBOS 開発者は [Ruby API 追加手順](.agents/skills/ruby-api-binding/SKILL.md)を参照してください。
+
+製品 Ruby の書き方は [ruby-idiomatic](.agents/skills/ruby-idiomatic/SKILL.md)、周辺機器 API の契約は [io-api-guideline](.agents/skills/io-api-guideline/SKILL.md)、版と公開準備は [semver](.agents/skills/semver/SKILL.md)にまとめています。利用者向けの変更は [CHANGELOG](CHANGELOG.md)に記録します。
 
 `mruby-wasm` CI は mruby 4.0.0 の mrbc で smoke scripts と将来の `src/**/*.rb` を compile し、smoke scripts を mruby/c の emscripten HAL で実行します。未捕捉例外の検出も検査します。
 emsdk 6.0.12 の環境を読み込めば、ローカルでも `tools/mrubyc-wasm/check.sh` を実行できます。必要なツール・試験範囲は [検査手順](tools/mrubyc-wasm/README.md)を参照してください。
