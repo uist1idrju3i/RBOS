@@ -13,8 +13,15 @@
 | S115 固定 | central を使用しない |
 | OpenBlink 対応は将来 | BLE bytecode 転送・保存・reload は初期範囲外 |
 | host compiler は vendor/mruby 4.0.0 | RITE0400 を生成。実行系は引き続き mruby/c |
+| I/O の pin は Integer・String・DeviceTree-label Symbol を受理 | Nordic の物理番号と board の意味を Ruby から表せるようにする。実装は未完了 |
 
 技術上の対応箇所: `vendor/mrubyc/src/rrt0.c:339-425`、`vendor/sdk-nrf-bm/doc/nrf-bm/libraries/bm_scheduler.rst:10-37`、`vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/single_bank_dfu.rst:6-24`、`vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/memory_partitioning.rst:29-47`。
+
+## I/O の pin 識別子
+
+利用者が承認した方針は、Integer の `port*32+pin`（P1.13 は 45）、String の `"P1.13"`、DeviceTree-label Symbol の `:led0` / `:sw0` を受け付けることです。Integer は Nordic の物理 pin、String は可読な物理名、Symbol は board 上の意味を表します。同じ数値を全 MCU へ共通化する方針ではありません。
+
+これは MPIG の Integer / platform 固有表現を土台とする RBOS の決定です。Symbol が MPIG の必須型であるという意味ではありません。DT node label・alias・label property のどれを resolver へ渡すか、active-low の扱い、未知の名前・非対応 pin・競合の例外と発生時点は未実装です。unit の識別子へ同じ三形式を自動適用する決定もしていません。[共通 I/O 調査](../io-api/overview.md)と [nRF 対応](../io-api/nrf54l15-mapping.md)を参照してください。
 
 ## 検討して不採用
 
