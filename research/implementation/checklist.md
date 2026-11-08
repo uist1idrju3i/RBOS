@@ -6,7 +6,7 @@
 
 - [ ] NCS/toolchain v3.3.0、BM v2.0.1、全 module SHA を固定する。
 - [ ] S115 target で recovery sample の build/flash を確認する。
-- [ ] S145/central、多接続が必要か決める。
+- [ ] central 不使用・S115 固定の構成を維持する。
 - [ ] board revision、配線、認証番号を実物・公的資料で照合する。
 - [ ] erase/recover と通常 flash を分け、保存データの扱いを記録する。
 
@@ -14,10 +14,10 @@
 
 ## P1: VM と時間
 
-- [ ] mruby 4.0.0 の mrbc 入手・再配布方法を決める。
+- [ ] vendor/mruby 4.0.0 の mrbc build・再配布方法を決める。
 - [ ] RITE0400 の正常・不正 bytecode の検査を作る。
 - [ ] MAX_VM_COUNT、register、symbol、float、string/debug 設定を固定する。
-- [ ] pool と bytecode buffer、C stack、割り込み stack の上限を測定する。
+- [ ] pool と IREP 等の追加確保、C stack、割り込み stack の上限を測定する。
 - [ ] tick、同 priority の巡回、sleep、mutex、suspend/resume を確認する。
 - [ ] priority inversion、mutex owner 終了時の方針を決める。
 - [ ] idle と deferred event が常時 ready の task に妨げられないようにする。
@@ -39,26 +39,25 @@
 
 出典: [C API](../mrubyc/c-api.md)、[OpenBlink 参照と制限](../openblink/api-binding-patterns.md)。
 
-## P4・P5: 更新と保存
+## P4・P5: 埋め込みと firmware 更新
 
-- [ ] `.mrb` 最大長、header、digest、RITE、commit state を固定する。
-- [ ] bm_zms/raw の採否と storage0 の sector 構成を決める。
-- [ ] peer manager 領域と更新領域が衝突しないことを確認する。
-- [ ] async 完了前の buffer 解放、二重更新、callback 再入を防ぐ。
-- [ ] 無効・不在時の組み込み default と診断を用意する。
-- [ ] BLE `.mrb` の protocol、host tool、認証・pairing を決める。
+- [ ] 固定 mrbc で const C 配列を生成し、入力と生成物 hash を記録する。
+- [ ] RRAM 配置、alignment、symbol 等を含む参照の寿命を確認する。
+- [ ] 全体 RAM コピーなしで正常・空・不正形式・OOM を検査する。
+- [ ] String 変更で const blob が書き換わらないことを確認する。
+- [ ] bytecode 更新を firmware 再build と DFU のみに限定する。
 - [ ] firmware single-bank の GPIO/reset/retention 入口を確認する。
 - [ ] app/loader/installer の容量と署名済み成果物を確認する。
 - [ ] 固有 ED25519 key と KMU provisioning を用意する。
 - [ ] BOOTCONF lock 前に復旧手順と製造時の消去条件を確認する。
 - [ ] 切断、不正署名、容量超過、各 write 時の電源断を試す。
 
-出典: [bytecode 保存](../dfu/bytecode-storage.md)、[DFU](../dfu/single-bank-dfu.md)、[MCUboot の境界](../dfu/mcuboot.md)。
+出典: [bytecode 埋め込み](../dfu/embedded-bytecode.md)、[DFU](../dfu/single-bank-dfu.md)、[MCUboot の境界](../dfu/mcuboot.md)。
 
 ## P6: 品質と公開
 
 - [ ] toolchain container の利用条件・digest を確定する。
-- [ ] host test、build CI、HIL の責務を分ける。
+- [ ] emscripten HAL の Ruby 検査 CI を作り、host test、build CI、HIL の責務を分ける。
 - [ ] map/size、stack/pool 使用量、長時間試験ログを保存する。
 - [ ] third-party notice、署名鍵を含まない成果物、再配布条件を確認する。
 - [ ] 日本語文書、英語のコードコメント、skill/link 検査を CI で維持する。
@@ -72,9 +71,9 @@
 | 常時 ready の VM と BM scheduler | storage/BLE の遅延処理が進まない | foreground service の実行点を P1 で作る |
 | native callback の長時間実行 | tick flag だけでは即時中断できない | callback を短くし、長い I/O は非同期化 |
 | app RAM 237 KiB と参考 stack/heap | 単純流用で予算不足 | image ごとに map と high-water を測る |
-| storage0 4 KiB | `.mrb` と GC の余白不足 | compile 実測から partition を再設計 |
+| const bytecode の RAM 見積もり | 全体コピー不要でも IREP/String 等は消費 | map と pool 統計で確認 |
 | VM ID だけの権限 | 再利用・子 task で漏れる可能性 | lifecycle に結び付けた認可試験 |
-| single-copy 更新中断 | user program の消失 | 無効判定 + 内蔵 default + 再転送 |
+| 将来の OpenBlink 保存 | 電源断時の program 消失 | 採用時に保存・認証・fallback を再設計 |
 | single-bank firmware 更新中断 | main app が起動不能 | 独立 loader の recovery を試験 |
 | dummy key / BOOTCONF lock | 不正更新または開発復旧困難 | release gate と製造手順を分離 |
 | vendor/online latest の差 | 手順・API の不一致 | 固定 SHA と版付き資料を優先 |

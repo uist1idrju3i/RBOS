@@ -14,7 +14,7 @@ MCUboot
   +-- slot1: BLE MCUmgr firmware loader
   +-- shared SoftDevice
   +-- metadata
-  +-- storage: bytecode and application data
+  +-- storage: peer manager and application data (not bytecode)
 ```
 
 ブートローダ、slot0、slot1、共有 SoftDevice、metadata、storage の役割は `vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/memory_partitioning.rst:14-47` に基づきます。Ruby タスクと権限境界は RBOS の設計案です。
@@ -23,10 +23,10 @@ MCUboot
 
 1. MCUboot が画像を検証し、通常は slot0 の RBOS を起動します。
 2. GPIO、リセット要因、retention の要求、または不正なアプリ画像に応じて slot1 の loader に入ります。
-3. RBOS は保存領域の準備、mruby/c のヒープ初期化、ネイティブ API 登録、システムタスク、利用者タスクの順に初期化する設計とします。
+3. RBOS は mruby/c のヒープ初期化、ネイティブ API 登録、firmware 内の const bytecode によるシステムタスク、利用者タスクの順に初期化する設計とします。
 4. ファームウェア更新では Ruby を実行し続けず、再起動して loader に移ります。
 
-1・2 の根拠は `vendor/sdk-mcuboot/boot/zephyr/firmware_loader_bm.c:232-293`、4 の方式は `vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/entering_dfu.rst:6-10` です。3 の順序は未実装で、保存データの検証失敗時は組み込み既定プログラムだけを起動する案です。
+1・2 の根拠は [boot/zephyr/firmware_loader_bm.c](https://github.com/nrfconnect/sdk-mcuboot/blob/fce4dac2e6295cf98bd02a85f7c4254f6102106d/boot/zephyr/firmware_loader_bm.c#L120-L293)、4 の方式は `vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/entering_dfu.rst:6-10` です。3 の順序は未実装で、const bytecode の task 作成失敗時は診断を残して安全状態へ移行する案です。
 
 ## S115 + MCUboot の RRAM 配置
 
@@ -44,7 +44,7 @@ MCUboot
 
 出典: `vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/bm_nrf54l15dk_nrf54l15_cpuapp_s115_softdevice_mcuboot.dts:39-82`。終端は開始とサイズから計算しました。slot1 は第二アプリバンクではありません。
 
-storage の内訳は peer manager 4 KiB と storage0 4 KiB です。8 KiB 全部を `.mrb` に割り当ててはいけません。バイトコード用領域を拡大する場合は独自 board/overlay で slot0 との境界も管理します。出典: 同 DTS の `vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/bm_nrf54l15dk_nrf54l15_cpuapp_s115_softdevice_mcuboot.dts:44-59`。[保存設計](../dfu/bytecode-storage.md)で上限を検討します。
+storage の内訳は peer manager 4 KiB と storage0 4 KiB です。初期 bytecode はここへ保存せず firmware に結合します。storage の拡張は将来の OpenBlink 対応で再検討します。出典: 同 DTS の `vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/bm_nrf54l15dk_nrf54l15_cpuapp_s115_softdevice_mcuboot.dts:44-59`。[埋め込み設計](../dfu/embedded-bytecode.md)を参照してください。
 
 ## SRAM と RAM 予算
 
@@ -55,15 +55,15 @@ S115 自体の最小 RAM 仕様 `0x1080` と、board 定義の予約 `0x4380` �
 | 項目 | 調査値・設計上の扱い |
 |---|---|
 | アプリ全体の上限 | DK 定義は 237 KiB。静的領域、ヒープ、スタック、バッファを全て含める |
-| mruby/c ヒープ | RBOS では未決。OpenBlink の 48 KiB を参考値として比較するだけ |
-| VM・C スタック | OpenBlink の専用スレッドは 96 KiB。BM にそのまま移植しない |
+| mruby/c ヒープ | RBOS では未決。新参照 OpenBlink の 15 KiB を参考値として比較するだけ |
+| VM・C スタック | 新参照 OpenBlink の専用スレッドは 50 KiB。BM にそのまま移植しない |
 | MCUmgr 画像バッファ | `CONFIG_BM_MCUMGR_GRP_IMG_BUFFER_SZ` は nRF54L15 で既定 128 KiB。通常アプリにも組み込む場合は競合を評価 |
-| `.mrb` 読み込み | blob 本体、検証用領域、転送領域、VM ロード後の追加確保を別々に見積もる |
+| `.mrb` 読み込み | blob 本体は RRAM。IREP、symbol、String 等の RAM 確保を別々に見積もる |
 
-出典: [OpenBlink の定数](https://github.com/OpenBlink/openblink-demo-mdbt50q-db-40/blob/d6efc07877ebac6bd55519b8458be4629bef80c3/src/app/mrubyc_vm.c#L39-L47)、`vendor/sdk-nrf-bm/subsys/mgmt/mcumgr/grp/img_mgmt/Kconfig:174-183`。
+出典: [OpenBlink の定数](https://github.com/OpenBlink/openblink-demo-nrf/blob/6d22b676d2cf4bc599a7709ecebaa1b890af9e3a/src/app/mrubyc_vm.c#L35-L44)、`vendor/sdk-nrf-bm/subsys/mgmt/mcumgr/grp/img_mgmt/Kconfig:174-183`。
 
-**容量上の衝突**: 48 + 96 + 128 = 272 KiB で、237 KiB を超えます。ただしこれは参照実装の値を同居させた仮計算で、実ビルドの不足を確認した結果ではありません。loader と通常アプリは別画像で動くため、両方の RAM を無条件で加算するのも誤りです。
+旧参照の48 KiB/96 KiB の比較は新参照へ流用しません。新参照の pool と二つの bytecode buffer は VM thread 内の自動変数で、stack と別枠に単純加算すると二重計上になります。出典: [VM loop の確保](https://github.com/OpenBlink/openblink-demo-nrf/blob/6d22b676d2cf4bc599a7709ecebaa1b890af9e3a/src/app/mrubyc_vm.c#L129-L139)。50 KiB の stack 定数が十分かどうかも未確認です。loader と通常アプリは別画像で動くため、両方の RAM を無条件で加算しません。
 
-設計案は、画像 DFU を専用 loader に閉じ込め、通常アプリでは `.mrb` 転送だけを用意することです。必要なら画像バッファを縮め、スタックの最大使用量を測定します。最終的には通常アプリ・loader・MCUboot の各 map と実測値を別々に保存します。
+設計案は、画像 DFU を専用 loader に閉じ込め、通常アプリでは const bytecode を参照し転送用 RAM buffer を持たないことです。必要なら画像バッファを縮め、スタックの最大使用量を測定します。最終的には通常アプリ・loader・MCUboot の各 map と実測値を別々に保存します。
 
 [調査索引へ戻る](../README.md)

@@ -14,7 +14,9 @@ application、library、依存を更新するときは、対象の変更履歴�
 | yomiyasu | `git -C vendor/yomiyasu rev-parse HEAD` と `.gitmodules` | `nanaism/yomiyasu` の release と変更履歴 | 手動確認 |
 | mrubyc | `git -C vendor/mrubyc rev-parse HEAD` と `.gitmodules` | `mrubyc/mrubyc` の release と変更履歴 | 手動確認 |
 | sdk-nrf-bm | `git -C vendor/sdk-nrf-bm rev-parse HEAD` と `.gitmodules` | `nrfconnect/sdk-nrf-bm` の tag と west workspace の変更 | 手動確認 |
-| sdk-mcuboot | `git -C vendor/sdk-mcuboot rev-parse HEAD` と `.gitmodules` | `nrfconnect/sdk-mcuboot` の tag（`ncs-v*`）と変更履歴 | 手動確認 |
+| mruby | `git -C vendor/mruby rev-parse HEAD` と `.gitmodules` | `mruby/mruby` の release と `doc/mruby4.0.md` | 手動確認 |
+
+MCUboot は sdk-nrf-bm が import する NCS manifest の mcuboot から取得します。SDK 更新時に west の固定 revision、変更履歴、署名設定を確認します。
 
 新しい固定値を追加するときは、同じ PR で監視方法も決めます。
 

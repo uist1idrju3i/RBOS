@@ -14,7 +14,9 @@ timer の出典: `vendor/sdk-nrf-bm/include/bm/bm_timer.h:30-45,66-112`、`vendo
 
 scheduler の出典: `vendor/sdk-nrf-bm/doc/nrf-bm/libraries/bm_scheduler.rst:10-37`。これは関数イベントの queue で、mruby/c rrt0 の VM task scheduler の代わりではありません。`CONFIG_BM_SCHEDULER_BUF_SIZE` の容量と overflow の契約を決め、常時実行中の VM がいても process が進むよう設計します。
 
-## bm_storage
+## bm_storage（将来の保存機能向け）
+
+初期 bytecode は firmware 埋め込みです。以下の保存 API は将来の OpenBlink 対応の参考で、初期 bytecode backend の選定ではありません。
 
 `bm_storage_init` で instance と領域を結び、read/write/erase を呼びます。完了 event、busy、program/wear/erase の単位を確認します。非同期 backend では受付成功と保存完了を区別し、完了まで入力バッファを維持します。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/libraries/bm_storage.rst:15-32,63-121`。
 
@@ -31,7 +33,7 @@ scheduler の出典: `vendor/sdk-nrf-bm/doc/nrf-bm/libraries/bm_scheduler.rst:10
 
 bm_zms は bm_storage 上で使う key-value storage です。少なくとも 2 sector が必要で、data と ID-ATE を書き、GC で有効な値を移します。ID-ATE は 32-bit key、位置、サイズ、CRC32 を持ちます。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/libraries/bm_zms.rst:6-30,83-92`。
 
-主 API は `bm_zms_mount`、`bm_zms_write`、`bm_zms_read`、`bm_zms_read_hist`、`bm_zms_get_data_length`、`bm_zms_calc_free_space` です。write の完了は event で通知され、len=0 は削除と同義、write の API 上限は 64 KiB です。これは現在の partition に 64 KiB 保存できるという意味ではありません。出典: `vendor/sdk-nrf-bm/include/bm/fs/bm_zms.h:152-205,227-305`。[`.mrb` の保存比較](../dfu/bytecode-storage.md)に採否をまとめます。
+主 API は `bm_zms_mount`、`bm_zms_write`、`bm_zms_read`、`bm_zms_read_hist`、`bm_zms_get_data_length`、`bm_zms_calc_free_space` です。write の完了は event で通知され、len=0 は削除と同義、write の API 上限は 64 KiB です。これは現在の partition に 64 KiB 保存できるという意味ではありません。出典: `vendor/sdk-nrf-bm/include/bm/fs/bm_zms.h:152-205,227-305`。[将来の保存比較](../openblink/future-support.md)に採否をまとめます。
 
 ## ボタン、GPIOTE、周辺 I/O
 
@@ -52,6 +54,6 @@ SDK は image、OS、settings の group を含み、transport には BLE MCUmgr 
 
 画像更新の BM 実装は slot0 を書き換える single-bank 用です。buffer の既定 128 KiB と非同期 write の進行を把握し、Ruby の転送 API と混同しません。出典: `vendor/sdk-nrf-bm/subsys/mgmt/mcumgr/grp/img_mgmt/src/bm_img_mgmt.c:95-121,160-195`、`vendor/sdk-nrf-bm/subsys/mgmt/mcumgr/grp/img_mgmt/Kconfig:174-183`。
 
-RBOS では firmware loader に画像管理を任せ、通常アプリには loader 遷移と `.mrb` 転送だけを用意する案です。認証・pairing、許可する group、設定書換え・reset の権限を決めてから公開します。
+RBOS では firmware loader に画像管理を任せ、通常アプリには loader 遷移を用意し、`.mrb` 転送は将来範囲とします。認証・pairing、許可する group、設定書換え・reset の権限を決めてから公開します。
 
 [調査索引へ戻る](../README.md)

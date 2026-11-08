@@ -1,8 +1,8 @@
 # SoftDevice と割り込み
 
-## S115 と S145
+## S115 に固定
 
-SDK v2.0.1 に含まれる SoftDevice は 10.0.1 です。S115 は peripheral 専用、S145 は central と peripheral に対応し同時接続数も多くできます。RBOS は BLE MCUmgr と peripheral の初期構成として S115 を推奨します。central または多接続が要件になれば S145 を評価します。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/release_notes/release_notes_2.0.1.rst:24-34`。
+SDK v2.0.1 に含まれる SoftDevice は 10.0.1 です。S115 は peripheral 専用、S145 は central と peripheral に対応し同時接続数も多くできます。RBOS は central を使用しないため S115 に固定します。S145 は不採用で、以下の値は不採用候補との資料比較に限ります。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/release_notes/release_notes_2.0.1.rst:24-34`。
 
 | nRF54L15 向け版 | NVM 本体 | RAM 本体 | IRQ stack の追加注意 | load address |
 |---|---:|---:|---:|---:|

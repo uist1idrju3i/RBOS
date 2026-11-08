@@ -5,17 +5,21 @@
 | 対象 | 主なライセンス | 根拠 |
 |---|---|---|
 | RBOS | BSD-3-Clause | `LICENSE:1-28` |
+| mruby（host compiler） | MIT | `vendor/mruby/LICENSE:1-19` |
 | mruby/c | BSD-3-Clause | `vendor/mrubyc/LICENSE:1-28` |
-| OpenBlink | BSD-3-Clause | [LICENSE](https://github.com/OpenBlink/openblink-demo-mdbt50q-db-40/blob/d6efc07877ebac6bd55519b8458be4629bef80c3/LICENSE#L1-L28) |
+| OpenBlink demo-nrf | BSD-3-Clause | [LICENSE](https://github.com/OpenBlink/openblink-demo-nrf/blob/6d22b676d2cf4bc599a7709ecebaa1b890af9e3a/LICENSE#L1-L28) |
+| OpenBlink MDBT / HMAC | BSD-3-Clause | [LICENSE](https://github.com/OpenBlink/openblink-demo-mdbt50q-db-40/blob/d6efc07877ebac6bd55519b8458be4629bef80c3/LICENSE#L1-L28) |
 | sdk-nrf-bm | LicenseRef-Nordic-5-Clause | `vendor/sdk-nrf-bm/LICENSE:1-40` |
-| MCUboot | Apache-2.0 | `vendor/sdk-mcuboot/LICENSE:1-30` |
+| MCUboot | Apache-2.0 | [LICENSE](https://github.com/nrfconnect/sdk-mcuboot/blob/fce4dac2e6295cf98bd02a85f7c4254f6102106d/LICENSE#L1-L30) |
 | yomiyasu | MIT | `vendor/yomiyasu/LICENSE:1-21` |
 
 ## 実装・再配布への影響
 
 - BSD のコードを取り込むときは著作権表示、条件、免責を保持します。バイナリ配布では文書等への表示が必要です。権利者名による推奨を示唆しません。根拠: `LICENSE:5-18`。
 - Nordic 5-Clause は Nordic Semiconductor の IC でのみ利用でき、同ライセンスのバイナリに逆解析等の制限があります。RBOS 本体が BSD でも、この制限を消すことはできません。根拠: `vendor/sdk-nrf-bm/LICENSE:8-28`。
-- Apache-2.0 の再配布条件、変更表示、該当する NOTICE を確認します。根拠: `vendor/sdk-mcuboot/LICENSE:89-121`。
+- Apache-2.0 の再配布条件、変更表示、該当する NOTICE を確認します。根拠: [LICENSE](https://github.com/nrfconnect/sdk-mcuboot/blob/fce4dac2e6295cf98bd02a85f7c4254f6102106d/LICENSE#L89-L121)。
+- mruby を配布する場合は MIT の著作権表示と許諾文を保持します。host compiler の追加であり、mruby runtime を RBOS firmware に link する計画ではありません。根拠: `vendor/mruby/LICENSE:1-19`。
+- MCUboot は独立 submodule を削除しても west 依存として配布条件の確認が必要です。
 - yomiyasu を再配布する場合も MIT の著作権表示と許諾文を保持します。根拠: `vendor/yomiyasu/LICENSE:5-21`。
 
 OpenBlink の実装からコードを転用する場合は ViXion の表示を保持します。パターンだけを参考に新規実装したファイルへ、転用していないコードの著作権表示を機械的に追加しません。引用する設計根拠と、コピーするソースを区別します。
