@@ -30,7 +30,7 @@ SDK のビルド、実機動作、DFU、性能・消費電力は本リポジト�
 対象は Nordic Semiconductor **nRF54L15-DK** です。
 主 target は `bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot` を予定しています。
 central は使わないため SoftDevice は **S115 に固定**します。
-工事設計認証番号 `220-JP8930` は依頼者提供情報であり、本リポジトリでは総務省のデータベースとの照合をしていません。
+工事設計認証番号 `220-JP8930` は総務省の DB で nRF54L15 DK の1件と照合しました（2026-11-08）。[照合結果と確認範囲](research/hardware/nrf54l15-dk.md)を参照してください。RBOS 全体の認証や任意の無線設定の適法性を保証するものではありません。
 出典、GPIO、書き込み上の注意は [ボード調査](research/hardware/nrf54l15-dk.md)にまとめています。
 
 ## アーキテクチャ概要
