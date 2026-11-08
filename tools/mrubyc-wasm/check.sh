@@ -42,6 +42,10 @@ timeout 30s node "$build/runner.js" "$build/scheduler.mrb" \
   "$build/worker_a.mrb" "$build/worker_b.mrb" "$build/empty.mrb"
 echo 'PASS: multiple tasks and empty Ruby program'
 
+for fixture in idiom_collections idiom_objects idiom_values idiom_resources; do
+  timeout 30s node "$build/runner.js" "$build/$fixture.mrb"
+done
+
 expect_failure() {
   local expected=$1 marker=$2 status=0
   shift 2
@@ -55,6 +59,9 @@ expect_failure() {
   echo "PASS: expected failure detected (exit $status / $marker)"
 }
 expect_failure 1 'expected smoke failure' "$build/expected_failure.mrb" "$build/empty.mrb"
+expect_failure 1 'Unimplemented opcode (0x61) found (Exception)' "$build/idiom_avoid_lambda.mrb"
+expect_failure 1 'no block given (yield)' "$build/idiom_avoid_symbol_proc.mrb"
+expect_failure 2 'Unsupported int64 (set MRBC_INT64 in vm_config)' "$build/idiom_avoid_int64.mrb"
 expect_failure 2 'Usage:'
 expect_failure 2 'Cannot open bytecode:' "$build/missing.mrb"
 expect_failure 2 'Invalid bytecode size:' "$root/tests/mruby/empty.rb"
