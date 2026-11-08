@@ -4,12 +4,10 @@
 
 ## Object
 
-Object.new と継承 class の new は instance を作る入口です。include/extend/attr_reader/attr_accessor/constants 等は class/module 文脈に依存します。C table は CRuby の singleton method table と同じ分離ではなく、receiver の型を C 実装が判定する場合があります。private/public/protected は no-op です。Exception.new と Proc.new は class receiver、message/call は instance の操作です。
+Object.new と継承 class の new は instance を作る入口です。include/extend/attr_reader/attr_accessor/constants 等は class/module 文脈に依存します。C table は CRuby の singleton method table と同じ分離ではなく、receiver の型を C 実装が判定する場合があります。private/public/protected は no-op です。Exception.new と Proc.new は class receiver、message/call は instance の操作です。attr_reader(:x) は x、attr_accessor(:x) は x と x= を生成します。これら利用者が付ける名前は固定登録名の件数に含めません。根拠: `vendor/mrubyc/src/c_object.c:490-573`。
 
 | method | 実装 | 引数数・形式 / argc 分岐 | 構成条件 | 根拠 |
 |---|---|---|---|---|
-| `print_memstat` | 動的 C: `mrbc_alloc_print_statistics` | 登録元の実装で確認 | mrblib 常時 / 依存 C API は構成次第 | `vendor/mrubyc/src/alloc.c:1049-1049` |
-| `print_memory_pool` | 動的 C: `mrbc_alloc_print_memory_pool` | 登録元の実装で確認 | mrblib 常時 / 依存 C API は構成次第 | `vendor/mrubyc/src/alloc.c:1065-1065` |
 | `new` | C: `c_object_new` | 任意個を initialize へ転送 | 常時 | `vendor/mrubyc/src/c_object.c:110-114` |
 | `!` | C: `c_object_not` | 位置引数参照なし | 常時 | `vendor/mrubyc/src/c_object.c:120-123` |
 | `!=` | C: `c_object_neq` | 参照位置 1（数の検査なし） | 常時 | `vendor/mrubyc/src/c_object.c:129-133` |
@@ -42,13 +40,11 @@ Object.new と継承 class の new は instance を作る入口です。include/
 | `instance_methods` | C: `c_object_instance_methods` | argc >= 1 | if defined(MRBC_DEBUG) | `vendor/mrubyc/src/c_object.c:397-429` |
 | `instance_variables` | C: `c_object_instance_variables` | 位置引数参照なし | if defined(MRBC_DEBUG) | `vendor/mrubyc/src/c_object.c:435-452` |
 | `memory_statistics` | C: `c_object_memory_statistics` | argc == 0 | if defined(MRBC_DEBUG); if !defined(MRBC_ALLOC_LIBC) | `vendor/mrubyc/src/c_object.c:459-484` |
-| `dump_const` | 動的 C: `mrbc_debug_dump_const` | 登録元の実装で確認 | mrblib 常時 / 依存 C API は構成次第 | `vendor/mrubyc/src/global.c:188-188` |
-| `dump_global` | 動的 C: `mrbc_debug_dump_global` | 登録元の実装で確認 | mrblib 常時 / 依存 C API は構成次第 | `vendor/mrubyc/src/global.c:239-239` |
-| `sleep` | 動的 C: `c_sleep` | 登録元の実装で確認 | rrt0 初期化時 | `vendor/mrubyc/src/rrt0.c:1508-1508` |
-| `sleep_ms` | 動的 C: `c_sleep_ms` | 登録元の実装で確認 | rrt0 初期化時 | `vendor/mrubyc/src/rrt0.c:1509-1509` |
-| `pqall` | 動的 C: `pqall` | 登録元の実装で確認 | mrblib 常時 / 依存 C API は構成次第 | `vendor/mrubyc/src/rrt0.c:1520-1520` |
-| `dump_symbol` | 動的 C: `mrbc_debug_dump_symbol` | 登録元の実装で確認 | mrblib 常時 / 依存 C API は構成次第 | `vendor/mrubyc/src/symbol.c:445-445` |
+| `sleep` | 動的 C: `c_sleep` | 0..1（なしなら suspend、秒 Integer/Float） | rrt0 初期化時 | `vendor/mrubyc/src/rrt0.c:1508-1508`、`vendor/mrubyc/src/rrt0.c:859-890` |
+| `sleep_ms` | 動的 C: `c_sleep_ms` | 1（ms Integer） | rrt0 初期化時 | `vendor/mrubyc/src/rrt0.c:1509-1509`、`vendor/mrubyc/src/rrt0.c:899-906` |
 | `loop` | mrblib: `Ruby def` | 位置引数0（yield は別） | mrblib 常時 / 依存 C API は構成次第 | `vendor/mrubyc/mrblib/object.rb:14-14` |
+
+print_memstat/print_memory_pool/dump_const/dump_global/dump_symbol/pqall の mrbc_define_method は source comment 内の登録例で、初期化時の実行ではありません。既定 Ruby method として数えず、対応する C 診断 API と区別しました。根拠: `vendor/mrubyc/src/alloc.c:1044-1068`、`vendor/mrubyc/src/global.c:183-190,234-241`、`vendor/mrubyc/src/symbol.c:440-447`、`vendor/mrubyc/src/rrt0.c:1514-1522`。
 
 ## NilClass
 

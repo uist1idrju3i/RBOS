@@ -11,11 +11,15 @@
 | Integer、Float、Math、String | [numeric/text](methods-numeric-text.md) | 数値・binary protocol。文字 encoding と桁数を製品仕様にする |
 | Task、Mutex、VM、sleep/sleep_ms | [tasks](methods-tasks.md) | rrt0 に task を任せ、共有 peripheral は backend owner へ要求 |
 
-索引は継承分を重複させず、C table、動的登録、mrblib def/alias の 288 登録を記録しました。引数列が argc 条件である C method は、宣言的 arity を持つ CRuby method とは異なります。実装が位置引数を読むだけで個数・型を検査しない場合もあるため、受理可能な任意入力の保証ではありません。
+索引は継承分を重複させず、C table、実行される動的登録、mrblib def/alias の 282 登録を記録しました。comment 内の C 診断関数の登録例は除外しました。引数列が argc 条件である C method は、宣言的 arity を持つ CRuby method とは異なります。実装が位置引数を読むだけで個数・型を検査しない場合もあるため、受理可能な任意入力の保証ではありません。
 
 例外の subclass は NoMemoryError、NotImplementedError、StandardError、ArgumentError、IndexError、IOError、NameError、NoMethodError、NoMatchingPatternError、RangeError、RuntimeError、TypeError、ZeroDivisionError。独自 method のない subclass は Exception の new/message 等を継承します。根拠: `vendor/mrubyc/src/error.c:1-355`。Class/Module は value の型として存在しますが、CRuby の全 reflection API や Class.new/Module.new の互換実装を意味しません。`vendor/mrubyc/src/class.c:1-643` と `vendor/mrubyc/src/value.h:1-800`。
 
 ## 互換性で間違えやすい点
+
+未実装 opcode/EXT 無効の経路は StandardError ではなく根の Exception を raise します。通常の省略形 rescue と同じ捕捉範囲だと考えず、製品の入力 bytecode を事前検査する方針にします。Proc は self を保持しますが callinfo/IREP の文脈を使うため、元の呼出し frame の寿命を越える closure の完全互換は今回未検証です。根拠: `vendor/mrubyc/src/vm.c:3117-3156`、`vendor/mrubyc/src/c_proc.c:42-65,112-131`。
+
+String#b は c_ineffect で、CRuby のような encoding 付き別 String の生成ではありません。Math の E/PI と RUBY_VERSION/MRUBY_VERSION/MRUBYC_VERSION/RUBY_ENGINE は定数で、class/method の一覧とは分けて確認します。根拠: `vendor/mrubyc/src/c_string.c:2432-2558`、`vendor/mrubyc/src/c_math.c:236-254`、`vendor/mrubyc/mrblib/global.rb:11-14`。
 
 | 機能 | 固定版でできること・制約 | 根拠 |
 |---|---|---|
