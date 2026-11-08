@@ -1,5 +1,7 @@
 # mruby/c のバージョン、ビルド、バイトコード
 
+[Ruby-first の能力と制約](ruby-first-capabilities.md)から method 索引へ進めます。全命令は [opcode 比較](opcode-compatibility.md)、上流 Makefile/HAL/sample/test は [実行手順と棚卸し](tests-and-samples.md)、公式資料との相違は [照合記録](official-document-comparison.md)へ分離しました。小さな Wasm 実行結果は [能力確認](capability-probes.md)にあります。
+
 ## 固定する組み合わせ
 
 mruby/c は小さい VM と限定したクラス群を提供する mruby の別実装です。README の RAM 比較値は代表値で、RBOS のヒープ上限を保証する値ではありません。出典: `vendor/mrubyc/README.md:7-19`。

@@ -1,5 +1,7 @@
 # タスクとスケジューリング
 
+全登録名は [Task/Mutex/VM 索引](methods-tasks.md)、状態遷移、VM ID 再利用、cleanup と例外の補足は [lifecycle](scheduler-lifecycle.md)を参照してください。
+
 ## 実行モデル
 
 rrt0 は ready queue の先頭の VM を実行し、実行可能なまま時間片を使い切ったタスクを同優先度の後尾へ戻します。queue は `priority_preemption` の昇順で、数値が小さいほど高優先度です。**優先度付きラウンドロビンであり、全優先度へ均等な CPU 時間を配る方式ではありません**。出典: `vendor/mrubyc/src/rrt0.c:55-91,339-425`。

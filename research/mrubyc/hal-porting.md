@@ -30,6 +30,10 @@ Zephyr HAL の `k_msleep` や thread scheduler 操作を、BM の HAL にその�
 
 ## timer と割り込み
 
+IRQ から Ruby method、object allocation/refcount、例外、class/symbol 登録、task の作成/破棄へ直接再入しません。mrbc_tick だけを指定 HAL の timer 経路で呼ぶ想定と、任意の C API が IRQ-safe であることは別です。allocator、global/const、symbol、VM register はこの用途の再入ロックを備えていません。出典: `vendor/mrubyc/src/alloc.c:54-110`、`vendor/mrubyc/src/global.c:30-45`、`vendor/mrubyc/src/symbol.c:35-60`、`vendor/mrubyc/src/rrt0.c:146-181`。
+
+ISR は bounded な event/data を queue に保存し、foreground の共有 binding/backend が処理する案です。IRQ priority、queue の multi-producer、buffer の寿命、mask 解除の入れ子は nRF 実機で未検証です。SoftDevice zero-latency IRQ を通常の HAL mask で保護できるとは仮定しません。各 HAL の棚卸しは [build/test](tests-and-samples.md)、VM の lifecycle は [補足](scheduler-lifecycle.md)を参照してください。
+
 bm_timer は GRTC を使います。system timer が使う GRTC channel0 / GRTC_2_IRQn を別用途に横取りしません。1 ms の周期 callback で `mrbc_tick()` を呼ぶ案を最初に評価します。bm_timer の最小 timeout は約 152 μs なので、1 ms は数値上は範囲内ですが実測精度は未確認です。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/drivers/allocation_interrupts.rst:8-34`、`vendor/sdk-nrf-bm/include/bm/bm_timer.h:30-45,87-102`。
 
 排他は実行中の IRQ 状態を保存し、最後の解除だけで元へ戻す設計にします。SoftDevice IRQ は zero-latency で、通常の `irq_lock` では mask されません。tick callback の priority と、queue を変更する呼出元を全て整理してから実装します。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/libraries/nrf_sdh.rst:23-28`、`vendor/mrubyc/hal/zephyr/hal.c:75-108`。

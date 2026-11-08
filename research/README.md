@@ -11,7 +11,7 @@ RBOS の実装に必要な仕様、参照実装、制約、試験項目をまと
 - **未確認**: 本リポジトリでは試していない内容、外部資料との照合が済んでいない内容です。
 - `vendor/...:開始行-終了行` は、この調査で固定した submodule 内の出典です。OpenBlink は固定 SHA の公開リンクを使います。
 
-この調査ではビルド、実機への書き込み、電源断、BLE 通信、電波認証の照合を実施していません。文書の検査結果を実機試験の代わりに扱わないでください。
+この調査では SDK/firmware のビルド、実機への書き込み、電源断、BLE 通信、電波認証の照合を実施していません。host の Wasm build と短い Ruby の実行結果は [mruby/c 能力確認](mrubyc/capability-probes.md)へ分離しました。文書の検査結果を実機試験の代わりに扱わないでください。
 
 ## 資料の版
 
@@ -50,6 +50,9 @@ RBOS の実装に必要な仕様、参照実装、制約、試験項目をまと
 | 全体設計 | [構成・起動・メモリ](architecture/overview.md)、[採否と未決事項](architecture/decisions.md) |
 | ボード | [nRF54L15-DK](hardware/nrf54l15-dk.md) |
 | mruby/c | [版とビルド](mrubyc/overview-and-build.md)、[タスク](mrubyc/task-scheduler.md)、[HAL 移植](mrubyc/hal-porting.md)、[C API](mrubyc/c-api.md)、[設定とメモリ](mrubyc/configuration-and-memory.md) |
+| mruby/c の Ruby 能力 | [Ruby-first の能力と制約](mrubyc/ruby-first-capabilities.md)、[Object 等](mrubyc/methods-objects.md)、[container](mrubyc/methods-collections.md)、[数値・文字列](mrubyc/methods-numeric-text.md)、[Task 等](mrubyc/methods-tasks.md)、[opcode](mrubyc/opcode-compatibility.md)、[Wasm 能力確認](mrubyc/capability-probes.md) |
+| mruby/c の native 契約 | [値と class API](mrubyc/c-api-values.md)、[container API](mrubyc/c-api-collections.md)、[runtime API](mrubyc/c-api-runtime.md)、[所有権と binding](mrubyc/c-api-ownership.md)、[macro](mrubyc/compile-macros.md)、[メモリ予算](mrubyc/memory-and-sizing.md)、[task lifecycle](mrubyc/scheduler-lifecycle.md) |
+| mruby/c の上流資料 | [test/sample/HAL/build](mrubyc/tests-and-samples.md)、[公式 Wiki との照合](mrubyc/official-document-comparison.md) |
 | OpenBlink | [構成と再ロード](openblink/architecture.md)、[API と権限](openblink/api-binding-patterns.md)、[HMAC](openblink/hmac-authentication.md)、[将来対応と保存](openblink/future-support.md) |
 | NCS Bare Metal | [開発環境](nrf-bm/setup-and-build.md)、[全 component・API・Kconfig 索引](nrf-bm/component-catalog.md)、[SoftDevice と割り込み](nrf-bm/softdevice-and-interrupts.md)、[ライブラリ案内](nrf-bm/libraries.md)、[samples](nrf-bm/samples.md)、[公式 latest 比較](nrf-bm/version-comparison.md) |
 | 更新と保存 | [single-bank DFU](dfu/single-bank-dfu.md)、[MCUboot](dfu/mcuboot.md)、[埋め込みバイトコード](dfu/embedded-bytecode.md) |
