@@ -1,0 +1,1 @@
+raise "expected smoke failure"

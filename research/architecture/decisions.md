@@ -41,6 +41,6 @@
 | 権限単位 | callback で VM 権限を検査。子 task、VM ID 再利用、破棄時の失効を決める |
 | RAM と alignment | const blob とは別に IREP/文字列等を見積もり、配置と access 条件を検証 |
 
-[埋め込み設計](../dfu/embedded-bytecode.md)、[HMAC](../openblink/hmac-authentication.md)、[将来の storage 検討](../openblink/future-support.md)を参照してください。storage backend は初期 RBOS の未決事項ではありません。emscripten HAL の Ruby 検査 CI は次段階の計画です。
+[埋め込み設計](../dfu/embedded-bytecode.md)、[HMAC](../openblink/hmac-authentication.md)、[将来の storage 検討](../openblink/future-support.md)を参照してください。storage backend は初期 RBOS の未決事項ではありません。emscripten HAL の Ruby 検査 CI は実装済みです。[検査手順](../../tools/mrubyc-wasm/README.md)を参照してください。
 
 [調査索引へ戻る](../README.md)

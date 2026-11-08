@@ -61,6 +61,7 @@ Devin / Codex / Claude Code など、このリポジトリで作業するすべ�
 git submodule update --init --depth 1   # submodule の取得
 python3 .github/scripts/check-skills.py  # 指示とスキルの一覧・名前・リンクを検査
 python3 -m unittest discover -s tests/check-skills  # スキル検査のテスト
+tools/mrubyc-wasm/check.sh              # emsdk 環境で Ruby compile・Wasm smoke test
 python3 .agents/skills/yomiyasu/scripts/yomiyasu_lint.py <file>  # 日本語文書の候補検査
 python3 -m json.tool .devin/wiki.json >/dev/null  # DeepWiki 設定の JSON 検査
 git diff --check                        # 空白エラーの検査

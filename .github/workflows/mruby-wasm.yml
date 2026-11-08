@@ -1,0 +1,54 @@
+name: mruby-wasm
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mruby-wasm-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 必要な submodule だけを取得する
+        run: git submodule update --init --depth 1 vendor/mruby vendor/mrubyc
+
+      - name: host build の依存を用意する
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y build-essential ruby python3
+
+      - name: mruby の固定 SHA を取得する
+        id: mruby
+        run: echo "sha=$(git -C vendor/mruby rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: host mrbc の build をキャッシュする
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: tools/mrubyc-wasm/build/mruby-${{ steps.mruby.outputs.sha }}
+          key: mrbc-only-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.mruby.outputs.sha }}
+
+      - name: 固定版 emsdk を用意する
+        run: |
+          git clone --depth 1 --branch 6.0.12 https://github.com/emscripten-core/emsdk.git "$RUNNER_TEMP/emsdk"
+          "$RUNNER_TEMP/emsdk/emsdk" install 6.0.12
+          "$RUNNER_TEMP/emsdk/emsdk" activate 6.0.12
+
+      - name: Ruby の compile と Wasm 実行を検査する
+        run: |
+          source "$RUNNER_TEMP/emsdk/emsdk_env.sh"
+          tools/mrubyc-wasm/check.sh

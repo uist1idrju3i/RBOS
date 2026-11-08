@@ -57,7 +57,7 @@
 ## P6: 品質と公開
 
 - [ ] toolchain container の利用条件・digest を確定する。
-- [ ] emscripten HAL の Ruby 検査 CI を作り、host test、build CI、HIL の責務を分ける。
+- [x] emscripten HAL の Ruby 検査 CI を実装する。[検査手順と実機試験の境界](../../tools/mrubyc-wasm/README.md)を明記する。
 - [ ] map/size、stack/pool 使用量、長時間試験ログを保存する。
 - [ ] third-party notice、署名鍵を含まない成果物、再配布条件を確認する。
 - [ ] 日本語文書、英語のコードコメント、skill/link 検査を CI で維持する。
