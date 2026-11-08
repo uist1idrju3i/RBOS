@@ -65,7 +65,7 @@ SDK の build は [P0 の再現手順](implementation/bm-build.md)で実施し�
 | OpenBlink | [構成と再ロード](openblink/architecture.md)、[API と権限](openblink/api-binding-patterns.md)、[HMAC](openblink/hmac-authentication.md)、[将来対応と保存](openblink/future-support.md) |
 | NCS Bare Metal | [開発環境](nrf-bm/setup-and-build.md)、[全 component・API・Kconfig 索引](nrf-bm/component-catalog.md)、[SoftDevice と割り込み](nrf-bm/softdevice-and-interrupts.md)、[ライブラリ案内](nrf-bm/libraries.md)、[samples](nrf-bm/samples.md)、[公式 latest 比較](nrf-bm/version-comparison.md) |
 | 更新と保存 | [single-bank DFU](dfu/single-bank-dfu.md)、[MCUboot](dfu/mcuboot.md)、[埋め込みバイトコード](dfu/embedded-bytecode.md) |
-| 実装準備 | [段階的計画](implementation/porting-plan.md)、[着手前チェックリスト](implementation/checklist.md)、[P0 の build 再現手順](implementation/bm-build.md)、[P0 の振り返り](implementation/retrospective-P0.md) |
+| 実装準備 | [段階的計画](implementation/porting-plan.md)、[着手前チェックリスト](implementation/checklist.md)、[P0 の build 再現手順](implementation/bm-build.md)、[DK の準備](implementation/dk-provisioning.md)、[署名鍵の手順](implementation/signing-keys.md)、[P0 の振り返り](implementation/retrospective-P0.md) |
 | 配布条件 | [ライセンス](licenses.md) |
 | 版と公開 | [SemVer・VERSION・image の制約と承認判断](release/versioning.md) |
 

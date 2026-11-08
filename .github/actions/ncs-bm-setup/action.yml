@@ -1,0 +1,69 @@
+name: NCS Bare Metal の準備
+description: 固定した toolchain と BM v2.0.1 の workspace を用意する
+runs:
+  using: composite
+  steps:
+    - name: nrfutil と sdk-manager の固定版を用意する
+      shell: bash
+      run: |
+        set -euo pipefail
+        bin="$RUNNER_TEMP/nrfutil-bin"
+        mkdir -p "$bin"
+        curl --fail --location --retry 3 \
+          https://files.nordicsemi.com/artifactory/swtools/external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil-x86_64-unknown-linux-gnu-1.4.2-8a9090a \
+          --output "$bin/nrfutil"
+        echo "a14996288928a92081cadeefd2dd37fcb54ee99a568fd4eaa6fb9586a51fba57  $bin/nrfutil" | sha256sum --check
+        chmod +x "$bin/nrfutil"
+        "$bin/nrfutil" --version
+        "$bin/nrfutil" install sdk-manager=1.17.0
+        echo "$bin" >> "$GITHUB_PATH"
+
+    - name: toolchain bundle をキャッシュする
+      id: toolchain
+      uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      with:
+        path: ${{ runner.temp }}/ncs/toolchains
+        key: ncs-bm-toolchain-v1-${{ runner.os }}-${{ runner.arch }}-911f4c5c26
+
+    - name: 固定した toolchain bundle を導入する
+      if: steps.toolchain.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        nrfutil sdk-manager toolchain install \
+          --toolchain-bundle-id 911f4c5c26 --for-ncs-version v3.3.0 \
+          --install-dir "$RUNNER_TEMP/ncs" --skip-cmake-registration
+
+    - name: toolchain の環境を後続の step へ渡す
+      shell: bash
+      run: |
+        set -eo pipefail
+        nrfutil sdk-manager toolchain env --toolchain-bundle-id 911f4c5c26 \
+          --install-dir "$RUNNER_TEMP/ncs" --as-script sh > "$RUNNER_TEMP/ncs-env.sh"
+        # The generated script may reference unset host environment variables.
+        # shellcheck source=/dev/null
+        source "$RUNNER_TEMP/ncs-env.sh"
+        python3 - "$RUNNER_TEMP/ncs-env.sh" <<'PY'
+        import os
+        import pathlib
+        import re
+        import sys
+        import uuid
+
+        script = pathlib.Path(sys.argv[1]).read_text()
+        names = re.findall(r'^export ([A-Za-z_][A-Za-z_0-9]*)=', script, re.MULTILINE)
+        with open(os.environ['GITHUB_ENV'], 'a') as output:
+            for name in names:
+                delimiter = uuid.uuid4().hex
+                output.write(f'{name}<<{delimiter}\n{os.environ[name]}\n{delimiter}\n')
+            output.write(f"BM_WORKSPACE={os.environ['RUNNER_TEMP']}/ncs-bm\n")
+        PY
+
+    - name: BM workspace を作り module の版を検査する
+      shell: bash
+      run: |
+        set -euo pipefail
+        west init -m https://github.com/nrfconnect/sdk-nrf-bm --mr v2.0.1 "$BM_WORKSPACE"
+        cd "$BM_WORKSPACE"
+        west update --narrow -o=--depth=1
+        "$GITHUB_WORKSPACE/tools/bm-build/check-workspace.sh" "$BM_WORKSPACE"

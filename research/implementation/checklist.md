@@ -12,11 +12,14 @@
 - [x] RBOS の CMake、Kconfig、sysbuild、board overlay、署名設定の最小構成を作る。
 - [x] release/debug と秘密鍵の配置を分離する。release の鍵の検査は五つの拒否例で build の失敗を確認しました。
 - [x] 全 module SHA、map、compiler 版を集める手順と script を作る。
-- [ ] map 等の成果物を CI の artifact として保存する（P6 の firmware CI で扱う）。
+- [ ] map 等の成果物を CI の artifact として保存する。
 - [x] clean な workspace で build を再現する。同じ host の二回の debug build が byte 単位で一致しました。別 host は未確認です。
 - [ ] DK 上で LED、console、loader 入口を確認する。
+- [x] 新しい DK の初回準備（erase と KMU への鍵の書き込み）を通常の書き込みと分けて手順にする。[DK の準備](dk-provisioning.md)。
+- [ ] erase なしで KMU に鍵を書く手順（`x-provision-keys`）を実機で確かめる。
+- [ ] 同じ commit の CI とローカルの build で、debug の成果物の hash が一致することを確かめる。
 
-出典: [SDK 環境](../nrf-bm/setup-and-build.md)、[build 再現手順](bm-build.md)、[P0 の振り返り](retrospective-P0.md)、[ハードウェア](../hardware/nrf54l15-dk.md)。
+出典: [SDK 環境](../nrf-bm/setup-and-build.md)、[build 再現手順](bm-build.md)、[DK の準備](dk-provisioning.md)、[P0 の振り返り](retrospective-P0.md)、[ハードウェア](../hardware/nrf54l15-dk.md)。
 
 ## P1: VM と時間
 
@@ -25,6 +28,7 @@
 - [ ] MAX_VM_COUNT、register、symbol、float、string/debug 設定を固定する。
 - [ ] pool と IREP 等の追加確保、C stack、割り込み stack の上限を測定する。
 - [ ] tick、同 priority の巡回、sleep、mutex、suspend/resume を確認する。
+- [ ] mruby/c の結合後に debug/release を build し、P0 からの map の増分を記録する。
 - [ ] priority inversion、mutex owner 終了時の方針を決める。
 - [ ] idle と deferred event が常時 ready の task に妨げられないようにする。
 - [ ] SoftDevice priority 0/1 と GRTC channel0 を予約する。
@@ -42,6 +46,7 @@
 - [ ] system Ruby の信頼元、権限付与、破棄、ID 再利用を定義する。
 - [ ] 特権 API の全 callback に認可検査を入れる。
 - [ ] debug API と system-only API を分離する。
+- [ ] retention 入口（boot mode）へ移る要求を書く API を特権操作に限る。
 - [ ] user task による他 task の停止・例外送信と拒否動作を試す。
 - [ ] application/shell UARTE30 の重複、NFC TIMER24、GRTC 予約、各 callback の実行 context を照合する。
 - [ ] bonding を採用する場合、初期 BLE でも BM_ZMS/SD backend と peer partition の予算を確保する。
@@ -58,6 +63,7 @@
 - [ ] firmware single-bank の GPIO/reset/retention 入口を確認する。
 - [ ] app/loader/installer の容量と署名済み成果物を確認する。
 - [ ] 固有 ED25519 key と KMU provisioning を用意する。
+- [x] release の鍵の検査で、SDK の既定鍵を名前でなく公開鍵の比較で拒否する。改名した既定鍵の拒否と、`root-*.pem` という名前の新しい鍵の受け入れを build で確認しました。
 - [ ] BOOTCONF lock 前に復旧手順と製造時の消去条件を確認する。
 - [ ] 切断、不正署名、容量超過、各 write 時の電源断を試す。
 - [ ] MCUmgr の OPEN default と必要 command の許可、retention clipboard の CRC/寿命・容量を確認する。[管理機能](../nrf-bm/mcumgr.md)参照。
@@ -69,6 +75,7 @@
 - [ ] toolchain container の利用条件・digest を確定する。
 - [x] emscripten HAL の Ruby 検査 CI を実装する。[検査手順と実機試験の境界](../../tools/mrubyc-wasm/README.md)を明記する。
 - [ ] map/size、stack/pool 使用量、長時間試験ログを保存する。
+- [ ] firmware build の成果物と SHA256SUMS を CI artifact に残す。
 - [ ] third-party notice、署名鍵を含まない成果物、再配布条件を確認する。
 - [ ] 日本語文書、英語のコードコメント、skill/link 検査を CI で維持する。
 

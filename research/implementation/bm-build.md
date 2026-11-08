@@ -12,7 +12,8 @@ firmware は RBOS の `firmware/` に置きます。`src/rbos/` の共有 bindin
 | `firmware/Kconfig` | log level の設定 |
 | `firmware/Kconfig.sysbuild` | release を示す `SB_CONFIG_RBOS_RELEASE` |
 | `firmware/sysbuild.cmake` | release の署名鍵の検査 |
-| `firmware/prj.conf` / `prj_release.conf` | debug / release の app 設定 |
+| `firmware/common.conf` | debug / release 共通の app 設定 |
+| `firmware/prj.conf` / `prj_release.conf` | debug / release の最適化設定だけを指定。共通設定は CMake で追加 |
 | `firmware/sysbuild.conf` / `sysbuild_release.conf` | BLE MCUmgr loader、GPIO 入口、release の印。retention 入口は board の既定で有効（`vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/Kconfig.sysbuild:73-74`） |
 | `firmware/boards/bm_nrf54l15dk_nrf54l15_cpuapp_s115_softdevice_mcuboot.overlay` | board overlay の置き場。現在は model 名だけを変更 |
 | `firmware/VERSION` | 0.1.0、TWEAK 0。署名 image は `0.1.0+0` |
@@ -82,15 +83,15 @@ MCUboot は FLASH 22272 B / 31 KB、firmware loader は FLASH 43124 B / 64 KB、
 | 構成 | 鍵 | 用途 |
 |---|---|---|
 | debug | MCUboot 同梱の `root-ed25519.pem`（SDK の既定） | 開発専用。公開鍵が既知のため配布しない |
-| release | リポジトリ外の利用者の PEM を build 時に指定 | 配布候補。鍵の生成・保管・KMU provisioning は P5 で手順化 |
+| release | リポジトリ外の利用者の PEM を build 時に指定 | 配布用。鍵の生成・保管・交換は[署名鍵の手順](signing-keys.md)、KMU への書き込みは [DK の準備](dk-provisioning.md) |
 
-`firmware/sysbuild.cmake` は release で次の場合に構成を止めます。五つとも build の失敗を確認しました。
+`firmware/sysbuild.cmake` は release で次の場合に構成を止めます。
 
 - 鍵を指定しない（SDK 既定の鍵になる）、または既定の鍵を明示する
 - 鍵が RBOS のリポジトリ内にある（symlink は解決して判定）
-- 空文字列、相対 path、存在しない file
+- 空文字列、相対 path、存在しない file、directory
 
-ファイル名が `root-*.pem` の鍵も既定の鍵と区別できないため拒否します。`.gitignore` は `*.pem` と `keys/` を除外します。鍵の内容や保管場所を文書・PR・成果物に書きません。
+sysbuild の Python と MCUboot 同梱の imgtool で公開鍵を取り出し、同梱の全 `root-*.pem` と比較します。既定の鍵は改名しても拒否し、新しい鍵は名前が `root-*.pem` でも使えます。imgtool の実行に失敗した場合も構成を止めます。`.gitignore` は `*.pem` と `keys/` を除外します。鍵の内容や保管場所を文書・PR・成果物に書きません。
 
 ## 書き込みと erase の区別
 
