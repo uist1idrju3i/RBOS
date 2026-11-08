@@ -21,6 +21,7 @@
 - IRQ mask はアプリ側の共有 queue の保護に限定し、SoftDevice priority 0/1 を止めない。
 - idle は SDK の SoftDevice 対応待機経路を確認して実装する。WFE や SD wait API を未確認のまま決め打ちしない。
 - bm_scheduler の foreground 処理と rrt0 の共存点を作る。rrt0 が常時 ready の場合も保守処理が進む設計にする。
+- SDH の IRQ/SCHED/POLL を .config で確定し、BM queue の容量・drain 時間、LESC、shell、管理処理の実行機会を予算化する。[SDK 実行モデル](../nrf-bm/runtime-primitives.md)参照。
 
 **受け入れ条件**: 二つ以上の task の同時実行、同 priority の巡回、priority 変更、sleep、mutex、suspend/resume、idle wakeupを試験すること。BLE 接続中の tick jitter と stack/pool 最大使用量を計測すること。
 
@@ -32,6 +33,7 @@
 - argc、type、範囲、所有権、エラー値/例外を共通規約にする。
 - ISR から Ruby へ直接入らず、queue を介して foreground で通知する。
 - ADC/PWM/I2C/UART は要件と pin/IRQ の一覧が揃ってから追加する。
+- [SDK component 表](../nrf-bm/component-catalog.md)の backend 候補から必要なものを選ぶ。共有 binding に Nordic header を入れず、製品動作は Ruby へ置く。UART/shell の instance 重複、NFC TIMER24、GRTC の所有を確認する。
 
 **受け入れ条件**: 正常、引数なし、nil、誤型、境界、driver failure、OOM をP6 で整える host test 基盤へ追加する。ハードウェア依存は mock と実機を分けて確認する。
 
@@ -65,6 +67,7 @@
 - MCUboot + BLE MCUmgr firmware loader の single-bank を結合する。
 - app/loader の RAM は別 image として map を測定し、128 KiB upload buffer と VM stack/heap を単純合算しない。
 - 固有の ED25519 key、KMU provisioning、IRoT、installer 更新の製造・復旧手順を作る。
+- MCUmgr の characteristic/command の認証と署名検証を別に設計する。flat settings の retention name と汎用 settings DB を区別する。[管理機能](../nrf-bm/mcumgr.md)参照。
 
 **受け入れ条件**: signed app、誤署名、電源断、切断からの再 DFU、三つの入口、installer 更新を実機で試すこと。storage と peer data が意図せず消えないこと。dummy key の release を拒否すること。
 

@@ -27,7 +27,29 @@ nrf_sdh は SoftDevice の enable/disable、IRQ 転送、BLE/SoC event、fault �
 
 設計案では ISR/observer 内で Ruby を直接呼びません。必要な情報を所有期限の明確な queue へコピーし、foreground で VM に渡します。BLE event のポインタを長期保持しない、queue overflow と接続切断を処理する、C callback の再入を防ぐことを試験項目にします。
 
-## RBOS の割り込み資源一覧
+## 配送 model と callback の context
+
+| NRF_SDH_DISPATCH_MODEL_* | 呼出の流れ | RBOS への制約 |
+|---|---|---|
+| IRQ | SD_EVT_IRQHandler → nrf_sdh_evts_poll → BLE/SoC observer | application event IRQ。SoftDevice 所有の zero-latency ISR とも別の context。Ruby へ直接入らない |
+| SCHED | SD event IRQ → bm_scheduler_defer → main の bm_scheduler_process → poll | BM queue の容量不足で defer が失敗し得る。常時 ready の VM がいても process を進める |
+| POLL | application が nrf_sdh_evts_poll を呼ぶ | 呼出側が実行頻度と context を決める。必要な IRQ notification の実装も確認 |
+
+Kconfig choice は SCHED を default としますが、SCHED は BM_SCHEDULER に依存します。依存が満たされない場合も含め最終 choice は .config で確認し、文書の「IRQ default」だけから決めません。根拠: `vendor/sdk-nrf-bm/subsys/softdevice_handler/Kconfig:16-46`、実際の dispatch は `vendor/sdk-nrf-bm/subsys/softdevice_handler/nrf_sdh.c:351-405`。[公式との照合](version-comparison.md)参照。
+
+BLE poll は static event buffer を再利用して observer を順に呼びます。event の pointer を非同期 Ruby task へ借用せず必要な field をコピーします。callback が poll を再入させる構成も避けます。根拠: `vendor/sdk-nrf-bm/subsys/softdevice_handler/nrf_sdh_ble.c:370-399`。
+
+## handler の API とメモリ設定
+
+enable/disable request、observer ready、suspend/resume/is_suspended、poll、BLE enable、connection handle/index、SD RAM usage、info と event string が公開されています。state/stack/BLE/SoC の observer 定義 macro・型は [API 索引](api-softdevice.md)、全設定は [Kconfig](kconfig-softdevice.md)にあります。suspend は event interrupt の制御であり、SoftDevice 全停止の代わりではありません。根拠: `vendor/sdk-nrf-bm/subsys/softdevice_handler/nrf_sdh.c:304-349`。
+
+S115 は SOFTDEVICE_PERIPHERAL と DATA_LENGTH_UPDATE を選択しますが CENTRAL/EXTENDED_ADVERTISING は選択しません。根拠: `vendor/sdk-nrf-bm/subsys/softdevice/Kconfig:33-46`。link count の S115 range は 0〜2、peripheral/total の default は各 1、ATT MTU default 23、attribute table default 1408 bytes、connection tag default 99 です。MTU と属性数の増加は SD の dynamic RAM を増やすため、NRF_SDH_BLE_LOG_SD_RAM_USAGE を使って確認します。根拠: `vendor/sdk-nrf-bm/subsys/softdevice_handler/Kconfig:165-232`。
+
+NRF_SDH_STR_TABLES は default y で、無効化すれば event 文字列の RRAM を減らす候補になります。clock source/accuracy、HFCLK latency と校正周期、PSA RNG seed も backend 初期化の設定対象です。root SOFTDEVICE と clock 条件は [platform 設定](kconfig-platform.md)と合わせて読みます。測定済みの RAM/RRAM 削減量はありません。
+
+上記の文字列・clock・seed 設定は `vendor/sdk-nrf-bm/subsys/softdevice_handler/Kconfig:48-158,238-251` が根拠です。RBOS backend の設計候補は platform_init/poll、ble_enable/disable、ble_ram_usage で、製品利用者に raw SD enable/clock/IRQ 制御を無条件で公開しません。
+
+## RBOS の割り込み資源一覧（統合時に作るもの）
 
 実装前に、次の列を持つ一覧表をビルド構成ごとに作ります。現時点で空き資源を確定したものではありません。
 

@@ -51,7 +51,7 @@ RBOS の実装に必要な仕様、参照実装、制約、試験項目をまと
 | ボード | [nRF54L15-DK](hardware/nrf54l15-dk.md) |
 | mruby/c | [版とビルド](mrubyc/overview-and-build.md)、[タスク](mrubyc/task-scheduler.md)、[HAL 移植](mrubyc/hal-porting.md)、[C API](mrubyc/c-api.md)、[設定とメモリ](mrubyc/configuration-and-memory.md) |
 | OpenBlink | [構成と再ロード](openblink/architecture.md)、[API と権限](openblink/api-binding-patterns.md)、[HMAC](openblink/hmac-authentication.md)、[将来対応と保存](openblink/future-support.md) |
-| NCS Bare Metal | [開発環境](nrf-bm/setup-and-build.md)、[SoftDevice と割り込み](nrf-bm/softdevice-and-interrupts.md)、[ライブラリ](nrf-bm/libraries.md) |
+| NCS Bare Metal | [開発環境](nrf-bm/setup-and-build.md)、[全 component・API・Kconfig 索引](nrf-bm/component-catalog.md)、[SoftDevice と割り込み](nrf-bm/softdevice-and-interrupts.md)、[ライブラリ案内](nrf-bm/libraries.md)、[samples](nrf-bm/samples.md)、[公式 latest 比較](nrf-bm/version-comparison.md) |
 | 更新と保存 | [single-bank DFU](dfu/single-bank-dfu.md)、[MCUboot](dfu/mcuboot.md)、[埋め込みバイトコード](dfu/embedded-bytecode.md) |
 | 実装準備 | [段階的計画](implementation/porting-plan.md)、[着手前チェックリスト](implementation/checklist.md) |
 | 配布条件 | [ライセンス](licenses.md) |
