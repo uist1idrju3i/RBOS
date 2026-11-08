@@ -13,6 +13,15 @@ RBOS の実装に必要な仕様、参照実装、制約、試験項目をまと
 
 この調査では SDK/firmware のビルド、実機への書き込み、電源断、BLE 通信、電波認証の照合を実施していません。host の Wasm build と短い Ruby の実行結果は [mruby/c 能力確認](mrubyc/capability-probes.md)へ分離しました。文書の検査結果を実機試験の代わりに扱わないでください。
 
+## Ruby らしさと共通 I/O API
+
+後続の `ruby-idiomatic` / `io-api-guideline` skill に先立つ調査です。skill 本体・RuboCop・六 class の実装は今回追加していません。
+
+- Ruby: [原則と一次資料](ruby-style/principles.md)、[guide と VM の対応](ruby-style/idiom-compatibility.md)、[組込み idiom](ruby-style/embedded-idioms.md)、[外部の主張の照合](ruby-style/attachment-review.md)。
+- 実行の証拠: [版・結果・hash](ruby-style/capability-probes.md)、[成功入力](ruby-style/probe-inputs.md)、[非対応入力](ruby-style/negative-probe-inputs.md)。
+- I/O: [固定版と読み方](io-api/overview.md)、[GPIO・ADC・PWM](io-api/gpio-adc-pwm.md)、[UART・I2C・SPI](io-api/serial-buses.md)、[RBS](io-api/rbs-comparison.md)。
+- 移植: [community 比較](io-api/community-comparison.md)、[nRF54L15 対応](io-api/nrf54l15-mapping.md)、[rrt0 待機案](io-api/rrt0-integration.md)。pin の承認済み方針は [設計判断](architecture/decisions.md)、出典の条件は [ライセンス](licenses.md)。
+
 ## 資料の版
 
 以下の SHA は調査時の `git submodule status` と `.gitmodules:1-16` に基づきます。依存を更新したら、版と引用行も更新します。
