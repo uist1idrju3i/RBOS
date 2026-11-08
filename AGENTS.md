@@ -66,6 +66,7 @@ RBOS では mruby/c が scheduler です。利用者は Ruby を主に書き、�
 git submodule update --init --depth 1   # submodule の取得
 python3 .github/scripts/check-skills.py  # 指示とスキルの一覧・名前・リンクを検査
 python3 -m unittest discover -s tests/check-skills  # スキル検査のテスト
+python3 .github/scripts/check-research.py  # 調査資料のリンク・引用・構造・個人パスを検査
 tools/mrubyc-wasm/check.sh              # emsdk 環境で Ruby compile・Wasm smoke test
 python3 .agents/skills/yomiyasu/scripts/yomiyasu_lint.py <file>  # 日本語文書の候補検査
 python3 -m json.tool .devin/wiki.json >/dev/null  # DeepWiki 設定の JSON 検査
