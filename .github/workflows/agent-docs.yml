@@ -29,3 +29,9 @@ jobs:
 
       - name: スキル検査のテスト
         run: python3 -m unittest discover -s tests/check-skills
+
+      - name: 調査資料のリンク・引用・構造を検査する
+        run: python3 .github/scripts/check-research.py
+
+      - name: 調査資料検査のテスト
+        run: python3 -m unittest discover -s tests/check-research
