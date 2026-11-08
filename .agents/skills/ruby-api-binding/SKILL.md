@@ -21,6 +21,8 @@ RBOS では mruby/c が scheduler です。製品開発者が Ruby を中心に�
 
 ## 追加手順
 
+GPIO・ADC・PWM・UART・I2C・SPI 等の周辺機器では、先に [io-api-guideline](../io-api-guideline/SKILL.md)で MPIG・RBS・待機・資源の契約を決めてから、以下の C binding 手順へ進みます。
+
 1. Ruby 側の class/method 名、引数・戻り値・例外、公開範囲を決めます。引数の省略、nil、型違い、範囲外、backend failure の契約も定義します。
 2. `src/rbos/` に callback と登録処理を置きます。`mrbc_define_class(NULL, "Example", NULL)` で class を作り、`mrbc_define_method(NULL, cls, "method", callback)` で登録します。callback は `void callback(mrbc_vm *vm, mrbc_value v[], int argc)` です。`rbos_define_classes()` から登録してください。これは命名例で、Example を実装済み API として扱いません。
 3. argc を調べてから `v[1]` 以降を参照し、型と範囲を検査します。借用値を返すときの incref、生成値の移譲、container・String の所有権を確認します。例外を設定したら後続の処理を止めます。[C API 規約](../../../research/mrubyc/c-api.md)の ownership・keyword 引数も確認してください。

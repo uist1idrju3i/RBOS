@@ -35,6 +35,8 @@ Devin / Codex / Claude Code など、このリポジトリで作業するすべ�
 | `vendor-update` | 依存関係の変更履歴、採否、ライセンス、回帰テストの確認 |
 | `document-structure` | 文書の意味単位による分割、公開サイトと内部文書の区別、索引・旧リンク・証拠の保持 |
 | `ruby-api-binding` | 共有 C binding、backend、Ruby test による class/method 追加 |
+| `ruby-idiomatic` | 製品 Ruby・tests/mruby・サンプル・文書のコード例の読みやすさと mruby/c 互換性 |
+| `io-api-guideline` | 周辺機器 Ruby API の MPIG 契約、pin、RBS、rrt0 待機、Wasm fake 検査 |
 
 RBOS では mruby/c が scheduler です。利用者は Ruby を主に書き、通常は C を編集せずに製品へ組み込めることを目指します。DeviceTree などの board 設定は必要です。API 拡張には [ruby-api-binding](.agents/skills/ruby-api-binding/SKILL.md) を使います。
 
