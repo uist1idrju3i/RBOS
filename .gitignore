@@ -10,3 +10,7 @@ AGENTS.override.md
 __pycache__/
 *.py[cod]
 .DS_Store
+
+# Signing keys
+*.pem
+keys/

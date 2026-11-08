@@ -1,6 +1,6 @@
 # 実装へ進むための段階計画
 
-この文書は将来の実装案です。P0〜P6 のコード作成、SDK build、実機試験はまだ行っていません。各段階を独立した PR に分け、受け入れ条件を満たしてから次へ進みます。
+この文書は実装の段階案です。P0 は `firmware/` の最小構成と SDK build まで進めました（[build 再現手順](bm-build.md)、[振り返り](retrospective-P0.md)）。P0 の実機確認と P1〜P6 の実装はまだ行っていません。各段階を独立した PR に分け、受け入れ条件を満たしてから次へ進みます。
 
 ## P0: BM の再現可能な基盤
 
@@ -10,6 +10,8 @@
 - release/debug と秘密鍵の配置を分離し、全 module SHA、map、compiler 版を保存する。
 
 **受け入れ条件**: clean workspace で再現でき、DK 上で LED/console/loader 入口を確認できること。自動 erase を通常操作に含めないこと。
+
+**状況（2026-11-09）**: build の再現と鍵の分離は確認済み。DK での確認と recovery sample の flash は未実施のため、P0 は未完了です。
 
 根拠: `vendor/sdk-nrf-bm/doc/nrf-bm/release_notes/release_notes_2.0.1.rst:37-49`、`vendor/sdk-nrf-bm/samples/boot/mcuboot_recovery_entry/README.rst:1-60`、[構築調査](../nrf-bm/setup-and-build.md)。
 

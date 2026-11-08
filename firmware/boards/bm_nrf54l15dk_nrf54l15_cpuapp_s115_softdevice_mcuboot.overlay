@@ -1,0 +1,3 @@
+/ {
+	model = "RBOS nRF54L15 DK S115";
+};
