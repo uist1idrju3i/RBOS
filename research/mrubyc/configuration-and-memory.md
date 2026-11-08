@@ -38,11 +38,13 @@ RBOS の初期案は Float を 1 にし、必要のない Math/Unicode 機能を
 
 `mrbc_init(void *heap_ptr, unsigned int size)` へ利用者が用意した pool を渡します。allocator は `mrbc_init_alloc(void *ptr, unsigned int size)` で初期化され、4-byte 整列とサイズ上限を検査します。サイズの上限は `MRBC_ALLOC_MEMSIZE_T` に依存するため、ソースの古い「max 64KB」というコメントだけで 24-bit 構成の上限を判断しません。出典: `vendor/mrubyc/src/alloc.c:446-478`。
 
-pool は TCB、register、VM のデータ、Ruby object 等の予算になります。bytecode の入力バッファ、C の stack、BLE/storage のバッファを全て pool だけで賄えるとは限りません。TCB と register の確保は `vendor/mrubyc/src/rrt0.c:203-218`、メモリ構成は [全体設計](../architecture/overview.md)を参照してください。
+pool は TCB、register、VM のデータ、Ruby object 等の予算になります。RRAM の const bytecode とは別に、C の stack、BLE 等のバッファを全て pool だけで賄えるとは限りません。TCB と register の確保は `vendor/mrubyc/src/rrt0.c:203-218`、メモリ構成は [全体設計](../architecture/overview.md)を参照してください。
 
 `mrbc_alloc_statistics(struct MRBC_ALLOC_STATISTICS *ret)` は total、used、free、fragmentation を返します。`MRBC_USE_ALLOC_PROF` では initial/max/min を記録する構造体もあります。出典: `vendor/mrubyc/src/alloc.h:35-55,90-100`。タスク数だけではなく、最大スクリプトのロード、例外、再ロード、繰り返し API 呼出の前後で記録します。
 
-## 破棄と再ロード
+## 破棄と将来の再ロード
+
+初期は firmware 埋め込みで、動的再ロードは将来の OpenBlink 範囲です。
 
 `mrbc_cleanup()` は allocator、VM、symbol の cleanup と task queue の初期化を行います。出典: `vendor/mrubyc/src/rrt0.c:845-856`。外部 DMA、timer、BLE callback、native API の handle まで自動解放する保証ではありません。
 

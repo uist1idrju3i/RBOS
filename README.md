@@ -19,7 +19,8 @@ SDK のビルド、実機動作、DFU、性能・消費電力は本リポジト�
 - C の native class を介した周辺機器へのアクセス。
 - 信頼された system task と user task の権限分離。
 - NCS Bare Metal、MCUboot、BLE MCUmgr による **single-bank DFU**。
-- storage 内の `.mrb` 単一コピーと、破損時の既定プログラムへの fallback。
+- mruby 4.0.0 の mrbc で生成した const bytecode の firmware 結合と RRAM からの実行。
+- OpenBlink 対応は将来計画。初期の bytecode 更新は firmware DFU のみ。
 
 いずれも目標・採用方針です。firmware A/B と bytecode A/B は採用しません。
 根拠と制約は [判断記録](research/architecture/decisions.md)を参照してください。
@@ -28,7 +29,7 @@ SDK のビルド、実機動作、DFU、性能・消費電力は本リポジト�
 
 対象は Nordic Semiconductor **nRF54L15-DK** です。
 主 target は `bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot` を予定しています。
-central が必要な場合は S145 を評価します。
+central は使わないため SoftDevice は **S115 に固定**します。
 工事設計認証番号 `220-JP8930` は依頼者提供情報であり、本リポジトリでは総務省のデータベースとの照合をしていません。
 出典、GPIO、書き込み上の注意は [ボード調査](research/hardware/nrf54l15-dk.md)にまとめています。
 
@@ -54,8 +55,10 @@ submodule の URL は [.gitmodules](.gitmodules) に記録しています。
 |---|---|---|
 | `vendor/mrubyc` | [mrubyc/mrubyc](https://github.com/mrubyc/mrubyc) | BSD-3-Clause |
 | `vendor/sdk-nrf-bm` | [nrfconnect/sdk-nrf-bm](https://github.com/nrfconnect/sdk-nrf-bm) | LicenseRef-Nordic-5-Clause |
-| `vendor/sdk-mcuboot` | [nrfconnect/sdk-mcuboot](https://github.com/nrfconnect/sdk-mcuboot) | Apache-2.0 |
+| `vendor/mruby` | [mruby/mruby](https://github.com/mruby/mruby)（4.0.0、host mrbc） | MIT |
 | `vendor/yomiyasu` | [nanaism/yomiyasu](https://github.com/nanaism/yomiyasu) | MIT |
+
+MCUboot は独立 vendor ではなく、sdk-nrf-bm の west manifest が import する NCS の依存として取得します。
 
 版とライセンスの根拠は [調査索引](research/README.md)と [ライセンス調査](research/licenses.md)を参照してください。
 

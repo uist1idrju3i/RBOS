@@ -2,7 +2,7 @@
 
 ## 更新するものを分ける
 
-2026-11-08 の決定は、firmware を公式 NCS BM の single-bank DFU、Ruby bytecode を storage の単一コピーとするものです。A/B rollback は採用しません。[判断記録](../architecture/decisions.md)を参照してください。
+2026-11-08 の決定は、firmware を公式 NCS BM の single-bank DFU、Ruby bytecode を const 配列で firmware に結合するものです。bytecode 更新も firmware 再build と DFU が必要です。A/B rollback は採用しません。[判断記録](../architecture/decisions.md)を参照してください。
 
 公式方式は MCUboot、slot0 の main application、slot1 の firmware loader、共有 SoftDevice と metadata を使います。slot1 は旧版アプリの待避場所ではありません。application update は既存アプリを直接上書きし、reset 後に検証、不正なら loader で再更新を待ちます。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/single_bank_dfu.rst:6-24`、`vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/memory_partitioning.rst:14-47`。
 
@@ -37,7 +37,7 @@ application update と installer update を区別します。installer は slot0
 | `installer_softdevice_firmware_loader.bin` | SoftDevice/loader の DFU |
 | `<app_name>/zephyr/zephyr.signed.bin` | application の DFU |
 
-出典: `vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/ug_dfu.rst:51-70`。`.mrb` をここへ直接渡すものではありません。署名済み firmware と Ruby プログラムの転送を別経路・別 format とします。
+出典: `vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/ug_dfu.rst:51-70`。`.mrb` をここへ直接渡すものではありません。初期は Ruby プログラムも firmware に含め、独立した転送経路を作りません。
 
 ## 鍵と製品化
 

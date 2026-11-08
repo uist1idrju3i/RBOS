@@ -2,13 +2,15 @@
 
 ## バージョンを固定する
 
-調査対象は BM v2.0.1、基盤となる NCS と toolchain は **v3.3.0** です。OpenBlink の v2.9.0 を使い回しません。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/release_notes/release_notes_2.0.1.rst:6-9,37-49`、`vendor/sdk-nrf-bm/west.yml:1-20`。
+調査対象は BM v2.0.1、基盤となる NCS と toolchain は **v3.3.0** です。新参照 OpenBlink demo-nrf も v3.3.0 ですが、Zephyr の app であり BM の build 設定は別です。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/release_notes/release_notes_2.0.1.rst:6-9,37-49`、`vendor/sdk-nrf-bm/west.yml:1-20`。
 
 公式の導入手順は nRF Connect for Desktop、J-Link、VS Code と nRF Connect 拡張を案内します。Quick Start で DK の初期設定を行い、BM v2.0.1 と対応 toolchain を選びます。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/install_nrf_bm.rst:10-109`。本リポジトリでは環境構築・ボードへの書き込みを試していません。
 
 ## submodule と west workspace の区別
 
 RBOS の vendor は調査資料と依存バージョンを固定するための submodule です。これだけでは NCS の全依存、toolchain、west workspace が揃うとは限りません。公式 manifest は NCS の import を含みます。出典: `.gitmodules:1-16`、`vendor/sdk-nrf-bm/west.yml:1-42`。
+
+MCUboot は `vendor/sdk-nrf-bm/west.yml:16-26` の allowlist と NCS v3.3.0 の [manifest](https://github.com/nrfconnect/sdk-nrf/blob/ba167d9f3db4abbdc9b67887ca3ea66c64f2d956/west.yml#L128-L131) により `bootloader/mcuboot` に取得されます。revision は ncs-v3.3.0、調査対象 SHA は fce4dac2e6295cf98bd02a85f7c4254f6102106d です。独立した RBOS vendor の異なる固定版は削除し、`west update` 経由に一本化します。
 
 以下は独立した SDK workspace を作る **計画例** です。既存の RBOS checkout を west init の対象にせず、対応 toolchain の shell 内で実施します。manifest の固定は release notes の v2.0.1 と west.yml に基づきます。
 
@@ -54,7 +56,7 @@ west flash -d build-recovery
 | `BM_FIRMWARE_LOADER_{NONE,BT_MCUMGR,UART_MCUMGR}` | loader 選択。RBOS は BT_MCUMGR |
 | `BM_BOOTLOADER_IMAGE_NAME/PATH` | MCUboot の image 名と source path |
 | `BM_FIRMWARE_LOADER_IMAGE_NAME/PATH` | loader の image 名と source path |
-| `SOFTDEVICE_{NONE,S115,S145}` / `SOFTDEVICE_FILE` | SoC と選択に対応した SoftDevice hex |
+| `SOFTDEVICE_S115` / `SOFTDEVICE_FILE` | RBOS は S115 を選択。他の選択肢は不採用 |
 | `METADATA_SIZE` / `METADATA_ENTRY_SIZE` | nRF54L は `0x200` / 32 |
 | `INSTALLER_HEX_OUTPUT` | debug 用 installer hex 出力 |
 
@@ -74,7 +76,7 @@ loader の有無による `BOOT_FIRMWARE_LOADER` / `SINGLE_APPLICATION_SLOT` の
 
 ## リリースと成熟度
 
-v2.0.0 は S115/S145 の役割分離と central 系の対応拡充等を含み、v2.0.1 は SoftDevice 10.0.1 の修正と MCUboot target の版情報ログ修正を含みます。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/release_notes/release_notes_2.0.0.rst:10-42`、`vendor/sdk-nrf-bm/doc/nrf-bm/release_notes/release_notes_2.0.1.rst:6-9,69-81`。
+v2.0.0 は SoftDevice の役割分離と central 系の対応拡充等を含み、v2.0.1 は SoftDevice 10.0.1 の修正と MCUboot target の版情報ログ修正を含みます。central 系は RBOS では採用しません。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/release_notes/release_notes_2.0.0.rst:10-42`、`vendor/sdk-nrf-bm/doc/nrf-bm/release_notes/release_notes_2.0.1.rst:6-9,69-81`。
 
 成熟度の「Supported」は資料上の対応範囲であり、RBOS の結合試験済みという意味ではありません。Experimental は製品利用に推奨されず、API や検証が不完全な場合があります。機能・SoC ごとの表を個別に確認します。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/release_notes/bm_software_maturity.rst:14-29`。
 

@@ -12,11 +12,11 @@
 | RAM-load | image を SRAM へ展開 | 不採用 |
 | firmware loader / single application | main app と recovery 用 loader、または app 一つ | **公式 BM 経路を採用** |
 
-汎用 mode の根拠: `vendor/sdk-mcuboot/docs/design.md:28-60,129-215`。採否は RBOS の判断です。汎用 MCUboot が swap を持つ事実と、NCS BM がその mode を製品向けに統合済みかどうかは別です。
+汎用 mode の根拠: [docs/design.md](https://github.com/nrfconnect/sdk-mcuboot/blob/fce4dac2e6295cf98bd02a85f7c4254f6102106d/docs/design.md#L212-L455)。採否は RBOS の判断です。汎用 MCUboot が swap を持つ事実と、NCS BM がその mode を製品向けに統合済みかどうかは別です。
 
 ## trailer と test/confirm/revert
 
-汎用 swap は trailer の magic、image_ok、copy_done、swap status 等を用いて更新の進行と状態を記録します。test 起動後に confirm しない場合の revert はその mode の機能です。出典: `vendor/sdk-mcuboot/docs/design.md:427-560`。single-bank の直接上書きに、旧 image へ戻すための保管領域があるという意味ではありません。
+汎用 swap は trailer の magic、image_ok、copy_done、swap status 等を用いて更新の進行と状態を記録します。test 起動後に confirm しない場合の revert はその mode の機能です。出典: [docs/design.md](https://github.com/nrfconnect/sdk-mcuboot/blob/fce4dac2e6295cf98bd02a85f7c4254f6102106d/docs/design.md#L456-L600)。single-bank の直接上書きに、旧 image へ戻すための保管領域があるという意味ではありません。
 
 公開 API は次の通りです。
 
@@ -27,15 +27,15 @@ int boot_set_confirmed(void);
 int boot_set_confirmed_multi(int image_index);
 ```
 
-出典: `vendor/sdk-mcuboot/boot/bootutil/include/bootutil/bootutil_public.h:180-229`。multi API が推奨されていますが、RBOS の通常 single-bank update にこの test/revert 手順を導入する計画はありません。
+出典: [boot/bootutil/include/bootutil/bootutil_public.h](https://github.com/nrfconnect/sdk-mcuboot/blob/fce4dac2e6295cf98bd02a85f7c4254f6102106d/boot/bootutil/include/bootutil/bootutil_public.h#L180-L229)。multi API が推奨されていますが、RBOS の通常 single-bank update にこの test/revert 手順を導入する計画はありません。
 
 ## stock BM の選択経路
 
 1. BM sysbuild は loader があれば `BOOT_FIRMWARE_LOADER`、なければ `SINGLE_APPLICATION_SLOT` を設定します。出典: `vendor/sdk-nrf-bm/sysbuild/image_configurations/BOOTLOADER_image_default.cmake:8-12`。
-2. MCUboot の CMake はその選択で `single_loader.c` を使い、BM firmware loader では `firmware_loader_bm.c` を追加します。出典: `vendor/sdk-mcuboot/boot/zephyr/CMakeLists.txt:158-178`。
+2. MCUboot の CMake はその選択で `single_loader.c` を使い、BM firmware loader では `firmware_loader_bm.c` を追加します。出典: [boot/zephyr/CMakeLists.txt](https://github.com/nrfconnect/sdk-mcuboot/blob/fce4dac2e6295cf98bd02a85f7c4254f6102106d/boot/zephyr/CMakeLists.txt#L159-L178)。
 3. BM image management の upload は `s0_storage` と `S0_SIZE` に対して処理されます。S1 の address 定義だけから secondary upload と解釈できません。出典: `vendor/sdk-nrf-bm/subsys/mgmt/mcumgr/grp/img_mgmt/src/bm_img_mgmt.c:24-43,95-121,160-195`。
 
-`firmware_loader_bm.c` は metadata に基づく SoftDevice/loader の検証、loader 起動判断と installer の処理を持つ BM 固有の接続点です。出典: `vendor/sdk-mcuboot/boot/zephyr/firmware_loader_bm.c:1-120`。汎用 swap を選ぶだけでこの経路と同等になるとは確認していません。
+`firmware_loader_bm.c` は metadata に基づく SoftDevice/loader の検証、loader 起動判断と installer の処理を持つ BM 固有の接続点です。出典: [boot/zephyr/firmware_loader_bm.c](https://github.com/nrfconnect/sdk-mcuboot/blob/fce4dac2e6295cf98bd02a85f7c4254f6102106d/boot/zephyr/firmware_loader_bm.c#L120-L293)。汎用 swap を選ぶだけでこの経路と同等になるとは確認していません。
 
 ## A/B を採らない理由
 
@@ -48,6 +48,6 @@ partition の根拠は `vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/memory_partitio
 
 ## imgtool の位置付け
 
-汎用 imgtool の `sign` は `--version`、`--header-size`、`--slot-size`、`--pad`、`--confirm` 等で image と trailer を構成します。出典: `vendor/sdk-mcuboot/docs/imgtool.md:1-120`。RBOS はまず sysbuild が生成する署名済み成果物を使い、手動で他 mode の padding/confirm を加えません。実際の鍵方式、header/TLV、partition 最大長を build output と照合する作業は P5 に残します。
+汎用 imgtool の `sign` は `--version`、`--header-size`、`--slot-size`、`--pad`、`--confirm` 等で image と trailer を構成します。出典: [docs/imgtool.md](https://github.com/nrfconnect/sdk-mcuboot/blob/fce4dac2e6295cf98bd02a85f7c4254f6102106d/docs/imgtool.md#L1-L120)。RBOS はまず sysbuild が生成する署名済み成果物を使い、手動で他 mode の padding/confirm を加えません。実際の鍵方式、header/TLV、partition 最大長を build output と照合する作業は P5 に残します。
 
 [調査索引へ戻る](../README.md)

@@ -10,7 +10,7 @@
 	path = vendor/sdk-nrf-bm
 	url = https://github.com/nrfconnect/sdk-nrf-bm
 	shallow = true
-[submodule "vendor/sdk-mcuboot"]
-	path = vendor/sdk-mcuboot
-	url = https://github.com/nrfconnect/sdk-mcuboot
+[submodule "vendor/mruby"]
+	path = vendor/mruby
+	url = https://github.com/mruby/mruby
 	shallow = true

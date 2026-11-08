@@ -40,14 +40,14 @@ BM の `bm_scheduler_process()` は main loop で定期的に呼ぶ必要があ�
 
 設計候補は、必ず実行機会を持つ C 側の実行区切りか、権限付きシステムタスクのイベント処理 API です。後者では高優先度 task の占有を制限し、イベント処理が Ruby の例外で止まらないようにします。vendor を直接編集せず実現できる範囲を P1 で検証し、追加の scheduler 接点が必要なら別途設計判断とします。
 
-idle の WFE / SoftDevice 待機 API は候補であり、確認済みの完成手順ではありません。割り込み発生と待機の間の取りこぼし、storage 完了通知、console 未送信の扱いを実機で確認します。
+idle の WFE / SoftDevice 待機 API は候補であり、確認済みの完成手順ではありません。割り込み発生と待機の間の取りこぼし、将来の storage 完了通知、console 未送信の扱いを実機で確認します。
 
 ## 受け入れ条件
 
 - tick の二重開始・二重供給がない。周期・jitter・wraparound を記録する。
 - 排他の入れ子、ISR からの呼出、SoftDevice 有効時の BLE 継続を試験する。
 - 常時 runnable な task がいても BM イベントが進む。
-- no-task 時だけでなく、sleep 復帰・storage 完了で待機解除できる。
+- no-task 時だけでなく、sleep 復帰（将来は storage 完了）で待機解除できる。
 - console の長い出力や致命エラーが割り込みを永久に止めない。
 
 全項目未実施です。[実装計画](../implementation/porting-plan.md)で順序を定めます。
