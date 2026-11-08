@@ -128,7 +128,7 @@ RBOS の build 設定は `SB_CONFIG_BM_BOOTLOADER_MCUBOOT_SIGNATURE_USING_KMU=y`
 | `softdevice.signed.bin` | `a485dbbfff88d2bc21b3e928737a98ac7f1b66daf2fcc728a2879eb2167bc002` |
 | `production.hex` | `e79e14fb56a5a8d5790e78b837d3f26011ed1882b122bfa4d433861705207f56` |
 
-hash は SDK の開発用鍵で署名した debug のものです。release の hash は鍵ごとに変わるため記録しません。
+hash は SDK の開発用鍵で署名した debug のものです。release の hash は鍵ごとに変わるため記録しません。起動 banner に RBOS の `git describe`（例: `v0.1.0-6c4740c8145c`）が入るため、app と `production.hex` の hash は RBOS の commit ごとに変わります。上の表は commit 前の作業木（基準 `6c4740c`）の値です。push 後の commit を新しい clone から build した場合も、build は成功し、hash は表と異なりました。
 
 ## 実機で確認する項目（未検証）
 
