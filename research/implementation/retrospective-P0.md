@@ -64,7 +64,7 @@ P0 の受け入れ条件は実機確認を含むため、P0 は未完了です�
 | retention 入口の要求を特権操作に限る | checklist P3 | 追記 |
 | 既定鍵を公開鍵の比較で拒否する | `firmware/sysbuild.cmake` | 実装。改名した既定鍵を拒否し、`root-*.pem` という名前の新しい鍵を受け入れることを build で確認 |
 | 成果物と SHA256SUMS を CI artifact に残す | `.github/workflows/firmware.yml` | 実装 |
-| 別 host での成果物の一致 | porting-plan P0 の受け入れ条件、checklist P0 | 受け入れ条件に追加。CI とローカルの比較で確かめる |
+| 別 host での成果物の一致 | porting-plan P0 の受け入れ条件、checklist P0 | 受け入れ条件に追加。commit `5664b86` の CI とローカルの debug build で、署名済み image と `production.hex` の hash が一致 |
 
 あわせて、正式 release を GitHub Actions の Environment `release` の Secret で署名する方針と、利用者が鍵を替える手順を[署名鍵の手順](signing-keys.md)にまとめました。
 

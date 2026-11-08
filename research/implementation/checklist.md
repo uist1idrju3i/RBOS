@@ -17,7 +17,7 @@
 - [ ] DK 上で LED、console、loader 入口を確認する。
 - [x] 新しい DK の初回準備（erase と KMU への鍵の書き込み）を通常の書き込みと分けて手順にする。[DK の準備](dk-provisioning.md)。
 - [ ] erase なしで KMU に鍵を書く手順（`x-provision-keys`）を実機で確かめる。
-- [ ] 同じ commit の CI とローカルの build で、debug の成果物の hash が一致することを確かめる。
+- [x] 同じ commit の CI とローカルの build で、debug の成果物の hash が一致することを確かめる。commit `5664b86` で app、loader、SoftDevice、`production.hex` が一致しました（[CI の実行](https://github.com/uist1idrju3i/RBOS/actions/runs/42528666949)）。
 
 出典: [SDK 環境](../nrf-bm/setup-and-build.md)、[build 再現手順](bm-build.md)、[DK の準備](dk-provisioning.md)、[P0 の振り返り](retrospective-P0.md)、[ハードウェア](../hardware/nrf54l15-dk.md)。
 

@@ -129,6 +129,17 @@ RBOS の build 設定は `SB_CONFIG_BM_BOOTLOADER_MCUBOOT_SIGNATURE_USING_KMU=y`
 | `softdevice.signed.bin` | `a485dbbfff88d2bc21b3e928737a98ac7f1b66daf2fcc728a2879eb2167bc002` |
 | `production.hex` | `e79e14fb56a5a8d5790e78b837d3f26011ed1882b122bfa4d433861705207f56` |
 
+別 host との比較として、PR #21 の merge commit `5664b86348922044807152ec6488fd06267c32c5` を GitHub Actions（[CI の実行](https://github.com/uist1idrju3i/RBOS/actions/runs/42528666949)）とこの手順の Linux host で debug build しました。次の成果物の SHA-256 が一致しました。`.config` と map は build directory の path を含むため一致しません。
+
+| 成果物 | SHA-256 |
+|---|---|
+| `firmware/zephyr/zephyr.signed.bin` | `9c9177bd6e331efef8044e5509fbe415640adeff9ddbe57cd9a289f1d8d6aa0c` |
+| `firmware_loader/zephyr/zephyr.signed.bin` | `3573c4c65e2abf8f853daa055adb35968702199735a7e2f6624d294a6c9c663a` |
+| `softdevice.signed.bin` | `a485dbbfff88d2bc21b3e928737a98ac7f1b66daf2fcc728a2879eb2167bc002` |
+| `production.hex` | `1be74718234016e1a5169723ad1b8b56286f0d10e0d5b1364fc22faed3318557` |
+| `combined_signed_update_images.hex` | `064a73d639b94b08bcabcc4d5e8a0122092a6fb8fba09f9c1f24d5bc9adab3d8` |
+| `installer_merged.hex` | `051b92a15f2d1f5c69071fc54bc022fa0735a2159b83f71f42bedc895e21daca` |
+
 hash は SDK の開発用鍵で署名した debug のものです。release の hash は鍵ごとに変わるため記録しません。起動 banner に RBOS の `git describe`（例: `v0.1.0-6c4740c8145c`）が入るため、app と `production.hex` の hash は RBOS の commit ごとに変わります。上の表は commit 前の作業木（基準 `6c4740c`）の値です。push 後の commit を新しい clone から build した場合も、build は成功し、hash は表と異なりました。
 
 ## 実機で確認する項目（未検証）
