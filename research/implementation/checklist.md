@@ -1,16 +1,22 @@
 # 実装前チェックリストとリスク
 
-以下は未実施の作業です。完了済みの証拠がない項目にチェックを入れません。方針は [判断記録](../architecture/decisions.md)、実施順は [段階計画](porting-plan.md)を参照してください。
+チェックは、完了の証拠がある項目だけに入れます。証拠がない項目は空のままにします。方針は [判断記録](../architecture/decisions.md)、実施順は [段階計画](porting-plan.md)を参照してください。
 
 ## P0: 環境と target
 
-- [ ] NCS/toolchain v3.3.0、BM v2.0.1、全 module SHA を固定する。
-- [ ] S115 target で recovery sample の build/flash を確認する。
-- [ ] central 不使用・S115 固定の構成を維持する。
-- [ ] board revision、配線、認証番号を実物・公的資料で照合する。
-- [ ] erase/recover と通常 flash を分け、保存データの扱いを記録する。
+- [x] NCS/toolchain v3.3.0、BM v2.0.1、全 module SHA を固定する。[modules.txt](../../tools/bm-build/modules.txt) と `check-workspace.sh` で照合します。
+- [ ] S115 target で recovery sample の build/flash を確認する。build は成功、flash と BLE は未確認です。
+- [x] central 不使用・S115 固定の構成を維持する。`firmware/CMakeLists.txt` が他の board target を拒否し、build の `.config` で S115 だけが有効でした。
+- [ ] board revision、配線、認証番号を実物・公的資料で照合する。技適 DB の照合だけ済み、実物は未確認です。
+- [ ] erase/recover と通常 flash を分け、保存データの扱いを記録する。手順は分けましたが、書き込み前後の保存データは実機で確かめていません。
+- [x] RBOS の CMake、Kconfig、sysbuild、board overlay、署名設定の最小構成を作る。
+- [x] release/debug と秘密鍵の配置を分離する。release の鍵の検査は五つの拒否例で build の失敗を確認しました。
+- [x] 全 module SHA、map、compiler 版を集める手順と script を作る。
+- [ ] map 等の成果物を CI の artifact として保存する（P6 の firmware CI で扱う）。
+- [x] clean な workspace で build を再現する。同じ host の二回の debug build が byte 単位で一致しました。別 host は未確認です。
+- [ ] DK 上で LED、console、loader 入口を確認する。
 
-出典: [SDK 環境](../nrf-bm/setup-and-build.md)、[ハードウェア](../hardware/nrf54l15-dk.md)。
+出典: [SDK 環境](../nrf-bm/setup-and-build.md)、[build 再現手順](bm-build.md)、[P0 の振り返り](retrospective-P0.md)、[ハードウェア](../hardware/nrf54l15-dk.md)。
 
 ## P1: VM と時間
 

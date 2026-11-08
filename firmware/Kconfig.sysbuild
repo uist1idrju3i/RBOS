@@ -1,0 +1,5 @@
+source "$(ZEPHYR_BASE)/share/sysbuild/Kconfig"
+
+config RBOS_RELEASE
+ bool "Require an external release signing key"
+ default n

@@ -6,6 +6,7 @@
 
 ### Added
 
-- 最初の build 可能な firmware ができた時点で、0.1.0 から版管理を開始します。
+- nRF54L15 DK の S115・MCUboot 向けに、版 0.1.0 の最小 firmware を追加しました。UARTE に版を表示し、LED0 を点灯します。
+- debug は SDK の開発用署名鍵を使い、release はリポジトリ外の署名鍵を必須とします。
 
 [Unreleased]: https://github.com/uist1idrju3i/RBOS/commits/main/

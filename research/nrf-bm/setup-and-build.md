@@ -4,7 +4,7 @@
 
 調査対象は BM v2.0.1、基盤となる NCS と toolchain は **v3.3.0** です。新参照 OpenBlink demo-nrf も v3.3.0 ですが、Zephyr の app であり BM の build 設定は別です。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/release_notes/release_notes_2.0.1.rst:6-9,37-49`、`vendor/sdk-nrf-bm/west.yml:1-20`。
 
-公式の導入手順は nRF Connect for Desktop、J-Link、VS Code と nRF Connect 拡張を案内します。Quick Start で DK の初期設定を行い、BM v2.0.1 と対応 toolchain を選びます。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/install_nrf_bm.rst:10-109`。本リポジトリでは環境構築・ボードへの書き込みを試していません。
+公式の導入手順は nRF Connect for Desktop、J-Link、VS Code と nRF Connect 拡張を案内します。Quick Start で DK の初期設定を行い、BM v2.0.1 と対応 toolchain を選びます。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/install_nrf_bm.rst:10-109`。P0 で Linux 上に workspace を構築し、build まで確認しました（[再現手順](../implementation/bm-build.md)）。ボードへの書き込みは試していません。
 
 ## submodule と west workspace の区別
 

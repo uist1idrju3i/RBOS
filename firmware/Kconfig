@@ -1,0 +1,9 @@
+menu "RBOS application"
+
+module=RBOS
+module-str=RBOS
+source "$(ZEPHYR_BASE)/subsys/logging/Kconfig.template.log_config"
+
+endmenu
+
+source "Kconfig.zephyr"

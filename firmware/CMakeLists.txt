@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.20.0)
+
+find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
+project(rbos)
+
+if(NOT DEFINED SYSBUILD)
+  message(FATAL_ERROR "This must be built with sysbuild.")
+endif()
+if(NOT CONFIG_BOARD_BM_NRF54L15DK_NRF54L15_CPUAPP_S115_SOFTDEVICE_MCUBOOT)
+  message(FATAL_ERROR "RBOS requires the nRF54L15 DK S115 MCUboot board target.")
+endif()
+if(NOT CONFIG_MCUBOOT_BOOTLOADER_MODE_FIRMWARE_UPDATER)
+  message(FATAL_ERROR "Invalid MCUboot mode selected.")
+endif()
+
+target_sources(app PRIVATE src/main.c)
