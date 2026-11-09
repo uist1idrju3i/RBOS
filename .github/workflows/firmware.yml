@@ -3,35 +3,50 @@ name: firmware
 on:
   push:
     branches: [main]
-    paths:
-      - 'firmware/**'
-      - 'tools/bm-build/**'
-      - '.github/actions/ncs-bm-setup/**'
-      - '.github/workflows/firmware.yml'
-      - '.github/workflows/firmware-release.yml'
-      - '.gitmodules'
-      - 'vendor/sdk-nrf-bm'
   pull_request:
-    paths:
-      - 'firmware/**'
-      - 'tools/bm-build/**'
-      - '.github/actions/ncs-bm-setup/**'
-      - '.github/workflows/firmware.yml'
-      - '.github/workflows/firmware-release.yml'
-      - '.gitmodules'
-      - 'vendor/sdk-nrf-bm'
 
 permissions:
   contents: read
 
 concurrency:
-  group: firmware-${{ github.event.pull_request.number || github.run_id }}
+  group: firmware-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  changes:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    outputs:
+      changed: ${{ steps.inputs.outputs.changed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: 変更判定のテスト
+        run: python3 -m unittest discover -s tests/check-changes
+
+      - name: firmware の入力に変更があるか調べる
+        id: inputs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+          PUSH_FORCED: ${{ github.event.forced || false }}
+        run: bash .github/scripts/changed-inputs.sh firmware
+
   build:
+    needs: changes
+    if: needs.changes.outputs.changed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [debug, release]
     runs-on: ubuntu-26.04
     timeout-minutes: 60
+    env:
+      VARIANT: ${{ matrix.variant }}
+      CCACHE_MAXSIZE: 512M
     defaults:
       run:
         shell: bash
@@ -42,55 +57,112 @@ jobs:
 
       - name: BM の build 環境を用意する
         uses: ./.github/actions/ncs-bm-setup
+        with:
+          cache-workspace: 'true'
+          save-workspace: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.variant == 'debug' }}
 
-      - name: debug を build する
+      - name: compiler cache の基準 path をそろえる
         run: |
-          cd "$BM_WORKSPACE"
-          west build -b bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot \
-            "$GITHUB_WORKSPACE/firmware" --sysbuild -d "$RUNNER_TEMP/build-debug" -p always
+          python3 - <<'PY'
+          import os
 
-      - name: 試験用の鍵で release を build する
+          base = os.path.commonpath([os.environ['GITHUB_WORKSPACE'], os.environ['BM_WORKSPACE']])
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              output.write(f'CCACHE_BASEDIR={base}\n')
+              output.write(f"CCACHE_DIR={os.environ['RUNNER_TEMP']}/ccache\n")
+          PY
+
+      - name: main の compiler cache を復元する
+        id: ccache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.variant }}-911f4c5c26-${{ hashFiles('tools/bm-build/modules.txt') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ccache-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.variant }}-911f4c5c26-${{ hashFiles('tools/bm-build/modules.txt') }}-
+
+      - name: compiler cache の統計をリセットする
+        run: ccache -z
+
+      - name: release の試験用秘密鍵を用意する
+        if: matrix.variant == 'release'
         run: |
           umask 077
           mkdir -p "$RUNNER_TEMP/keys"
           python3 "$BM_WORKSPACE/bootloader/mcuboot/scripts/imgtool.py" keygen \
             -t ed25519 -k "$RUNNER_TEMP/keys/rbos-test-release.pem"
+
+      - name: 選んだ構成を build する
+        run: |
+          args=()
+          if [ "$VARIANT" = release ]; then
+            args+=(-- -DFILE_SUFFIX=release
+              "-DSB_CONFIG_BM_BOOTLOADER_MCUBOOT_SIGNATURE_KEY_FILE=\"$RUNNER_TEMP/keys/rbos-test-release.pem\"")
+          fi
           cd "$BM_WORKSPACE"
           west build -b bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot \
-            "$GITHUB_WORKSPACE/firmware" --sysbuild -d "$RUNNER_TEMP/build-release" -p always -- \
-            -DFILE_SUFFIX=release \
-            "-DSB_CONFIG_BM_BOOTLOADER_MCUBOOT_SIGNATURE_KEY_FILE=\"$RUNNER_TEMP/keys/rbos-test-release.pem\""
+            "$GITHUB_WORKSPACE/firmware" --sysbuild -d "$RUNNER_TEMP/build-$VARIANT" -p always "${args[@]}"
 
-      - name: 両構成の証拠と hash を集める
+      - name: compiler cache の統計を表示する
+        if: always()
         run: |
-          for variant in debug release; do
-            tools/bm-build/collect-evidence.sh "$BM_WORKSPACE" \
-              "$RUNNER_TEMP/build-$variant" "$RUNNER_TEMP/evidence-$variant"
-            echo "=== $variant SHA256SUMS ==="
-            cat "$RUNNER_TEMP/evidence-$variant/SHA256SUMS"
-          done
+          if command -v ccache >/dev/null; then
+            ccache -s
+          fi
+
+      - name: 構成の証拠と hash を集める
+        run: |
+          tools/bm-build/collect-evidence.sh "$BM_WORKSPACE" \
+            "$RUNNER_TEMP/build-$VARIANT" "$RUNNER_TEMP/evidence-$VARIANT"
+          echo "=== $VARIANT SHA256SUMS ==="
+          cat "$RUNNER_TEMP/evidence-$VARIANT/SHA256SUMS"
 
       - name: 試験用の秘密鍵を削除する
-        if: always()
+        if: always() && matrix.variant == 'release'
         run: rm -f "$RUNNER_TEMP/keys/rbos-test-release.pem"
 
       - name: 成果物に鍵の file がないことを確かめる
         run: |
-          for variant in debug release; do
-            forbidden=$(find "$RUNNER_TEMP/evidence-$variant" \( -name '*.pem' -o -name keyfile.json \) -print -quit)
-            if [ -n "$forbidden" ]; then
-              echo '::error::Evidence contains a PEM or keyfile.json file.'
-              exit 1
-            fi
-          done
+          forbidden=$(find "$RUNNER_TEMP/evidence-$VARIANT" \( -name '*.pem' -o -name keyfile.json \) -print -quit)
+          if [ -n "$forbidden" ]; then
+            echo '::error::Evidence contains a PEM or keyfile.json file.'
+            exit 1
+          fi
 
-      - name: 両構成の証拠を保存する
+      - name: 構成の証拠を保存する
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: firmware-evidence-${{ github.sha }}
-          path: |
-            ${{ runner.temp }}/evidence-debug
-            ${{ runner.temp }}/evidence-release
+          name: firmware-evidence-${{ matrix.variant }}-${{ github.sha }}
+          path: ${{ runner.temp }}/evidence-${{ matrix.variant }}
           include-hidden-files: true
+          archive: true
           if-no-files-found: error
           retention-days: 7
+
+      - name: main の compiler cache を更新する
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache.outputs.cache-primary-key }}
+
+  firmware:
+    needs: [changes, build]
+    if: always()
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - name: firmware の検査結果をまとめる
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          CHANGED: ${{ needs.changes.outputs.changed }}
+          WORK_RESULT: ${{ needs.build.result }}
+        run: |
+          if [ "$CHANGES_RESULT" != success ]; then
+            echo '::error::Input change detection failed or was cancelled.'
+            exit 1
+          fi
+          case "$CHANGED:$WORK_RESULT" in
+            true:success|false:skipped) echo 'firmware: PASS' ;;
+            *) echo "::error::firmware: changed=$CHANGED result=$WORK_RESULT"; exit 1 ;;
+          esac
