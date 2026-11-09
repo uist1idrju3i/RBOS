@@ -2,6 +2,7 @@ set(RBOS_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
 set(RBOS_MRBC "" CACHE FILEPATH "Existing host mrbc (mruby 4.0.0)")
 find_program(RBOS_RUBY ruby REQUIRED)
 find_program(RBOS_MAKE make REQUIRED)
+find_program(RBOS_PYTHON python3 REQUIRED)
 if(NOT RBOS_MRBC)
   find_program(RBOS_HOST_CC NAMES cc gcc clang NO_CMAKE_FIND_ROOT_PATH)
   find_program(RBOS_HOST_AR NAMES ar REQUIRED NO_CMAKE_FIND_ROOT_PATH)
@@ -35,6 +36,11 @@ execute_process(COMMAND ${RBOS_MAKE} -C "${vm}/mrblib" "MRBC=${RBOS_MRBC}" all
 if(NOT result EQUAL 0)
   message(FATAL_ERROR "mruby/c mrblib generation failed")
 endif()
+execute_process(COMMAND "${RBOS_PYTHON}" "${RBOS_ROOT}/tools/bm-build/check-bytecode.py"
+  "${vm}/src/mrblib.c" RESULT_VARIABLE result)
+if(NOT result EQUAL 0)
+  message(FATAL_ERROR "mruby/c mrblib bytecode validation failed")
+endif()
 execute_process(COMMAND ${RBOS_MAKE} -C "${vm}/src" autogen RESULT_VARIABLE result)
 if(NOT result EQUAL 0)
   message(FATAL_ERROR "mruby/c symbol header generation failed")
@@ -62,7 +68,9 @@ foreach(source ${task_sources})
   set(output "${CMAKE_CURRENT_BINARY_DIR}/${symbol}.c")
   add_custom_command(OUTPUT "${output}"
     COMMAND "${RBOS_MRBC}" "-B${symbol}" -o "${output}" "${CMAKE_CURRENT_SOURCE_DIR}/ruby/${source}"
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/ruby/${source}" "${RBOS_MRBC}" VERBATIM)
+    COMMAND "${RBOS_PYTHON}" "${RBOS_ROOT}/tools/bm-build/check-bytecode.py" "${output}"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/ruby/${source}" "${RBOS_MRBC}"
+      "${RBOS_ROOT}/tools/bm-build/check-bytecode.py" VERBATIM)
   target_sources(app PRIVATE "${output}")
   string(APPEND table "extern const uint8_t ${symbol}[];\n")
   string(APPEND entries "  {\"${source}\", ${symbol}},\n")

@@ -22,6 +22,7 @@ struct rbos_tick_stats {
 	unsigned int min_us;
 	unsigned int max_us;
 	unsigned int catchups;
+	unsigned int count;
 };
-void rbos_tick_snapshot(struct rbos_tick_stats *stats);
+void rbos_tick_take_interval(struct rbos_tick_stats *stats);
 #endif

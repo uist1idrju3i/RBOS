@@ -29,15 +29,18 @@ static void tick_handler(void *context)
 	if (elapsed > 1) ++ticks.catchups;
 	while (last_ms < now) {
 		mrbc_tick();
+		++ticks.count;
 		++last_ms;
 	}
 }
 
-void rbos_tick_snapshot(struct rbos_tick_stats *stats)
+void rbos_tick_take_interval(struct rbos_tick_stats *stats)
 {
 	unsigned int key = irq_lock();
 	*stats = ticks;
+	ticks = (struct rbos_tick_stats){ .min_us = UINT_MAX };
 	irq_unlock(key);
+	if (stats->min_us == UINT_MAX) stats->min_us = 0;
 }
 
 void mrbc_hal_init(void)

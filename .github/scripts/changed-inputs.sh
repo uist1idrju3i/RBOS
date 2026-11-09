@@ -24,7 +24,9 @@ if [ "${PUSH_FORCED:-false}" != true ] &&
       *:.github/scripts/changed-inputs.sh|*:tests/check-changes/*|*:.gitmodules|\
       firmware:firmware/*|firmware:tools/bm-build/*|firmware:.github/actions/ncs-bm-setup/*|\
       firmware:.github/workflows/firmware.yml|firmware:.github/workflows/firmware-release.yml|firmware:vendor/sdk-nrf-bm|\
+      firmware:vendor/mruby|firmware:vendor/mrubyc|firmware:src/*|firmware:include/*|\
       mruby-wasm:src/*|mruby-wasm:include/*|mruby-wasm:tests/mruby/*|mruby-wasm:tools/mrubyc-wasm/*|\
+      mruby-wasm:firmware/ruby/*|\
       mruby-wasm:vendor/mruby|mruby-wasm:vendor/mrubyc|mruby-wasm:.github/workflows/mruby-wasm.yml)
         changed=true
         break

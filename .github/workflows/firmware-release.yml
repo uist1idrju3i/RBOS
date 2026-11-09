@@ -38,6 +38,15 @@ jobs:
       - name: BM の build 環境を用意する
         uses: ./.github/actions/ncs-bm-setup
 
+      - name: Ruby VM の source と host build の依存を用意する
+        run: |
+          git submodule update --init --depth 1 vendor/mruby vendor/mrubyc
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y build-essential ruby python3
+          ruby --version
+          cc --version
+          make --version
+
       - name: release の秘密鍵を一時 directory に置く
         env:
           RELEASE_SIGNING_KEY: ${{ secrets.RBOS_RELEASE_SIGNING_KEY }}

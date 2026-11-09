@@ -48,15 +48,15 @@ void rbos_maintenance(bool service)
 	if (now - last_stats < CONFIG_RBOS_STATS_INTERVAL_MS) return;
 	last_stats = now;
 	struct rbos_tick_stats ticks;
-	rbos_tick_snapshot(&ticks);
+	rbos_tick_take_interval(&ticks);
 	const uint8_t *main_base = (uint8_t *)K_THREAD_STACK_BUFFER(z_main_stack);
 	const uint8_t *isr_base = (uint8_t *)K_KERNEL_STACK_BUFFER(z_interrupt_stacks[0]);
 	unsigned int main_used = stack_used(main_base, CONFIG_MAIN_STACK_SIZE,
 		main_painted_end ? main_painted_end : main_base);
 	unsigned int isr_used = stack_used(isr_base, CONFIG_ISR_STACK_SIZE,
 		isr_base + CONFIG_ISR_STACK_SIZE);
-	LOG_INF("stats tick_us=%u..%u catchups=%u pool=%u/%u main=%u isr=%u idle=%u service=%u",
-		ticks.min_us, ticks.max_us, ticks.catchups, pool_max, pool.total,
+	LOG_INF("stats tick_us=%u..%u catchups=%u ticks=%u pool=%u/%u main=%u isr=%u idle=%u service=%u",
+		ticks.min_us, ticks.max_us, ticks.catchups, ticks.count, pool_max, pool.total,
 		main_used, isr_used, idle_count, service_count);
 }
 
