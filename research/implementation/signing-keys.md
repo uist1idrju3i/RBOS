@@ -19,6 +19,8 @@ MCUboot は KMU に書かれた公開鍵で image を検証します。KMU の�
    chmod 600 ~/rbos-keys/product-release.pem
    ```
 
+   OpenSSL 3 でも作れます（`openssl genpkey -algorithm ed25519 -out product-release.pem`）。macOS では Homebrew の `openssl@3` を使います。`ssh-keygen` は OpenSSH 形式の鍵を書き出し、imgtool はこの形式を読めないため使いません。どちらの方法でも、ファイルは `-----BEGIN PRIVATE KEY-----` で始まります。
+
 2. 鍵の写しをオフラインの媒体に保管します。鍵を失うと、配布済みの機器へ新しい firmware を入れるには erase が必要になります。
 
 3. release を build します。`<key-dir>` は手順 1 の directory の絶対 path です。値は二重引用符を含めて渡します。
@@ -50,8 +52,9 @@ RBOS の正式 release は `.github/workflows/firmware-release.yml` で build �
 
 1. GitHub の Settings → Environments で `release` を作り、Required reviewers に管理者を、Deployment branches and tags に `main` と `v*` を設定します。
 2. 鍵を上の利用者の手順 1 と同じ方法で作り、オフラインに保管します。
-3. `gh secret set RBOS_RELEASE_SIGNING_KEY --env release < rbos-release.pem` で登録します。repository の Secret には登録しません。repository の Secret は、書き込み権限のある人が branch の workflow を書き換えると読み出せます。
-4. 登録後、手元の鍵の写しをオフラインの保管先以外から消します。
+3. Environment `release` の画面の Environment secrets で、名前 `RBOS_RELEASE_SIGNING_KEY` の Secret を追加し、PEM の全文（`BEGIN` と `END` の行を含む）を値に貼ります。`gh secret set RBOS_RELEASE_SIGNING_KEY --env release < rbos-release.pem` でも登録できます。repository の Secret には登録しません。repository の Secret は、書き込み権限のある人が branch の workflow を書き換えると読み出せます。
+4. Environment `release` を作る前に `firmware-release.yml` を起動しません。GitHub は、保護のない Environment `release` を自動で作ります。
+5. 登録後、手元の鍵の写しをオフラインの保管先以外から消します。
 
 pull request の CI（`.github/workflows/firmware.yml`）は、job ごとに作る使い捨ての鍵で release の build を確かめます。この鍵の image は配布しません。
 
