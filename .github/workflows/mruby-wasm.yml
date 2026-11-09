@@ -13,7 +13,31 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  check:
+  changes:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    outputs:
+      changed: ${{ steps.inputs.outputs.changed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: 変更判定のテスト
+        run: python3 -m unittest discover -s tests/check-changes
+
+      - name: mruby-wasm の入力に変更があるか調べる
+        id: inputs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+          PUSH_FORCED: ${{ github.event.forced || false }}
+        run: bash .github/scripts/changed-inputs.sh mruby-wasm
+
+  test:
+    needs: changes
+    if: needs.changes.outputs.changed == 'true'
     runs-on: ubuntu-26.04
     timeout-minutes: 20
     defaults:
@@ -37,7 +61,7 @@ jobs:
         run: echo "sha=$(git -C vendor/mruby rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: host mrbc の build をキャッシュする
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: tools/mrubyc-wasm/build/mruby-${{ steps.mruby.outputs.sha }}
           key: mrbc-only-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.mruby.outputs.sha }}
@@ -52,3 +76,24 @@ jobs:
         run: |
           source "$RUNNER_TEMP/emsdk/emsdk_env.sh"
           tools/mrubyc-wasm/check.sh
+
+  mruby-wasm:
+    needs: [changes, test]
+    if: always()
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - name: mruby-wasm の検査結果をまとめる
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          CHANGED: ${{ needs.changes.outputs.changed }}
+          WORK_RESULT: ${{ needs.test.result }}
+        run: |
+          if [ "$CHANGES_RESULT" != success ]; then
+            echo '::error::Input change detection failed or was cancelled.'
+            exit 1
+          fi
+          case "$CHANGED:$WORK_RESULT" in
+            true:success|false:skipped) echo 'mruby-wasm: PASS' ;;
+            *) echo "::error::mruby-wasm: changed=$CHANGED result=$WORK_RESULT"; exit 1 ;;
+          esac

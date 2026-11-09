@@ -1,5 +1,12 @@
 name: NCS Bare Metal の準備
 description: 固定した toolchain と BM v2.0.1 の workspace を用意する
+inputs:
+  cache-workspace:
+    description: BM workspace の main cache を復元する
+    default: 'false'
+  save-workspace:
+    description: main の job で検査済み workspace を保存する
+    default: 'false'
 runs:
   using: composite
   steps:
@@ -20,7 +27,7 @@ runs:
 
     - name: toolchain bundle をキャッシュする
       id: toolchain
-      uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ runner.temp }}/ncs/toolchains
         key: ncs-bm-toolchain-v1-${{ runner.os }}-${{ runner.arch }}-911f4c5c26
@@ -59,11 +66,46 @@ runs:
             output.write(f"BM_WORKSPACE={os.environ['RUNNER_TEMP']}/ncs-bm\n")
         PY
 
-    - name: BM workspace を作り module の版を検査する
+    - name: workspace の復元時間を測り始める
+      if: inputs.cache-workspace == 'true'
+      id: workspace-clock
       shell: bash
+      run: echo "started=$(date +%s)" >> "$GITHUB_OUTPUT"
+
+    - name: main の BM workspace を復元する
+      if: inputs.cache-workspace == 'true'
+      id: workspace
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ runner.temp }}/ncs-bm
+        key: ncs-bm-workspace-v1-${{ runner.os }}-${{ runner.arch }}-v2.0.1-${{ hashFiles('tools/bm-build/modules.txt') }}
+
+    - name: BM workspace を更新し module の版と所要時間を検査する
+      shell: bash
+      env:
+        WORKSPACE_CACHE_HIT: ${{ steps.workspace.outputs.cache-hit }}
+        WORKSPACE_RESTORE_STARTED: ${{ steps.workspace-clock.outputs.started }}
       run: |
         set -euo pipefail
-        west init -m https://github.com/nrfconnect/sdk-nrf-bm --mr v2.0.1 "$BM_WORKSPACE"
+        restore_seconds=0
+        if [ -n "$WORKSPACE_RESTORE_STARTED" ]; then
+          restore_seconds=$(( $(date +%s) - WORKSPACE_RESTORE_STARTED ))
+        fi
+        SECONDS=0
+        if [ "$WORKSPACE_CACHE_HIT" != 'true' ]; then
+          west init -m https://github.com/nrfconnect/sdk-nrf-bm --mr v2.0.1 "$BM_WORKSPACE"
+        fi
+        init_seconds=$SECONDS
         cd "$BM_WORKSPACE"
         west update --narrow -o=--depth=1
+        update_seconds=$(( SECONDS - init_seconds ))
         "$GITHUB_WORKSPACE/tools/bm-build/check-workspace.sh" "$BM_WORKSPACE"
+        check_seconds=$(( SECONDS - init_seconds - update_seconds ))
+        echo "BM workspace: cache_hit=${WORKSPACE_CACHE_HIT:-false} restore=${restore_seconds}s init=${init_seconds}s update=${update_seconds}s check=${check_seconds}s total=$(( restore_seconds + SECONDS ))s"
+
+    - name: 検査済みの BM workspace を main に保存する
+      if: inputs.cache-workspace == 'true' && inputs.save-workspace == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.workspace.outputs.cache-hit != 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ runner.temp }}/ncs-bm
+        key: ${{ steps.workspace.outputs.cache-primary-key }}

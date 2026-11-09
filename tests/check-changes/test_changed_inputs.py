@@ -1,0 +1,155 @@
+import os
+from pathlib import Path
+import shlex
+import shutil
+import subprocess
+import tempfile
+import textwrap
+import unittest
+
+
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / '.github/scripts/changed-inputs.sh'
+
+
+class ChangedInputsTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.repo = Path(self.temp.name)
+        self.env = {
+            **os.environ,
+            'GIT_AUTHOR_NAME': 'CI Test',
+            'GIT_AUTHOR_EMAIL': 'ci@example.invalid',
+            'GIT_COMMITTER_NAME': 'CI Test',
+            'GIT_COMMITTER_EMAIL': 'ci@example.invalid',
+            'GITHUB_OUTPUT': str(self.repo / 'output'),
+            'PUSH_FORCED': 'false',
+        }
+        self.git('init', '-b', 'main')
+        self.change('seed', 'base')
+        self.base = self.git('rev-parse', 'HEAD')
+
+    def git(self, *args):
+        return subprocess.check_output(
+            ['git', *args], cwd=self.repo, env=self.env, text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+
+    def change(self, path, value='fixture'):
+        file = self.repo / path
+        file.parent.mkdir(parents=True, exist_ok=True)
+        file.write_text(value)
+        self.git('add', '--', path)
+        self.git('commit', '-qm', 'fixture')
+
+    def detect(self, kind, expected, **env):
+        output = self.repo / 'output'
+        output.unlink(missing_ok=True)
+        result = subprocess.run(
+            ['bash', str(SCRIPT), kind], cwd=self.repo,
+            env={**self.env, 'BASE_SHA': self.base, 'HEAD_SHA': 'HEAD', **env},
+            capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(output.read_text(), f'changed={str(expected).lower()}\n')
+
+    def test_empty_and_unrelated_changes(self):
+        for kind in ['firmware', 'mruby-wasm']:
+            self.detect(kind, False)
+        self.change('research/unrelated.md')
+        for kind in ['firmware', 'mruby-wasm']:
+            self.detect(kind, False)
+
+    def test_all_inputs_and_unusual_filenames(self):
+        common = ['.gitmodules', '.github/scripts/changed-inputs.sh', 'tests/check-changes/test.py']
+        paths = {
+            'firmware': ['firmware/src/main.c', 'tools/bm-build/modules.txt',
+                         '.github/actions/ncs-bm-setup/action.yml',
+                         '.github/workflows/firmware.yml',
+                         '.github/workflows/firmware-release.yml', 'vendor/sdk-nrf-bm'],
+            'mruby-wasm': ['src/new\nfile.rb', 'include/space name.h', 'tests/mruby/test.rb',
+                           'tools/mrubyc-wasm/check.sh', 'vendor/mruby', 'vendor/mrubyc',
+                           '.github/workflows/mruby-wasm.yml'],
+        }
+        for kind, inputs in paths.items():
+            for path in inputs:
+                with self.subTest(kind=kind, path=path):
+                    self.base = self.git('rev-parse', 'HEAD')
+                    self.change(path)
+                    self.detect(kind, True)
+                    other = 'firmware' if kind == 'mruby-wasm' else 'mruby-wasm'
+                    self.detect(other, False)
+        for path in common:
+            self.base = self.git('rev-parse', 'HEAD')
+            self.change(path, '' if path == '.gitmodules' else 'fixture')
+            for kind in paths:
+                self.detect(kind, True)
+
+    def test_renaming_or_deleting_an_input(self):
+        self.change('firmware/old.c')
+        self.base = self.git('rev-parse', 'HEAD')
+        self.git('mv', 'firmware/old.c', 'moved.c')
+        self.git('commit', '-qm', 'rename')
+        self.detect('firmware', True)
+        self.change('src/old.rb')
+        self.base = self.git('rev-parse', 'HEAD')
+        self.git('rm', '--', 'src/old.rb')
+        self.git('commit', '-qm', 'delete')
+        self.detect('mruby-wasm', True)
+
+    def test_unknown_zero_or_forced_history_is_changed(self):
+        for kind in ['firmware', 'mruby-wasm']:
+            for base in ['', '0' * 40, 'f' * 40, 'invalid']:
+                with self.subTest(kind=kind, base=base):
+                    self.detect(kind, True, BASE_SHA=base)
+            self.detect(kind, True, PUSH_FORCED='true')
+            self.detect(kind, True, HEAD_SHA='missing')
+        self.change('unrelated')
+        later = self.git('rev-parse', 'HEAD')
+        self.detect('firmware', True, BASE_SHA=later, HEAD_SHA=self.base)
+
+    def test_invalid_kind_and_diff_error_fail(self):
+        result = subprocess.run(['bash', str(SCRIPT), 'invalid'], cwd=self.repo, env=self.env, capture_output=True)
+        self.assertEqual(result.returncode, 2)
+        bin_dir = self.repo / 'bin'
+        bin_dir.mkdir()
+        git = bin_dir / 'git'
+        git.write_text('#!/usr/bin/env bash\nif [ "$1" = diff ]; then exit 23; fi\n'
+                       f'exec {shlex.quote(shutil.which("git"))} "$@"\n')
+        git.chmod(0o755)
+        result = subprocess.run(
+            ['bash', str(SCRIPT), 'firmware'], cwd=self.repo,
+            env={**self.env, 'BASE_SHA': self.base, 'PATH': f'{bin_dir}:{self.env["PATH"]}'},
+            capture_output=True,
+        )
+        self.assertEqual(result.returncode, 23)
+        self.assertFalse((self.repo / 'output').exists())
+
+
+class SummaryTests(unittest.TestCase):
+    def test_required_names_and_summary_results(self):
+        agent = (ROOT / '.github/workflows/agent-docs.yml').read_text()
+        self.assertIn('\n  agent-docs:\n', agent)
+        for kind in ['firmware', 'mruby-wasm']:
+            workflow = (ROOT / f'.github/workflows/{kind}.yml').read_text()
+            self.assertNotIn('    paths:', workflow)
+            summary = workflow.split(f'\n  {kind}:\n')[1]
+            self.assertIn('    if: always()', summary)
+            script = textwrap.dedent(summary.split('        run: |\n')[1])
+            for changes in ['success', 'failure', 'cancelled', 'skipped', '']:
+                for changed in ['true', 'false', '']:
+                    for work in ['success', 'failure', 'cancelled', 'skipped', '']:
+                        with self.subTest(kind=kind, changes=changes, changed=changed, work=work):
+                            result = subprocess.run(
+                                ['bash', '-eo', 'pipefail', '-c', script], capture_output=True,
+                                env={**os.environ, 'CHANGES_RESULT': changes,
+                                     'CHANGED': changed, 'WORK_RESULT': work},
+                            )
+                            expected = changes == 'success' and (changed, work) in [
+                                ('true', 'success'), ('false', 'skipped')]
+                            self.assertEqual(result.returncode == 0, expected)
+
+
+if __name__ == '__main__':
+    unittest.main()
