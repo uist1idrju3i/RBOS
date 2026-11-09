@@ -5,7 +5,7 @@
 ## P0: 環境と target
 
 - [x] NCS/toolchain v3.3.0、BM v2.0.1、全 module SHA を固定する。[modules.txt](../../tools/bm-build/modules.txt) と `check-workspace.sh` で照合します。
-- [x] S115 target で recovery sample の build/flash を確認する。利用者が 2026-11-09 JST に起動 log と `Advertising as nRF_BM_Entry` を確認しました。Device Manager から loader へ切り替える操作は未確認です（[実機結果](dk-provisioning.md#記録表)）。
+- [x] S115 target で recovery sample の build/flash を確認する。利用者が 2026-11-09 JST に起動 log と `Advertising as nRF_BM_Entry` を確認しました。nRF Connect Device Manager Android から Boot Mode=1 の reset を送り、MCUboot の再起動後に `BLE MCUmgr sample started` と `Advertising as FL_12345` を確認し、loader への切り替えも成功しました（[実機結果](dk-provisioning.md#記録表)）。
 - [x] central 不使用・S115 固定の構成を維持する。`firmware/CMakeLists.txt` が他の board target を拒否し、build の `.config` で S115 だけが有効でした。
 - [x] board revision、配線、認証番号を実物・公的資料で照合する。利用者が PCA10156 revision 1.0.0、`220-JP8930` と LED0 / BUTTON0 / TXD1 の背面印字を照合しました。配線の確認範囲はこの三つの pin です（[実機結果](dk-provisioning.md#記録表)）。
 - [ ] erase/recover と通常 flash を分け、保存データの扱いを記録する。全体 erase なし・鍵の再準備なしで v0.1.1 の起動は確認しましたが、書き込み前後の保存データは実機で比較していません。

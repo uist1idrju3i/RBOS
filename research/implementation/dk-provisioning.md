@@ -141,8 +141,24 @@ CI debug は [run 42620432714](https://github.com/uist1idrju3i/RBOS/actions/runs
 | 通常の書き込み | v0.1.1 を `ERASE_RANGES_TOUCHED_BY_FIRMWARE` で program | 鍵の再準備なしで新しい版が起動 | PASS。`Image version: v0.1.1` と `RBOS 0.1.1+0`。保存データの維持は未確認 |
 | BLE DFU（P0 外） | nRF Connect iOS から `nRF_BM_MCUmgr` 経由で v0.1.1 app signed bin を upload | 転送完了と更新 image の起動 | 一部。app は Success を表示。ただし導入済みと同じ版なので、DFU した image の起動は識別できず未確認 |
 | recovery sample の起動・広告 | 全体 erase なしで sample を書き込む | sample が起動して BLE で広告 | PASS。起動 log と `Advertising as nRF_BM_Entry` を確認 |
-| recovery sample から loader へ切り替え | Device Manager の Switch to Firmware Loader mode | firmware loader に入る | 未確認。操作結果の報告なし |
+| recovery sample から loader へ切り替え | nRF Connect Device Manager Android で Switch to Firmware Loader Mode を ON（Boot Mode=1）にして Send Reset Command | firmware loader に入る | PASS。`nRF_BM_Entry` に接続し、Adv. Name を `FL_12345` に指定。reset 後に MCUboot、`BLE MCUmgr sample started`、`Advertising as FL_12345` を確認（下記追記） |
 | RBOS への復帰 | v0.1.1 RBOS を再度書き込む | RBOS が起動 | PASS。`RBOS 0.1.1+0` に復帰 |
+
+### recovery sample から loader への切り替え（2026-11-09 JST 追記）
+
+利用者は nRF Connect Device Manager **Android** で `nRF_BM_Entry` に接続し、Switch to Firmware Loader Mode を ON（Boot Mode=1）、Adv. Name を `FL_12345` にして reset を送りました。報告された log の順序は次のとおりです。
+
+```text
+I: Bluetooth name set to: FL_12345
+I: Peer disconnected
+*** Booting MCUboot v2.3.0-dev-fce4dac2e629 ***
+I: BLE MCUmgr sample started
+I: Advertising as FL_12345
+```
+
+この recovery sample build の MCUboot は `I: Booting firmware loader` 行を出しません。MCUboot の再起動後に `BLE MCUmgr sample started` が出て、指定した名前で広告したことを loader への切り替え成功の証拠とします。`FL_12345` は指定した広告名で、DK の識別番号ではありません。
+
+この操作には Android app を使ってください。利用者の環境では iOS の nRF Connect Device Manager が Send Reset Command の直後に crash しました。利用者の画面録画による報告では、広告名 `FL_232659` の設定までは済みましたが reset は起きていません。iOS app のバージョンは未記録で、ほかの環境やバージョンでも起きるとは判断しません。これは前記の nRF Connect iOS による DFU upload の結果とは別の操作です。
 
 console の pin は `vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/include/board-config.h:55-63` にあります。P0 の判定と P1 への提案は [振り返り](retrospective-P0.md)に記録します。
 

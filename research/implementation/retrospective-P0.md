@@ -83,7 +83,7 @@ macOS に接続した PCA10156 revision 1.0.0 の結果です。エージェン�
 | LED・console・GPIO loader 入口 | LED0 点灯、`RBOS 0.1.0+0`、`nRF_BM_MCUmgr` の広告、RESET で app 復帰 | banner は `My Application`。VCOM は二段階の有効化が必要だった |
 | 通常更新 | 全体 erase と鍵の再準備なしで v0.1.1 起動 | `ERASE_RANGES_TOUCHED_BY_FIRMWARE` を使用。保存データの維持は未確認 |
 | BLE DFU（P0 外） | iOS app が upload の Success を表示 | 導入済みと同じ版。DFU した image が起動したかは区別できない |
-| recovery sample | 起動 log と `nRF_BM_Entry` の広告を確認。RBOS の再書き込みで復帰 | Device Manager の Switch to Firmware Loader mode は未確認 |
+| recovery sample | 起動 log と `nRF_BM_Entry` の広告を確認。RBOS の再書き込みで復帰。追記報告では nRF Connect Device Manager Android の Switch to Firmware Loader Mode（Boot Mode=1）も成功 | MCUboot の再起動後に `BLE MCUmgr sample started` と `Advertising as FL_12345` を確認。`Booting firmware loader` 行はこの build では出ない |
 
 ### P0 の受け入れ判定
 
@@ -93,7 +93,7 @@ P0 は閉じられると判断します。[段階計画](porting-plan.md#p0-bm-�
 - DK 上の LED / console / loader 入口は、今回の利用者報告でそろいました。recovery sample の flash、起動、BLE 広告も確認されました。
 - 初回準備の破壊的な全体 erase と、通常更新を分けました。通常の script / CI に自動 erase は追加していません。
 
-これは P0 の受け入れ条件の判定で、checklist 全項目や DFU の検証完了を意味しません。保存データの維持、erase なしの初回準備、DFU 後の新 image 起動、Device Manager からの loader 遷移は未確認のままです。
+これは P0 の受け入れ条件の判定で、checklist 全項目や DFU の検証完了を意味しません。保存データの維持、erase なしの初回準備、DFU 後の新 image 起動は未確認のままです。Device Manager からの loader 遷移は、2026-11-09 JST の追記報告で Android による成功を確認しました。
 
 ### 残るリスクと P1 への提案
 
@@ -102,5 +102,6 @@ P0 は閉じられると判断します。[段階計画](porting-plan.md#p0-bm-�
 3. P1 で boot banner の application 名を RBOS と分かる表示にする案を検討します。`CONFIG_BOOT_BANNER` 周辺の設定と app 名の指定方法を確認してから決める提案で、今回は code を変えていません。
 4. 版と署名済み image を区別できる DFU 試験を P5 で行います。同じ版の upload 成功だけで、新 image の起動成功とは扱いません。保存データも既知の内容を書いて前後を比較します。
 5. P1 の mruby/c 結合後も、この LED / console / loader 入口を再確認し、debug / release の map 増分と時間・stack/pool の実機計測へ進みます。開発用鍵での今回の成功を release 鍵の実機検証に流用しません。
+6. iOS の nRF Connect Device Manager は、利用者の画面録画による報告で Send Reset Command の直後に crash しました。広告名 `FL_232659` の設定は済みましたが reset は起きていません。app のバージョンは未記録です。この環境では Android app を使い、広告名の設定だけを reset や loader 遷移の成功と扱いません。一般的な iOS の不具合や firmware の失敗とは断定しません。
 
 [調査索引へ戻る](../README.md)
