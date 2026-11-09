@@ -12,7 +12,7 @@
 - [x] RBOS の CMake、Kconfig、sysbuild、board overlay、署名設定の最小構成を作る。
 - [x] release/debug と秘密鍵の配置を分離する。release の鍵の検査は五つの拒否例で build の失敗を確認しました。
 - [x] 全 module SHA、map、compiler 版を集める手順と script を作る。
-- [ ] map 等の成果物を CI の artifact として保存する。
+- [x] map 等の成果物を CI の artifact として保存する。[workflow](../../.github/workflows/firmware.yml) と [収集 script](../../tools/bm-build/collect-evidence.sh) が `zephyr.map`、`.config`、`build_info.yml`、tool/compiler のバージョン、`SHA256SUMS` を `firmware-evidence-<variant>-<sha>` に7日間保存し、`.pem` と `keyfile.json` を除外します。[実行例](https://github.com/uist1idrju3i/RBOS/actions/runs/42620432714)の `firmware-evidence-debug-6d09bd5068f26c65258d9ed3da3d66ac6c84670a` は利用者が DK 書き込みに使用しました。正式 release の証拠の長期保管は、この項目の対象外です。
 - [x] clean な workspace で build を再現する。同じ host の二回の debug build が byte 単位で一致しました。別 host は未確認です。
 - [x] DK 上で LED、console、loader 入口を確認する。LED0 点灯、`RBOS 0.1.0+0`、BUTTON0 + RESET による `nRF_BM_MCUmgr` の広告と RESET による RBOS への復帰を利用者が確認しました（[実機結果](dk-provisioning.md#記録表)）。
 - [x] 新しい DK の初回準備（erase と KMU への鍵の書き込み）を通常の書き込みと分けて手順にする。[DK の準備](dk-provisioning.md)。
@@ -77,7 +77,7 @@
 - [ ] toolchain container の利用条件・digest を確定する。
 - [x] emscripten HAL の Ruby 検査 CI を実装する。[検査手順と実機試験の境界](../../tools/mrubyc-wasm/README.md)を明記する。
 - [ ] map/size、stack/pool 使用量、長時間試験ログを保存する。
-- [ ] firmware build の成果物と SHA256SUMS を CI artifact に残す。
+- [x] firmware build の成果物と SHA256SUMS を CI artifact に残す。[P0 の証拠](#p0-環境と-target)と同じ7日間の保存を確認しました。正式 release の証拠の長期保管まで完了したという意味ではありません。
 - [ ] third-party notice、署名鍵を含まない成果物、再配布条件を確認する。
 - [ ] 日本語文書、英語のコードコメント、skill/link 検査を CI で維持する。
 
