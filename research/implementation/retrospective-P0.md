@@ -2,6 +2,8 @@
 
 [段階計画](porting-plan.md)の P0「BM の再現可能な基盤」の最初の実装を振り返ります。作業日は 2026-11-09、基準 commit は `6c4740c8145c0c5f7f86fae6a04433b51336cd36` です。手順と結果の詳細は [build 再現手順](bm-build.md)にあります。
 
+「実機結果」より前は、最初の実装時点の記録です。当時の未確認事項を残し、利用者報告を受けた現在の達成範囲と P0 の判定を末尾に追記しました。
+
 ## 達成と未達
 
 | 項目 | 結果 | 証拠・残り |
@@ -67,5 +69,39 @@ P0 の受け入れ条件は実機確認を含むため、P0 は未完了です�
 | 別 host での成果物の一致 | porting-plan P0 の受け入れ条件、checklist P0 | 受け入れ条件に追加。commit `5664b86` の CI とローカルの debug build で、署名済み image と `production.hex` の hash が一致 |
 
 あわせて、正式 release を GitHub Actions の Environment `release` の Secret で署名する方針と、利用者が鍵を替える手順を[署名鍵の手順](signing-keys.md)にまとめました。
+
+## 実機結果（2026-11-09 JST、利用者報告）
+
+macOS に接続した PCA10156 revision 1.0.0 の結果です。エージェントによる追試ではありません。入力 image の出所、hash、未 commit の版変更、実行した操作と log は [DK の準備](dk-provisioning.md)に記録しました。CI debug は commit `6d09bd5` の成果物、v0.1.1 と recovery sample は Devin のローカル build です。後二つの hash をリポジトリでの再現の証拠にはしません。
+
+### 達成と未確認
+
+| 項目 | 今回の結果 | 境界 |
+|---|---|---|
+| DK の表示と pin | `220-JP8930`、LED0 P2.09、BUTTON0 P1.13、TXD1 P1.04 が資料と一致 | 観察した範囲の照合。任意の無線設定の適法性の保証ではない |
+| 初回準備 | SDK 標準相当の program `ERASE_ALL` → KMU provision → reset で app 起動 | `west flash --erase` 自体と、空の KMU での erase なしの初回準備は未確認 |
+| LED・console・GPIO loader 入口 | LED0 点灯、`RBOS 0.1.0+0`、`nRF_BM_MCUmgr` の広告、RESET で app 復帰 | banner は `My Application`。VCOM は二段階の有効化が必要だった |
+| 通常更新 | 全体 erase と鍵の再準備なしで v0.1.1 起動 | `ERASE_RANGES_TOUCHED_BY_FIRMWARE` を使用。保存データの維持は未確認 |
+| BLE DFU（P0 外） | iOS app が upload の Success を表示 | 導入済みと同じ版。DFU した image が起動したかは区別できない |
+| recovery sample | 起動 log と `nRF_BM_Entry` の広告を確認。RBOS の再書き込みで復帰。追記報告では nRF Connect Device Manager Android の Switch to Firmware Loader Mode（Boot Mode=1）も成功 | MCUboot の再起動後に `BLE MCUmgr sample started` と `Advertising as FL_12345` を確認。`Booting firmware loader` 行はこの build では出ない |
+
+### P0 の受け入れ判定
+
+P0 は閉じられると判断します。[段階計画](porting-plan.md#p0-bm-の再現可能な基盤)の受け入れ条件との対応は次のとおりです。
+
+- clean workspace からの build と、同じ commit を CI / ローカルで build した debug 成果物の一致は、既存の commit `5664b86` の記録で確認しています（[build 再現手順](bm-build.md)）。今回のローカル v0.1.1 の hash でこの証拠を置き換えません。
+- DK 上の LED / console / loader 入口は、今回の利用者報告でそろいました。recovery sample の flash、起動、BLE 広告も確認されました。
+- 初回準備の破壊的な全体 erase と、通常更新を分けました。通常の script / CI に自動 erase は追加していません。
+
+これは P0 の受け入れ条件の判定で、checklist 全項目や DFU の検証完了を意味しません。保存データの維持、erase なしの初回準備、DFU 後の新 image 起動は未確認のままです。Device Manager からの loader 遷移は、2026-11-09 JST の追記報告で Android による成功を確認しました。
+
+### 残るリスクと P1 への提案
+
+1. toolchain の版と west の workspace は別々に確認します。workspace の外で別の NCS が選ばれた失敗を、P1 の手順でも防ぎます。
+2. USB に VCOM が現れることと、Board Configurator の VCOM0 / VCOM1 の有効化を分けて確認します。無出力だけで app の起動失敗とは判断しません。
+3. P1 で boot banner の application 名を RBOS と分かる表示にする案を検討します。`CONFIG_BOOT_BANNER` 周辺の設定と app 名の指定方法を確認してから決める提案で、今回は code を変えていません。
+4. 版と署名済み image を区別できる DFU 試験を P5 で行います。同じ版の upload 成功だけで、新 image の起動成功とは扱いません。保存データも既知の内容を書いて前後を比較します。
+5. P1 の mruby/c 結合後も、この LED / console / loader 入口を再確認し、debug / release の map 増分と時間・stack/pool の実機計測へ進みます。開発用鍵での今回の成功を release 鍵の実機検証に流用しません。
+6. iOS の nRF Connect Device Manager は、利用者の画面録画による報告で Send Reset Command の直後に crash しました。広告名 `FL_232659` の設定は済みましたが reset は起きていません。app のバージョンは未記録です。この環境では Android app を使い、広告名の設定だけを reset や loader 遷移の成功と扱いません。一般的な iOS の不具合や firmware の失敗とは断定しません。
 
 [調査索引へ戻る](../README.md)

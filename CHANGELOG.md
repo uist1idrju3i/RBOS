@@ -11,4 +11,8 @@
 - release の build は、MCUboot の既定鍵と公開鍵が同じ鍵を、ファイル名を変えていても拒否します。
 - firmware の debug/release build を検査する CI と、Environment `release` の Secret で署名する手動 release workflow を追加しました。
 
+### Fixed
+
+- nRF54L15-DK の準備手順に、利用者報告の初回 KMU 準備、通常更新、LED・console・loader 入口の実機結果を記録しました。BM workspace 内での build、macOS の VCOM 設定、正しい期待 log を追記しました。erase なしの初回準備と DFU 後の新 image 起動は未確認です。試験用 v0.1.1 は未 commit の写しで、公開版の追加ではありません。
+
 [Unreleased]: https://github.com/uist1idrju3i/RBOS/commits/main/

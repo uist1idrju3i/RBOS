@@ -1,6 +1,6 @@
 # P0 の build 再現手順
 
-[段階計画](porting-plan.md)の P0 で作った firmware の最小構成を、別の環境で同じ版から build するための手順です。2026-11-09 に RBOS commit `6c4740c8145c0c5f7f86fae6a04433b51336cd36` と本 PR の変更を Linux x86_64 で build しました。実機への書き込みと起動は試していません。
+[段階計画](porting-plan.md)の P0 で作った firmware の最小構成を、別の環境で同じ版から build するための手順です。2026-11-09 に RBOS commit `6c4740c8145c0c5f7f86fae6a04433b51336cd36` と当時の PR の変更を Linux x86_64 で build しました。この build 作業では実機を試していません。別途、利用者から報告された 2026-11-09 JST の [DK の実機結果](dk-provisioning.md)を記録しました。
 
 ## 構成
 
@@ -54,7 +54,7 @@ west zephyr-export
 
 ## build
 
-`<workspace>` で実行します。build directory は RBOS の外に置きます。
+`<workspace>` で実行します。`<workspace>` は BM workspace root、`<RBOS>` は別に置いた RBOS checkout、`<build-debug>` / `<build-release>` はリポジトリと workspace の外の出力先に置き換えます。v3.3.0 の toolchain 環境を読み込んだ後、`cd "<workspace>"` と `west topdir` で参照先を確かめてください。別の NCS workspace が選ばれると `No board named 'bm_nrf54l15dk'` で失敗します（[環境の確認](dk-provisioning.md#path-の置き換えと-build-環境)）。
 
 ```sh
 # debug: SDK 既定の開発用 ED25519 鍵で署名する
@@ -171,11 +171,10 @@ compiler cache は variant、bundle ID、module hash、run ID・attempt ごと�
 
 マージ後に管理者が Settings → Rules → Rulesets → main → Require status checks で、source が GitHub Actions の `agent-docs`、`mruby-wasm`、`firmware` を追加します。Require branches to be up to date は off のままにします。必要なら Require code scanning results も追加し、CodeQL の threshold を High 以上に設定してください。今回の変更では ruleset を操作しません。
 
-## 実機で確認する項目（未検証）
+## 実機で確認した範囲と残り
 
-- 通常の書き込み後に MCUboot から app が起動し、UARTE20（VCOM）に `RBOS 0.1.0+0` が出る。
-- LED0（P2.09、active high）が点灯する。
-- BTN_0（P1.13）を押して reset すると BLE MCUmgr loader に入る。入口は `vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/entering_dfu.rst:13-19` の GPIO 方式。
-- 通常の書き込みの前後で、書き込む範囲の外のデータが残る。
+2026-11-09 JST に利用者が、CI debug の MCUboot → app 起動、LED0 点灯、VCOM の `RBOS 0.1.0+0`、BUTTON0 + RESET による BLE MCUmgr loader 入口を確認しました。banner は `My Application` で、RBOS の log に `v` は付きません。macOS の VCOM 有効化と詳細な log は [DK の準備](dk-provisioning.md)を参照してください。
+
+全体 erase なし・鍵の再準備なしの v0.1.1 への通常更新も起動しました。ただし、書き込む範囲の外の保存データを前後で比較した結果はありません。空の KMU での erase なしの初回準備と、BLE DFU 後に新しい image が起動することも未確認です。
 
 [調査索引へ戻る](../README.md)

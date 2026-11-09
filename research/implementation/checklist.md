@@ -5,19 +5,21 @@
 ## P0: 環境と target
 
 - [x] NCS/toolchain v3.3.0、BM v2.0.1、全 module SHA を固定する。[modules.txt](../../tools/bm-build/modules.txt) と `check-workspace.sh` で照合します。
-- [ ] S115 target で recovery sample の build/flash を確認する。build は成功、flash と BLE は未確認です。
+- [x] S115 target で recovery sample の build/flash を確認する。利用者が 2026-11-09 JST に起動 log と `Advertising as nRF_BM_Entry` を確認しました。nRF Connect Device Manager Android から Boot Mode=1 の reset を送り、MCUboot の再起動後に `BLE MCUmgr sample started` と `Advertising as FL_12345` を確認し、loader への切り替えも成功しました（[実機結果](dk-provisioning.md#記録表)）。
 - [x] central 不使用・S115 固定の構成を維持する。`firmware/CMakeLists.txt` が他の board target を拒否し、build の `.config` で S115 だけが有効でした。
-- [ ] board revision、配線、認証番号を実物・公的資料で照合する。技適 DB の照合だけ済み、実物は未確認です。
-- [ ] erase/recover と通常 flash を分け、保存データの扱いを記録する。手順は分けましたが、書き込み前後の保存データは実機で確かめていません。
+- [x] board revision、配線、認証番号を実物・公的資料で照合する。利用者が PCA10156 revision 1.0.0、`220-JP8930` と LED0 / BUTTON0 / TXD1 の背面印字を照合しました。配線の確認範囲はこの三つの pin です（[実機結果](dk-provisioning.md#記録表)）。
+- [ ] erase/recover と通常 flash を分け、保存データの扱いを記録する。全体 erase なし・鍵の再準備なしで v0.1.1 の起動は確認しましたが、書き込み前後の保存データは実機で比較していません。
 - [x] RBOS の CMake、Kconfig、sysbuild、board overlay、署名設定の最小構成を作る。
 - [x] release/debug と秘密鍵の配置を分離する。release の鍵の検査は五つの拒否例で build の失敗を確認しました。
 - [x] 全 module SHA、map、compiler 版を集める手順と script を作る。
 - [ ] map 等の成果物を CI の artifact として保存する。
 - [x] clean な workspace で build を再現する。同じ host の二回の debug build が byte 単位で一致しました。別 host は未確認です。
-- [ ] DK 上で LED、console、loader 入口を確認する。
+- [x] DK 上で LED、console、loader 入口を確認する。LED0 点灯、`RBOS 0.1.0+0`、BUTTON0 + RESET による `nRF_BM_MCUmgr` の広告と RESET による RBOS への復帰を利用者が確認しました（[実機結果](dk-provisioning.md#記録表)）。
 - [x] 新しい DK の初回準備（erase と KMU への鍵の書き込み）を通常の書き込みと分けて手順にする。[DK の準備](dk-provisioning.md)。
 - [ ] erase なしで KMU に鍵を書く手順（`x-provision-keys`）を実機で確かめる。
 - [x] 同じ commit の CI とローカルの build で、debug の成果物の hash が一致することを確かめる。commit `5664b86` で app、loader、SoftDevice、`production.hex` が一致しました（[CI の実行](https://github.com/uist1idrju3i/RBOS/actions/runs/42528666949)）。
+
+2026-11-09 JST の利用者報告を受け、P0 の受け入れ条件は満たしたと判断します（[判定の根拠](retrospective-P0.md#p0-の受け入れ判定)）。保存データの維持や erase なしの初回準備まで確認したという意味ではなく、未確認の項目は空欄のまま残します。
 
 出典: [SDK 環境](../nrf-bm/setup-and-build.md)、[build 再現手順](bm-build.md)、[DK の準備](dk-provisioning.md)、[P0 の振り返り](retrospective-P0.md)、[ハードウェア](../hardware/nrf54l15-dk.md)。
 
