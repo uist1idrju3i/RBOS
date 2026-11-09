@@ -6,6 +6,7 @@
 
 ### Added
 
+- BM firmware に mruby/c scheduler、BLE 広告、system task による保守処理と統計出力を追加しました。Ruby は build 時に vendor の mruby から作った mrbc で組み込み、P1 の scheduler self-test を実行します。
 - nRF54L15 DK の S115・MCUboot 向けに、版 0.1.0 の最小 firmware を追加しました。UARTE に版を表示し、LED0 を点灯します。
 - debug は SDK の開発用署名鍵を使い、release はリポジトリ外の署名鍵を必須とします。
 - release の build は、MCUboot の既定鍵と公開鍵が同じ鍵を、ファイル名を変えていても拒否します。

@@ -1,5 +1,28 @@
 menu "RBOS application"
 
+config RBOS_MAX_VM_COUNT
+	int "Maximum number of Ruby VMs"
+	range 4 32
+	default 8
+
+config RBOS_VM_POOL_SIZE
+	int "Ruby VM memory pool size"
+	range 16384 131072
+	default 65536
+
+config RBOS_SERVICE_INTERVAL_MS
+	int "System service interval (ms)"
+	range 1 1000
+	default 10
+
+config RBOS_STATS_INTERVAL_MS
+	int "Runtime statistics interval (ms)"
+	range 100 3600000
+	default 10000
+
+config RBOS_VM_NDEBUG
+	bool "Disable assertions in mruby/c sources"
+
 module=RBOS
 module-str=RBOS
 source "$(ZEPHYR_BASE)/subsys/logging/Kconfig.template.log_config"
