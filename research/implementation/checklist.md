@@ -25,17 +25,17 @@
 
 ## P1: VM と時間
 
-- [ ] vendor/mruby 4.0.0 の mrbc build・再配布方法を決める。
-- [ ] RITE0400 の正常・不正 bytecode の検査を作る。
-- [ ] MAX_VM_COUNT、register、symbol、float、string/debug 設定を固定する。
-- [ ] pool と IREP 等の追加確保、C stack、割り込み stack の上限を測定する。
-- [ ] tick、同 priority の巡回、sleep、mutex、suspend/resume を確認する。
-- [ ] mruby/c の結合後に debug/release を build し、P0 からの map の増分を記録する。
-- [ ] priority inversion、mutex owner 終了時の方針を決める。
-- [ ] idle と deferred event が常時 ready の task に妨げられないようにする。
-- [ ] SoftDevice priority 0/1 と GRTC channel0 を予約する。
+- [x] vendor/mruby 4.0.0 の mrbc build・再配布方法を決める。binary は再配布せず、configure 時にコピーから `build_config/mrbc.rb` で build。`firmware/cmake/mrubyc.cmake` と [host mrbc の記録](bm-build.md#host-mrbc-と-bytecode)参照。
+- [x] RITE0400 の正常・不正 bytecode の検査を作る。`tools/mrubyc-wasm/check.sh` の正常・空 Ruby・誤 version/magic/size、`tools/bm-build/check-bytecode.py` の build-time 検査、`tests/check-changes/test_bytecode.py` の拒否例を実行。`bb6e99b` の変更を含む作業木で Wasm exit 0、unittest 全12件 OK（[検査記録](retrospective-P1.md)）。
+- [x] MAX_VM_COUNT、register、symbol、float、string/debug 設定を固定する。両 variant の rrt0 compile command を前処理して MAX_VM_COUNT=8、MAX_REGS_SIZE=110、MAX_SYMBOLS_COUNT=255、MRBC_USE_FLOAT=2（double）、MRBC_USE_STRING=1 を確認。debug は MRBC_DEBUG 有効、release は VM source のみ NDEBUG=1 / MRBC_DEBUG 無効。`firmware/Kconfig`、`firmware/cmake/mrubyc.cmake`、`vendor/mrubyc/src/vm_config.h:18-79,122-125` が根拠です。
+- [ ] pool と IREP 等の追加確保、C stack、割り込み stack の上限を測定する。`firmware/src/runtime.c` に stack paint と pool 観測最大値の計装あり。実機未計測で、pool は保守時の標本、main stack は256 Bの未塗布余裕を含みます。
+- [ ] tick、同 priority の巡回、sleep、mutex、suspend/resume を確認する。`firmware/ruby/selftest/` は Wasm runner のみ PASS。BM tick、実機 IRQ/BLE との共存は未確認です。
+- [x] mruby/c の結合後に debug/release を build し、P0 からの map の増分を記録する。[部品別表と集計方法](bm-build.md#p1-の-build-結果と-map-比較)に app の FLASH/RAM 差を記録。debug は +82,444 / +78,152 B、release は +71,444 / +77,920 B でした。
+- [ ] priority inversion、mutex owner 終了時の方針を決める。[上流実装の事実](retrospective-P1.md#判明したリスクと-blocker)を記録しましたが、方針は未決です。
+- [ ] idle と deferred event が常時 ready の task に妨げられないようにする。system task と HAL idle に保守処理を実装。Wasm の idle wakeup は PASS ですが、BM scheduler を含む実機の進行保証は未確認です。
+- [x] SoftDevice priority 0/1 と GRTC channel0 を予約する。静的確認: 両 app の ZERO_LATENCY_IRQS=y / ZERO_LATENCY_LEVELS=1、3 priority bits、BASEPRI=0x40（NVIC 2以上を mask）。`firmware/src/hal/hal.c` は SDK の irq_lock と bm_timer のみを使い、直接 GRTC/channel を操作しません。bm_timer は `k_timer` を経由し、SDK の channel0 予約を維持（[根拠と確認の境界](retrospective-P1.md#達成と未達)）。
 - [ ] peripheral、DPPI、IRQ の完全な予約表を対象 SoftDevice の仕様と照合する。
-- [ ] SDH 配送 model と SD RAM usage、BM queue の容量と drain 時間を .config/map/実測で確認する。[SDK 調査](../nrf-bm/component-catalog.md)参照。
+- [ ] SDH 配送 model と SD RAM usage、BM queue の容量と drain 時間を .config/map/実測で確認する。両 app の `.config` は SCHED、BM_SCHEDULER_BUF_SIZE=512。queue drain 時間と SD RAM の実測は未実施です。[SDK 調査](../nrf-bm/component-catalog.md)参照。
 
 出典: [scheduler](../mrubyc/task-scheduler.md)、[設定とメモリ](../mrubyc/configuration-and-memory.md)、[IRQ](../nrf-bm/softdevice-and-interrupts.md)。
 

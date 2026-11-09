@@ -1,6 +1,8 @@
-# P0 の build 再現手順
+# BM firmware の build 再現手順
 
-[段階計画](porting-plan.md)の P0 で作った firmware の最小構成を、別の環境で同じ版から build するための手順です。2026-11-09 に RBOS commit `6c4740c8145c0c5f7f86fae6a04433b51336cd36` と当時の PR の変更を Linux x86_64 で build しました。この build 作業では実機を試していません。別途、利用者から報告された 2026-11-09 JST の [DK の実機結果](dk-provisioning.md)を記録しました。
+[段階計画](porting-plan.md)に沿って実装した firmware を、別の環境で同じ固定版から build するための手順です。P0 の初回は2026-11-09 に RBOS commit `6c4740c8145c0c5f7f86fae6a04433b51336cd36` と当時の PR の変更を Linux x86_64 で build しました。この build 作業では実機を試していません。別途、利用者から報告された 2026-11-09 JST の [DK の実機結果](dk-provisioning.md)を記録しました。
+
+現在は P1 の mruby/c、BM HAL、BLE、組込み Ruby task まで実装済みです。P1 は debug/release build と Wasm runner で検査し、実機は未確認です。[P1 の振り返り](retrospective-P1.md)に達成範囲と試験手順をまとめました。以下の P0 の結果・hash は履歴として残します。
 
 ## 構成
 
@@ -9,16 +11,24 @@ firmware は RBOS の `firmware/` に置きます。`src/rbos/` の共有 bindin
 | ファイル | 役割 |
 |---|---|
 | `firmware/CMakeLists.txt` | sysbuild 以外、他 board target、firmware loader 以外の MCUboot mode を拒否 |
-| `firmware/Kconfig` | log level の設定 |
+| `firmware/Kconfig` | log level、VM 数、pool、保守・統計周期、VM debug の設定 |
 | `firmware/Kconfig.sysbuild` | release を示す `SB_CONFIG_RBOS_RELEASE` |
 | `firmware/sysbuild.cmake` | release の署名鍵の検査 |
 | `firmware/common.conf` | debug / release 共通の app 設定 |
-| `firmware/prj.conf` / `prj_release.conf` | debug / release の最適化設定だけを指定。共通設定は CMake で追加 |
+| `firmware/prj.conf` / `prj_release.conf` | 最適化設定と release の VM 専用 NDEBUG。共通設定は CMake で追加 |
 | `firmware/sysbuild.conf` / `sysbuild_release.conf` | BLE MCUmgr loader、GPIO 入口、release の印。retention 入口は board の既定で有効（`vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/Kconfig.sysbuild:73-74`） |
 | `firmware/boards/bm_nrf54l15dk_nrf54l15_cpuapp_s115_softdevice_mcuboot.overlay` | board overlay の置き場。現在は model 名だけを変更 |
 | `firmware/VERSION` | 0.1.0、TWEAK 0。署名 image は `0.1.0+0` |
-| `firmware/src/main.c` | 版を UARTE の log へ出し、LED0 を点灯して log を flush し続ける |
+| `firmware/cmake/mrubyc.cmake` | host mrbc、VM のコピーと生成物、const task 配列・固定順 table を結合 |
+| `firmware/src/main.c` | 版の log、LED0、stack paint、BLE、VM/pool/binding/task の初期化後に mrbc_run |
+| `firmware/src/hal/hal.h` / `hal.c` | BM timer、IRQ、console、idle、abort と区間 tick 統計 |
+| `firmware/src/runtime.h` / `runtime.c` | 保守処理、RBOSSystem.service の caller 検査、stack/pool 統計 |
+| `firmware/src/ble.c` | 接続可能な RBOS 広告と接続・切断 log |
+| `firmware/src/embedded.h` | build directory に生成する task table の宣言 |
+| `firmware/ruby/system.rb` / `selftest/*.rb` | 常設 system task と三つの移植可能な自己検査 task |
+| `src/rbos/` / `include/rbos/` | Nordic/Zephyr header を含まない共有 binding と backend 契約 |
 | `tools/bm-build/` | module SHA の照合と成果物の収集 |
+| `tools/bm-build/check-bytecode.py` / `tests/check-changes/test_bytecode.py` | 生成 C 配列の header/size 検査と正常・拒否例 |
 
 対象 board は `bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot` だけです。S145 と central は使いません。
 
@@ -35,6 +45,24 @@ firmware は RBOS の `firmware/` に置きます。`src/rbos/` の共有 bindin
 全 module の名前・path・SHA は [modules.txt](../../tools/bm-build/modules.txt) に固定しました。workspace がこの表と一致し、各 project に未 commit の変更がないことを `tools/bm-build/check-workspace.sh` で検査します。BM の manifest は sdk-nrf を tag で参照し、sdk-nrf は各 module を SHA または tag で参照します。tag の付け替えに備え、build の記録には `west manifest --freeze --active-only` の出力も残します。`--active-only` を付けないと、取得しない group の `sdk-nrf-bm-internal` が原因で freeze が失敗します。
 
 `vendor/sdk-nrf-bm/west.yml:18-34` の allowlist に並ぶ dragoon、lz4、tinycrypt は、この workspace の `west list` に現れません。理由は[振り返り](retrospective-P0.md)に記録します。
+
+## host mrbc と bytecode
+
+**決定: host binary は再配布しません。** `firmware/cmake/mrubyc.cmake` が configure 時に、固定 submodule `vendor/mruby`（4.0.0、SHA は[調査索引](../README.md#資料の版)）を build directory の `mruby-host/` にコピーし、そこで次を実行します。vendor 内では build しません。
+
+```sh
+MRUBY_CONFIG=build_config/mrbc.rb ruby minirake
+```
+
+host には Ruby、C compiler（cc/gcc/clang）、ar、make、Python 3 が必要です。firmware CI は `build-essential ruby python3` を導入し、ruby/cc/make の版も出力します。CMake は host の CC/LD/AR を明示し、SDK の cross compiler 用 CFLAGS/CXXFLAGS/LDFLAGS を引き継がない構成です。Ruby、make、Python や既定 build 用の host compiler がなければ configure が失敗します。
+
+既存の実行可能な compiler は app の CMake 引数 `-DRBOS_MRBC=<mrbc>` で指定できます。`mrbc --version` が `mruby 4.0.0` を報告する必要があり、版が合わなければ構成を止めます。override 時も mrblib/header の生成に Ruby と make を使うため、host の依存をすべて省けるわけではありません。
+
+同じコピーの mrbc で `puts "hello"` を `mrbc -Bsample -o x.c foo.rb` として二回変換し、`cmp` が exit 0 になりました。両生成物の SHA-256 は `d41e941dce496d4fbd8fe712cdb3888565a95950cc8a20f2818f6b180ceda1d1` です。これは同一 host・入力での C 配列の一致であり、異なる host の compiler binary や firmware 全体の一致を保証する検査ではありません。
+
+mruby/c の `src`・`support`・`mrblib` も build directory にコピーします。コピー上で mrblib と vendor にない `_autogen*.h` を生成するので、vendor の生成物を変更しません。system → coordinator → worker_a → worker_b の順に const 配列と task table を生成し、Ruby source の変更で再生成する依存を置きました。
+
+各 task の `mrbc -B` custom command の直後と、configure 時の mrblib 生成後に `tools/bm-build/check-bytecode.py` を実行します。検査条件は、C 配列の先頭8 byte が `RITE0400` で、byte 8..11 の big-endian 宣言長が配列の実 byte 数と同じであることです。一致しなければ build は失敗します。正常、空・欠落・不正な C 配列、誤 magic/version/size の拒否例は `tests/check-changes/test_bytecode.py` にあります。CI でも `python3 -m unittest discover -s tests/check-changes` により実行する対象です。VM loader まで含む正常・空プログラム・誤形式の検査は `tools/mrubyc-wasm/check.sh` に分けています。
 
 ## workspace を作る
 
@@ -68,6 +96,8 @@ west build -b bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot \
   '-DSB_CONFIG_BM_BOOTLOADER_MCUBOOT_SIGNATURE_KEY_FILE="<key-dir>/rbos-release.pem"'
 ```
 
+### P0 の build 記録（履歴）
+
 比較用に、SDK の `nrf-bm/samples/boot/mcuboot_recovery_entry` も同じ board で build しました。
 
 | build | 結果 | app の FLASH / RAM |
@@ -77,6 +107,47 @@ west build -b bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot \
 | RBOS release（試験用の鍵） | 成功 | 27024 B / 5440 B |
 
 MCUboot は FLASH 22272 B / 31 KB、firmware loader は FLASH 43124 B / 64 KB、RAM 150900 B を使い、debug と release で同じでした。`imgtool verify` は debug と release の app の署名を各鍵で検証し、`Image version: 0.1.0+0` を表示しました。
+
+## P1 の build 結果と map 比較
+
+比較対象は app の `firmware/zephyr/zephyr.map` と `zephyr.elf`、その app link の FLASH/RAM 表示です。sysbuild の最後に出る installer の値とは区別します。P0 基準は `da063c210a4a37469093098e14e4fb78cd068c05`、P1 は `bb6e99b` に commit した変更を含む作業木（親 `92341ee2f340`）です。P1 の生成 `app_version.h` の APP_BUILD_VERSION は親を示すため、commit 後の clean build と hash は一致しません。
+
+| app | FLASH (B) | RAM (B) | 結果 |
+|---|---:|---:|---|
+| P0 debug | 31,760 | 5,448 | 成功 |
+| P0 release | 27,024 | 5,440 | 成功 |
+| P1 debug | 114,204 | 83,600 | 成功、compiler warning/error 0 |
+| P1 release | 98,468 | 83,360 | 成功、compiler warning/error 0 |
+
+P1 も上の `west build --sysbuild -p always` を debug と外部試験鍵の release に適用しました。容量は app 領域 FLASH 1,316 KiB / RAM 237 KiB に対する値で、SoftDevice binary、MCUboot、loader は加算していません。
+
+### 集計方法
+
+Python で GNU ld map の `Linker script and memory map` 以降の入力 section（object/archive member 付き）を解析しました。`arm-zephyr-eabi-objdump -h` の ALLOC な出力 section 内だけを対象とし、discarded section と非 ALLOC の debug 情報を除外します。merge/relax 前の長さが出力 section を越える場合は出力の境界で切ります。LOAD と VMA/LMA で RAM 初期値を照合し、RAM と FLASH の両方に計上しました。`arm-zephyr-eabi-nm -S` で `vm_pool` と `z_main_stack` の領域を先に分離しています。
+
+残る各 byte は map の出現順で最初の部品に一度だけ割り当てます。文字列の merge による重複範囲も二重計上しません。各 memory region の origin から link summary の使用末尾までを対象にし、未帰属 byte、配置 gap、padding と下表にない依存を「その他」に含めました。これは配置上の帰属であり、個々の機能を無効にした差分実験ではありません。共有文字列の帰属は link 順に依存します。
+
+再集計時の入力は P0/P1 各 variant の app map/ELF と build log です。SDK toolchain 環境で `arm-zephyr-eabi-objdump -h <app.elf>`、`arm-zephyr-eabi-nm -S <app.elf>`、`arm-zephyr-eabi-size <app.elf>` を実行します。size の text/data/bss は領域外の KMU 等も含むので、単純合算を app RAM として使いません。
+
+### 部品別増分（P1 − P0、byte）
+
+| 部品（帰属する入力） | debug FLASH | debug RAM | release FLASH | release RAM |
+|---|---:|---:|---:|---:|
+| mruby/c VM（app 内のコピーした src、mrblib を除く） | +55,827 | +2,747 | +47,606 | +2,515 |
+| 組込み bytecode + mrblib（rbos_task_*.c、embedded.c、mrblib.c） | +6,643 | 0 | +6,638 | 0 |
+| RBOS HAL/runtime/BLE + main（pool を除く） | +2,239 | +448 | +1,910 | +448 |
+| SoftDevice handler / BLE libs（softdevice_handler/、bluetooth/） | +5,099 | +12 | +3,855 | +12 |
+| nrf_security / PSA（nrf_security、mbedtls、oberon、psa、crypto/） | +5,215 | +1,691 | +4,386 | +1,691 |
+| logging（logging/、log_*.c、printk.c） | −22 | 0 | −18 | 0 |
+| bm_scheduler / bm_timer（同名 library） | +458 | +540 | +402 | +540 |
+| VM pool（vm_pool） | 0 | +65,536 | 0 | +65,536 |
+| main stack（z_main_stack、1,024 → 8,192） | 0 | +7,168 | 0 | +7,168 |
+| その他（共有 binding、kernel/libc/libgcc、配置差など） | +6,985 | +10 | +6,665 | +10 |
+| **合計** | **+82,444** | **+78,152** | **+71,444** | **+77,920** |
+
+各列の和は上の app summary の差と一致します。logging の減少を単体の最適化効果とは解釈しません。bytecode 行には task の名前・table も含みます。const blob の RAM コピーはありませんが、IREP や String など実行時の追加確保は pool 内に別途必要です。ISR stack は両方 2,048 B のままで「その他」に含み、増分はありません。
+
+P1 debug app の `zephyr.signed.bin` は SHA-256 `16713af249a4f0ab4e98100a6d633e962d319db75ffb00f6b44f2c7c4f7f7f10` でした。これは CI artifact の hash ではなく、上記 commit 前作業木の識別情報です。起動 banner の commit 表記が変わるため、文書変更だけの commit でも firmware の hash は変わり得ます。release は鍵でも変わります。
 
 ## 鍵の分離
 
