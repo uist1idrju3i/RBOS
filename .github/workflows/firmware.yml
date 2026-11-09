@@ -1,0 +1,96 @@
+name: firmware
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'firmware/**'
+      - 'tools/bm-build/**'
+      - '.github/actions/ncs-bm-setup/**'
+      - '.github/workflows/firmware.yml'
+      - '.github/workflows/firmware-release.yml'
+      - '.gitmodules'
+      - 'vendor/sdk-nrf-bm'
+  pull_request:
+    paths:
+      - 'firmware/**'
+      - 'tools/bm-build/**'
+      - '.github/actions/ncs-bm-setup/**'
+      - '.github/workflows/firmware.yml'
+      - '.github/workflows/firmware-release.yml'
+      - '.gitmodules'
+      - 'vendor/sdk-nrf-bm'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firmware-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: BM の build 環境を用意する
+        uses: ./.github/actions/ncs-bm-setup
+
+      - name: debug を build する
+        run: |
+          cd "$BM_WORKSPACE"
+          west build -b bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot \
+            "$GITHUB_WORKSPACE/firmware" --sysbuild -d "$RUNNER_TEMP/build-debug" -p always
+
+      - name: 試験用の鍵で release を build する
+        run: |
+          umask 077
+          mkdir -p "$RUNNER_TEMP/keys"
+          python3 "$BM_WORKSPACE/bootloader/mcuboot/scripts/imgtool.py" keygen \
+            -t ed25519 -k "$RUNNER_TEMP/keys/rbos-test-release.pem"
+          cd "$BM_WORKSPACE"
+          west build -b bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot \
+            "$GITHUB_WORKSPACE/firmware" --sysbuild -d "$RUNNER_TEMP/build-release" -p always -- \
+            -DFILE_SUFFIX=release \
+            "-DSB_CONFIG_BM_BOOTLOADER_MCUBOOT_SIGNATURE_KEY_FILE=\"$RUNNER_TEMP/keys/rbos-test-release.pem\""
+
+      - name: 両構成の証拠と hash を集める
+        run: |
+          for variant in debug release; do
+            tools/bm-build/collect-evidence.sh "$BM_WORKSPACE" \
+              "$RUNNER_TEMP/build-$variant" "$RUNNER_TEMP/evidence-$variant"
+            echo "=== $variant SHA256SUMS ==="
+            cat "$RUNNER_TEMP/evidence-$variant/SHA256SUMS"
+          done
+
+      - name: 試験用の秘密鍵を削除する
+        if: always()
+        run: rm -f "$RUNNER_TEMP/keys/rbos-test-release.pem"
+
+      - name: 成果物に鍵の file がないことを確かめる
+        run: |
+          for variant in debug release; do
+            forbidden=$(find "$RUNNER_TEMP/evidence-$variant" \( -name '*.pem' -o -name keyfile.json \) -print -quit)
+            if [ -n "$forbidden" ]; then
+              echo '::error::Evidence contains a PEM or keyfile.json file.'
+              exit 1
+            fi
+          done
+
+      - name: 両構成の証拠を保存する
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: firmware-evidence-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/evidence-debug
+            ${{ runner.temp }}/evidence-release
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7

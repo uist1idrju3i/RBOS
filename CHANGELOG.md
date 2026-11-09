@@ -8,5 +8,7 @@
 
 - nRF54L15 DK の S115・MCUboot 向けに、版 0.1.0 の最小 firmware を追加しました。UARTE に版を表示し、LED0 を点灯します。
 - debug は SDK の開発用署名鍵を使い、release はリポジトリ外の署名鍵を必須とします。
+- release の build は、MCUboot の既定鍵と公開鍵が同じ鍵を、ファイル名を変えていても拒否します。
+- firmware の debug/release build を検査する CI と、Environment `release` の Secret で署名する手動 release workflow を追加しました。
 
 [Unreleased]: https://github.com/uist1idrju3i/RBOS/commits/main/

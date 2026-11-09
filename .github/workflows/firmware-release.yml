@@ -1,0 +1,75 @@
+name: firmware-release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firmware-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    environment: release
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: BM の build 環境を用意する
+        uses: ./.github/actions/ncs-bm-setup
+
+      - name: release の秘密鍵を一時 directory に置く
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RBOS_RELEASE_SIGNING_KEY }}
+        run: |
+          if [ -z "$RELEASE_SIGNING_KEY" ]; then
+            echo '::error::RBOS_RELEASE_SIGNING_KEY is empty or unavailable.'
+            exit 1
+          fi
+          umask 077
+          mkdir -p "$RUNNER_TEMP/keys"
+          printf '%s\n' "$RELEASE_SIGNING_KEY" > "$RUNNER_TEMP/keys/rbos-release.pem"
+
+      - name: release を build する
+        run: |
+          cd "$BM_WORKSPACE"
+          west build -b bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot \
+            "$GITHUB_WORKSPACE/firmware" --sysbuild -d "$RUNNER_TEMP/build-release" -p always -- \
+            -DFILE_SUFFIX=release \
+            "-DSB_CONFIG_BM_BOOTLOADER_MCUBOOT_SIGNATURE_KEY_FILE=\"$RUNNER_TEMP/keys/rbos-release.pem\""
+
+      - name: release の証拠と hash を集める
+        run: |
+          tools/bm-build/collect-evidence.sh "$BM_WORKSPACE" \
+            "$RUNNER_TEMP/build-release" "$RUNNER_TEMP/evidence-release"
+          cat "$RUNNER_TEMP/evidence-release/SHA256SUMS"
+
+      - name: release の秘密鍵を削除する
+        if: always()
+        run: rm -f "$RUNNER_TEMP/keys/rbos-release.pem"
+
+      - name: 成果物に鍵の file がないことを確かめる
+        run: |
+          forbidden=$(find "$RUNNER_TEMP/evidence-release" \( -name '*.pem' -o -name keyfile.json \) -print -quit)
+          if [ -n "$forbidden" ]; then
+            echo '::error::Evidence contains a PEM or keyfile.json file.'
+            exit 1
+          fi
+
+      - name: release の証拠を保存する
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: firmware-release-evidence-${{ github.sha }}
+          path: ${{ runner.temp }}/evidence-release
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 90

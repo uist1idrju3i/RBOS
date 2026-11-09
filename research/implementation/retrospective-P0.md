@@ -26,7 +26,7 @@ P0 の受け入れ条件は実機確認を含むため、P0 は未完了です�
 - **Kconfig の文字列引数**: `-DSB_CONFIG_..._KEY_FILE` は値を二重引用符で囲まないと Kconfig の警告で build が止まりました。
 - **`west manifest --freeze` の失敗**: 取得しない `sdk-nrf-bm-internal` があるため、`--active-only` が必要でした。
 - **allowlist と実体の差**: BM の allowlist にある dragoon は group 無効のため取得されず、lz4 と tinycrypt は NCS v3.3.0 の Zephyr manifest に定義がありません。`nrf/west.yml:44-46,181-187`、`zephyr/west.yml:320-325,377-385`（workspace 内の path）で確認しました。現在の build には影響しません。
-- **鍵名の判定**: release の検査は `root-*.pem` という名前の鍵を一律に拒否します。利用者が同じ名前を付けた正当な鍵も拒否されます。
+- **鍵名の判定**: release の検査は `root-*.pem` という名前の鍵を一律に拒否します。利用者が同じ名前を付けた正当な鍵も拒否されます（追記: 公開鍵の比較に変えて解消）。
 - **SoftDevice の既定設定**: app は BLE を使いませんが、`CONFIG_SOFTDEVICE=y` で peripheral link 1 本の設定が入ります。central の設定は入っていません。
 - **license header**: 既存の `src/rbos/` にも SPDX header がなく、`firmware/` も合わせて付けていません。方針は未決です。
 
@@ -48,6 +48,24 @@ P0 の受け入れ条件は実機確認を含むため、P0 は未完了です�
 - porting-plan P0: 受け入れ条件に「別 host での成果物の一致」を含めるかを決める
 - porting-plan 全体: 各段階の終わりに振り返り文書を作ることを明記する
 
-上の候補は今回 checklist・porting-plan に反映していません。採用するかは利用者が判断します。
+## 改善提案と追記候補の反映（2026-11-09 追記）
+
+利用者の判断で、上の改善提案と追記候補をすべて採用しました。実機での確認が要る項目は、DK の確認を待っています。
+
+| 提案・候補 | 反映先 | 状態 |
+|---|---|---|
+| DK で P0 の未確認項目を確かめる | [DK の準備](dk-provisioning.md)の記録表 | 実機確認待ち |
+| firmware build を CI に入れる | `.github/workflows/firmware.yml`、`.github/actions/ncs-bm-setup/` | 実装。debug と使い捨て鍵の release を build し、証拠を artifact に残す |
+| mruby/c の結合後に debug/release の map を比べる | checklist P1、porting-plan P1 | 追記 |
+| 段階の運用を定める | porting-plan の「段階の進め方」 | 追記 |
+| `prj.conf` の重複をなくす | `firmware/common.conf` | 実装。変更前と `.config` が一致 |
+| 初回準備と通常の書き込みを分ける | [DK の準備](dk-provisioning.md)、checklist P0 | 手順を作成。実機は未確認 |
+| erase なしで KMU に鍵を書く方法を調べる | [DK の準備](dk-provisioning.md) | `x-provision-keys` の単独実行を候補として記録。実機は未確認 |
+| retention 入口の要求を特権操作に限る | checklist P3 | 追記 |
+| 既定鍵を公開鍵の比較で拒否する | `firmware/sysbuild.cmake` | 実装。改名した既定鍵を拒否し、`root-*.pem` という名前の新しい鍵を受け入れることを build で確認 |
+| 成果物と SHA256SUMS を CI artifact に残す | `.github/workflows/firmware.yml` | 実装 |
+| 別 host での成果物の一致 | porting-plan P0 の受け入れ条件、checklist P0 | 受け入れ条件に追加。commit `5664b86` の CI とローカルの debug build で、署名済み image と `production.hex` の hash が一致 |
+
+あわせて、正式 release を GitHub Actions の Environment `release` の Secret で署名する方針と、利用者が鍵を替える手順を[署名鍵の手順](signing-keys.md)にまとめました。
 
 [調査索引へ戻る](../README.md)

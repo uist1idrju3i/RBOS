@@ -2,14 +2,22 @@
 
 この文書は実装の段階案です。P0 は `firmware/` の最小構成と SDK build まで進めました（[build 再現手順](bm-build.md)、[振り返り](retrospective-P0.md)）。P0 の実機確認と P1〜P6 の実装はまだ行っていません。各段階を独立した PR に分け、受け入れ条件を満たしてから次へ進みます。
 
+## 段階の進め方
+
+1. 着手時に、[チェックリスト](checklist.md)の該当項目を PR の本文へ転記する。
+2. 作業中は、証拠（実行した commit、コマンド、成果物の hash、実機の記録）がそろった項目だけに印を付ける。
+3. 段階の終わりに `retrospective-P<n>.md` を作り、達成と未達、リスクと blocker、次の段階への改善提案、checklist と本計画への追記候補を記録する。
+4. 追記候補は利用者の判断を得てから反映する。
+
 ## P0: BM の再現可能な基盤
 
 - NCS/toolchain v3.3.0 + BM v2.0.1 の独立 workspace を構築する。
 - recovery sample を main target で build/flash し、BLE と console を確認する。
 - RBOS の CMake、Kconfig、sysbuild、board overlay、署名設定の最小構成を作る。
 - release/debug と秘密鍵の配置を分離し、全 module SHA、map、compiler 版を保存する。
+- 新しい DK の初回準備（KMU への鍵の書き込み）を通常の書き込みと分けて手順にする。[DK の準備](dk-provisioning.md)参照。
 
-**受け入れ条件**: clean workspace で再現でき、DK 上で LED/console/loader 入口を確認できること。自動 erase を通常操作に含めないこと。
+**受け入れ条件**: clean workspace で再現でき、DK 上で LED/console/loader 入口を確認できること。同じ commit を CI とローカルで build し、debug の成果物の hash が一致すること。自動 erase を通常操作に含めないこと。
 
 **状況（2026-11-09）**: build の再現と鍵の分離は確認済み。DK での確認と recovery sample の flash は未実施のため、P0 は未完了です。
 
@@ -18,6 +26,7 @@
 ## P1: mruby/c を OS の中核として動かす
 
 - vendor/mruby 4.0.0 の mrbc を build して固定し、RITE0400 の最小プログラムを作る。
+- mruby/c を `firmware/` へ結合したら、debug と release の両方を build し、P0 の map と比べた増分を記録する。
 - BM 用 HAL を新設し、pool、console write/flush、abort、idle を接続する。
 - tick は bm_timer を第一候補とし、直接 GRTC を使う場合も予約 channel0 を避ける。
 - IRQ mask はアプリ側の共有 queue の保護に限定し、SoftDevice priority 0/1 を止めない。
@@ -77,7 +86,7 @@
 
 ## P6: CI と長時間試験
 
-- 版固定した nRF toolchain container で SDK build を行う。container の配布元・digest・利用条件は選定前で、現時点で使えると断定しない。
+- SDK build の CI は P0 の改善として `.github/workflows/firmware.yml` に置き、nRF Util の toolchain bundle を固定して使う。版固定した container へ移すかは、配布元・digest・利用条件を確かめてから判断する。
 - mruby/c の emscripten HAL による Ruby compile・smoke CI は実装済みです。[共通手順](../../tools/mrubyc-wasm/README.md)と `.github/workflows/mruby-wasm.yml` を使用します。ASYNCIFY と timeout を用い、実機 IRQ/BLE の代替にはしません。native API の mock は今後の課題です。根拠: `vendor/mrubyc/hal/emscripten/hal.h:1-7,27-74`。
 - host で mrbc format、native 引数、権限、queue overflow の試験を行う。
 - map/size、stack/pool high-water、warnings、署名対象、license notice を成果物に残す。
