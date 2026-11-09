@@ -13,7 +13,7 @@
 | recovery sample の flash、BLE、console | 未達 | DK を接続していない |
 | RBOS の CMake・Kconfig・sysbuild・overlay・署名の最小構成 | 達成 | `firmware/`。debug と release の build が成功 |
 | release/debug と鍵の分離 | 達成 | release の鍵の検査が五つの拒否例で失敗し、試験用の外部鍵で成功 |
-| module SHA・map・compiler 版の保存 | 一部 | 収集 script はある。CI の artifact としては未保存 |
+| module SHA・map・compiler 版の保存 | 初回は一部、現在は達成（追記） | 当時は収集 script のみ。現在は [CI artifact の保存](#ci-artifact-の保存)を確認済み |
 | clean workspace での再現 | 一部 | 同じ host の二回の build が一致。別 host、`--path-cache` なしの取得は未確認 |
 | DK 上の LED・console・loader 入口 | 未達 | 実機がない |
 | 自動 erase を通常操作に含めない | 達成 | script・設定に erase はない。runner の既定は `ERASE_NONE` |
@@ -103,5 +103,13 @@ P0 は閉じられると判断します。[段階計画](porting-plan.md#p0-bm-�
 4. 版と署名済み image を区別できる DFU 試験を P5 で行います。同じ版の upload 成功だけで、新 image の起動成功とは扱いません。保存データも既知の内容を書いて前後を比較します。
 5. P1 の mruby/c 結合後も、この LED / console / loader 入口を再確認し、debug / release の map 増分と時間・stack/pool の実機計測へ進みます。開発用鍵での今回の成功を release 鍵の実機検証に流用しません。
 6. iOS の nRF Connect Device Manager は、利用者の画面録画による報告で Send Reset Command の直後に crash しました。広告名 `FL_232659` の設定は済みましたが reset は起きていません。app のバージョンは未記録です。この環境では Android app を使い、広告名の設定だけを reset や loader 遷移の成功と扱いません。一般的な iOS の不具合や firmware の失敗とは断定しません。
+
+## CI artifact の保存
+
+2026-11-09 に [workflow](../../.github/workflows/firmware.yml) と [収集 script](../../tools/bm-build/collect-evidence.sh) を照合しました。debug / release の matrix が、module SHA、`zephyr.map`、`.config`、`build_info.yml`、compiler/tool のバージョン、`SHA256SUMS` を含む `firmware-evidence-<variant>-<sha>` を7日間保存します。`.pem` と `keyfile.json` は収集対象から除外し、upload 前にも混入を検査します。
+
+[run 42620432714](https://github.com/uist1idrju3i/RBOS/actions/runs/42620432714) の debug / release artifact が存在し、期限が7日後であることを GitHub API でも確認しました。debug artifact は利用者が DK 書き込みに使ったものです。P0 と同内容の P6 の保存項目も完了に訂正しました。stack/pool 使用量や長時間試験ログの保存は別項目で、今回の確認に含めません。
+
+[正式 release workflow](../../.github/workflows/firmware-release.yml) には90日間の artifact 保存設定があります。ただし、正式署名の実行や期限を超える長期保管の運用を確認したわけではありません。通常 CI の7日間の保存を、その完了の証拠にはしません。
 
 [調査索引へ戻る](../README.md)
