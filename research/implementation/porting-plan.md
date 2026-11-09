@@ -1,6 +1,6 @@
 # 実装へ進むための段階計画
 
-この文書は実装の段階案です。P0 は `firmware/` の最小構成と SDK build まで進めました（[build 再現手順](bm-build.md)、[振り返り](retrospective-P0.md)）。P0 の実機確認と P1〜P6 の実装はまだ行っていません。各段階を独立した PR に分け、受け入れ条件を満たしてから次へ進みます。
+この文書は実装の段階案です。P0 は最小構成の build と利用者による実機確認の記録があります（[build 再現手順](bm-build.md)、[P0 の振り返り](retrospective-P0.md)）。P1 は mruby/c・BM HAL・BLE を実装し、debug/release build と Wasm の検査まで進めました。P1 の実機確認は未実施で、受け入れ条件は未達です（[P1 の振り返り](retrospective-P1.md)）。P2〜P6 の段階完了は主張しません。各段階を独立した PR に分け、受け入れ条件を満たしてから次へ進みます。
 
 ## 段階の進め方
 
@@ -19,11 +19,13 @@
 
 **受け入れ条件**: clean workspace で再現でき、DK 上で LED/console/loader 入口を確認できること。同じ commit を CI とローカルで build し、debug の成果物の hash が一致すること。自動 erase を通常操作に含めないこと。
 
-**状況（2026-11-09）**: build の再現と鍵の分離は確認済み。DK での確認と recovery sample の flash は未実施のため、P0 は未完了です。
+**状況（2026-11-09 初回記録）**: build の再現と鍵の分離は確認済み。当時は DK での確認と recovery sample の flash が未実施のため、P0 は未完了でした。その後の利用者報告を受けた現在の判定は [P0 の受け入れ判定](retrospective-P0.md#p0-の受け入れ判定)を参照してください。
 
 根拠: `vendor/sdk-nrf-bm/doc/nrf-bm/release_notes/release_notes_2.0.1.rst:37-49`、`vendor/sdk-nrf-bm/samples/boot/mcuboot_recovery_entry/README.rst:1-60`、[構築調査](../nrf-bm/setup-and-build.md)。
 
 ## P1: mruby/c を OS の中核として動かす
+
+**状況**: 実装、debug/release build、移植可能な selftest の Wasm 実行は完了。BLE 接続中の tick jitter、stack/pool 最大値を含む実機試験は未実施です。[P1 の振り返り](retrospective-P1.md)と[証拠付き checklist](checklist.md#p1-vm-と時間)を参照してください。以下は引き続き受け入れの条件です。
 
 - vendor/mruby 4.0.0 の mrbc を build して固定し、RITE0400 の最小プログラムを作る。
 - mruby/c を `firmware/` へ結合したら、debug と release の両方を build し、P0 の map と比べた増分を記録する。

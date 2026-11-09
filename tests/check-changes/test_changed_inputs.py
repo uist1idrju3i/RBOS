@@ -62,14 +62,16 @@ class ChangedInputsTests(unittest.TestCase):
             self.detect(kind, False)
 
     def test_all_inputs_and_unusual_filenames(self):
-        common = ['.gitmodules', '.github/scripts/changed-inputs.sh', 'tests/check-changes/test.py']
+        common = ['.gitmodules', '.github/scripts/changed-inputs.sh', 'tests/check-changes/test.py',
+                  'vendor/mruby', 'vendor/mrubyc', 'src/new\nfile.rb', 'include/space name.h',
+                  'src/rbos/new.c', 'include/rbos/new.h',
+                  'firmware/ruby/system.rb', 'firmware/ruby/selftest/coordinator.rb']
         paths = {
             'firmware': ['firmware/src/main.c', 'tools/bm-build/modules.txt',
                          '.github/actions/ncs-bm-setup/action.yml',
                          '.github/workflows/firmware.yml',
                          '.github/workflows/firmware-release.yml', 'vendor/sdk-nrf-bm'],
-            'mruby-wasm': ['src/new\nfile.rb', 'include/space name.h', 'tests/mruby/test.rb',
-                           'tools/mrubyc-wasm/check.sh', 'vendor/mruby', 'vendor/mrubyc',
+            'mruby-wasm': ['tests/mruby/test.rb', 'tools/mrubyc-wasm/check.sh',
                            '.github/workflows/mruby-wasm.yml'],
         }
         for kind, inputs in paths.items():
@@ -97,6 +99,7 @@ class ChangedInputsTests(unittest.TestCase):
         self.git('rm', '--', 'src/old.rb')
         self.git('commit', '-qm', 'delete')
         self.detect('mruby-wasm', True)
+        self.detect('firmware', True)
 
     def test_unknown_zero_or_forced_history_is_changed(self):
         for kind in ['firmware', 'mruby-wasm']:

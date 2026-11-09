@@ -14,4 +14,5 @@ if(NOT CONFIG_MCUBOOT_BOOTLOADER_MODE_FIRMWARE_UPDATER)
   message(FATAL_ERROR "Invalid MCUboot mode selected.")
 endif()
 
-target_sources(app PRIVATE src/main.c)
+include(cmake/mrubyc.cmake)
+target_sources(app PRIVATE src/main.c src/runtime.c src/ble.c src/hal/hal.c)

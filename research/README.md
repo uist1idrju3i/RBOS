@@ -4,14 +4,14 @@
 
 ## 目的と読み方
 
-RBOS の実装に必要な仕様、参照実装、制約、試験項目をまとめます。実装は P0 の firmware 最小構成と SDK build まで進めました。調査日と利用者による方式決定日は 2026-11-08 です。
+RBOS の実装に必要な仕様、参照実装、制約、試験項目をまとめます。P0 の記録に続き、P1 の mruby/c 結合・BM HAL・BLE の実装と debug/release build、Wasm の自己検査まで進めました。P1 の実機試験は未実施です。調査日と利用者による方式決定日は 2026-11-08 です。
 
 - **確認済み（資料）**: 固定したソースまたは公式文書から読み取れた内容です。動作確認を意味しません。
 - **設計案**: RBOS でこれから実装・評価する方針です。上流が保証する仕様とは区別します。
 - **未確認**: 本リポジトリでは試していない内容、外部資料との照合が済んでいない内容です。
 - `vendor/...:開始行-終了行` は、この調査で固定した submodule 内の出典です。OpenBlink は固定 SHA の公開リンクを使います。
 
-SDK の build は [P0 の再現手順](implementation/bm-build.md)で実施しました。実機への書き込み、電源断、BLE 通信、電波認証の照合は実施していません。host の Wasm build と短い Ruby の実行結果は [mruby/c 能力確認](mrubyc/capability-probes.md)へ分離しました。文書の検査結果を実機試験の代わりに扱わないでください。
+SDK の build は [BM の再現手順と P1 map 比較](implementation/bm-build.md)に記録しました。P0 の実機操作は[利用者報告](implementation/dk-provisioning.md)と区別し、P1 の未確認項目は [P1 の振り返り](implementation/retrospective-P1.md)にまとめています。host の Wasm build と短い Ruby の実行結果は [mruby/c 能力確認](mrubyc/capability-probes.md)へ分離しました。文書の検査結果を実機試験の代わりに扱わないでください。
 
 ## Ruby らしさと共通 I/O API
 
@@ -65,7 +65,7 @@ SDK の build は [P0 の再現手順](implementation/bm-build.md)で実施し�
 | OpenBlink | [構成と再ロード](openblink/architecture.md)、[API と権限](openblink/api-binding-patterns.md)、[HMAC](openblink/hmac-authentication.md)、[将来対応と保存](openblink/future-support.md) |
 | NCS Bare Metal | [開発環境](nrf-bm/setup-and-build.md)、[全 component・API・Kconfig 索引](nrf-bm/component-catalog.md)、[SoftDevice と割り込み](nrf-bm/softdevice-and-interrupts.md)、[ライブラリ案内](nrf-bm/libraries.md)、[samples](nrf-bm/samples.md)、[公式 latest 比較](nrf-bm/version-comparison.md) |
 | 更新と保存 | [single-bank DFU](dfu/single-bank-dfu.md)、[MCUboot](dfu/mcuboot.md)、[埋め込みバイトコード](dfu/embedded-bytecode.md) |
-| 実装準備 | [段階的計画](implementation/porting-plan.md)、[着手前チェックリスト](implementation/checklist.md)、[P0 の build 再現手順](implementation/bm-build.md)、[DK の準備](implementation/dk-provisioning.md)、[署名鍵の手順](implementation/signing-keys.md)、[P0 の振り返り](implementation/retrospective-P0.md) |
+| 実装準備 | [段階的計画](implementation/porting-plan.md)、[着手前チェックリスト](implementation/checklist.md)、[BM build 再現手順・P1 map](implementation/bm-build.md)、[DK の準備](implementation/dk-provisioning.md)、[署名鍵の手順](implementation/signing-keys.md)、[P0 の振り返り](implementation/retrospective-P0.md)、[P1 の振り返り](implementation/retrospective-P1.md) |
 | 配布条件 | [ライセンス](licenses.md) |
 | 版と公開 | [SemVer・VERSION・image の制約と承認判断](release/versioning.md) |
 

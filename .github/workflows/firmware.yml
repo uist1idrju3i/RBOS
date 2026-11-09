@@ -61,6 +61,15 @@ jobs:
           cache-workspace: 'true'
           save-workspace: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.variant == 'debug' }}
 
+      - name: Ruby VM の source と host build の依存を用意する
+        run: |
+          git submodule update --init --depth 1 vendor/mruby vendor/mrubyc
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y build-essential ruby python3
+          ruby --version
+          cc --version
+          make --version
+
       - name: compiler cache の基準 path をそろえる
         run: |
           python3 - <<'PY'

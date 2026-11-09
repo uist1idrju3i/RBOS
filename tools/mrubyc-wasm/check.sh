@@ -42,6 +42,15 @@ timeout 30s node "$build/runner.js" "$build/scheduler.mrb" \
   "$build/worker_a.mrb" "$build/worker_b.mrb" "$build/empty.mrb"
 echo 'PASS: multiple tasks and empty Ruby program'
 
+for source in "$root"/firmware/ruby/selftest/*.rb; do
+  "$mrbc" -o "$build/p1-$(basename "${source%.rb}").mrb" "$source"
+done
+"$mrbc" -o "$build/p1-system.mrb" "$root/firmware/ruby/system.rb"
+timeout 30s node "$build/runner.js" "$build/p1-coordinator.mrb" \
+  "$build/p1-worker_a.mrb" "$build/p1-worker_b.mrb" | tee "$build/p1-selftest.log"
+grep -Fxq 'PASS: P1 selftest' "$build/p1-selftest.log"
+echo 'PASS: compiled system task and ran P1 selftests'
+
 for fixture in idiom_collections idiom_objects idiom_values idiom_resources; do
   timeout 30s node "$build/runner.js" "$build/$fixture.mrb"
 done

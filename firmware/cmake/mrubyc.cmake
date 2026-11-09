@@ -1,0 +1,81 @@
+set(RBOS_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
+set(RBOS_MRBC "" CACHE FILEPATH "Existing host mrbc (mruby 4.0.0)")
+find_program(RBOS_RUBY ruby REQUIRED)
+find_program(RBOS_MAKE make REQUIRED)
+find_program(RBOS_PYTHON python3 REQUIRED)
+if(NOT RBOS_MRBC)
+  find_program(RBOS_HOST_CC NAMES cc gcc clang NO_CMAKE_FIND_ROOT_PATH)
+  find_program(RBOS_HOST_AR NAMES ar REQUIRED NO_CMAKE_FIND_ROOT_PATH)
+  if(NOT RBOS_HOST_CC)
+    message(FATAL_ERROR "Building host mrbc requires a host C compiler (cc/gcc/clang)")
+  endif()
+  set(host "${CMAKE_CURRENT_BINARY_DIR}/mruby-host")
+  file(COPY "${RBOS_ROOT}/vendor/mruby/" DESTINATION "${host}" PATTERN ".git" EXCLUDE)
+  execute_process(COMMAND ${CMAKE_COMMAND} -E env --unset=CFLAGS --unset=CXXFLAGS --unset=LDFLAGS
+    "MRUBY_CONFIG=build_config/mrbc.rb" "CC=${RBOS_HOST_CC}" "LD=${RBOS_HOST_CC}"
+    "CXX=${RBOS_HOST_CC}" "AR=${RBOS_HOST_AR}"
+    ${RBOS_RUBY} minirake WORKING_DIRECTORY "${host}"
+    RESULT_VARIABLE result OUTPUT_FILE "${host}/build.log" ERROR_FILE "${host}/build-error.log")
+  if(NOT result EQUAL 0)
+    message(FATAL_ERROR "Host mrbc build failed: see ${host}/build-error.log")
+  endif()
+  set(RBOS_MRBC "${host}/build/host/bin/mrbc")
+endif()
+execute_process(COMMAND "${RBOS_MRBC}" --version OUTPUT_VARIABLE mrbc_version RESULT_VARIABLE result)
+if(NOT result EQUAL 0 OR NOT mrbc_version MATCHES "mruby 4.0.0")
+  message(FATAL_ERROR "RBOS_MRBC must be an executable mruby 4.0.0 compiler")
+endif()
+
+set(vm "${CMAKE_CURRENT_BINARY_DIR}/mrubyc")
+foreach(dir src support mrblib)
+  file(COPY "${RBOS_ROOT}/vendor/mrubyc/${dir}" DESTINATION "${vm}")
+endforeach()
+# Always regenerate the copied mrblib; symbol headers are absent in the vendor tree.
+execute_process(COMMAND ${RBOS_MAKE} -C "${vm}/mrblib" "MRBC=${RBOS_MRBC}" all
+  RESULT_VARIABLE result)
+if(NOT result EQUAL 0)
+  message(FATAL_ERROR "mruby/c mrblib generation failed")
+endif()
+execute_process(COMMAND "${RBOS_PYTHON}" "${RBOS_ROOT}/tools/bm-build/check-bytecode.py"
+  "${vm}/src/mrblib.c" RESULT_VARIABLE result)
+if(NOT result EQUAL 0)
+  message(FATAL_ERROR "mruby/c mrblib bytecode validation failed")
+endif()
+execute_process(COMMAND ${RBOS_MAKE} -C "${vm}/src" autogen RESULT_VARIABLE result)
+if(NOT result EQUAL 0)
+  message(FATAL_ERROR "mruby/c symbol header generation failed")
+endif()
+file(GLOB vm_sources CONFIGURE_DEPENDS "${vm}/src/*.c")
+file(GLOB shared_sources CONFIGURE_DEPENDS "${RBOS_ROOT}/src/rbos/*.c")
+file(GLOB_RECURSE vm_inputs CONFIGURE_DEPENDS "${RBOS_ROOT}/vendor/mrubyc/src/*"
+  "${RBOS_ROOT}/vendor/mrubyc/mrblib/*" "${RBOS_ROOT}/vendor/mrubyc/support/*"
+  "${RBOS_ROOT}/vendor/mruby/build_config/*" "${RBOS_ROOT}/vendor/mruby/src/*")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${vm_inputs})
+target_sources(app PRIVATE ${vm_sources} ${shared_sources})
+target_include_directories(app BEFORE PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/hal")
+target_include_directories(app PRIVATE "${vm}/src" "${RBOS_ROOT}/include" "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_compile_definitions(app PRIVATE MAX_VM_COUNT=${CONFIG_RBOS_MAX_VM_COUNT})
+if(CONFIG_RBOS_VM_NDEBUG)
+  set_source_files_properties(${vm_sources} PROPERTIES COMPILE_DEFINITIONS NDEBUG)
+endif()
+
+set(task_sources system.rb selftest/coordinator.rb selftest/worker_a.rb selftest/worker_b.rb)
+set(table "#include <stdint.h>\n#include \"embedded.h\"\n")
+set(entries "")
+set(index 0)
+foreach(source ${task_sources})
+  set(symbol "rbos_task_${index}")
+  set(output "${CMAKE_CURRENT_BINARY_DIR}/${symbol}.c")
+  add_custom_command(OUTPUT "${output}"
+    COMMAND "${RBOS_MRBC}" "-B${symbol}" -o "${output}" "${CMAKE_CURRENT_SOURCE_DIR}/ruby/${source}"
+    COMMAND "${RBOS_PYTHON}" "${RBOS_ROOT}/tools/bm-build/check-bytecode.py" "${output}"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/ruby/${source}" "${RBOS_MRBC}"
+      "${RBOS_ROOT}/tools/bm-build/check-bytecode.py" VERBATIM)
+  target_sources(app PRIVATE "${output}")
+  string(APPEND table "extern const uint8_t ${symbol}[];\n")
+  string(APPEND entries "  {\"${source}\", ${symbol}},\n")
+  math(EXPR index "${index} + 1")
+endforeach()
+string(APPEND table "const struct rbos_embedded_task rbos_tasks[] = {\n${entries}};\nconst unsigned int rbos_task_count = ${index};\n")
+file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/embedded.c" CONTENT "${table}")
+target_sources(app PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/embedded.c")
