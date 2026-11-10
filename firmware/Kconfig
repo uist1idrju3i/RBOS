@@ -25,6 +25,11 @@ config RBOS_VM_POOL_SIZE
 	range 16384 131072
 	default 65536
 
+config RBOS_TIMESLICE_TICK_COUNT
+	int "Ruby VM timeslice (ticks)"
+	range 1 255
+	default 10
+
 config RBOS_SERVICE_INTERVAL_MS
 	int "System service interval (ms)"
 	range 1 1000

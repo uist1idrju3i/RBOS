@@ -6,6 +6,7 @@
 
 ### Added
 
+- Spinner 公平性の比較用に、VM quantum の Kconfig と stress-X（1 tick）・stress-Y（10 tick、service sleep 9 ms）の overlay、CI image、host の理想化モデルを追加しました。既定の quantum 10 tick・service sleep 10 msは維持し、比較 image の実機結果は未確認です。
 - P1 closeout 向けに STRESS/OOM profile、二つの常時 ready spinner、保持割当て fault task、四 variant の CI artifact、区間最大の `drain_us` を追加しました。利用者の決定で stress 条件を完全接続窓5分へ変更しました。DK OOM/abort は利用者 log で確認済み、stress 条件は未達です。
 - 固定 mruby/c の Mutex owner 終了・ensure 解放・priority inversion・非 owner unlock の Wasm fault test と、pool 最小値の任意実行探索を追加しました。自己検査は Wasm 10 KiB で成功、9 KiB で OOM でした。Mutex 利用規約と P2/P3/P5/P6 の担当・検証条件は承認済みの方針として記録し、未実装の項目を区別しました。
 - DK console log の自己検査・stress・OOM checker と、macOS の時間制限付き capture 手順を追加しました。BLE 境界を除いた統計、spinner、試験時間を判定します。capture は Linux PTY で検査し、macOS 実機では未確認です。

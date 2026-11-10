@@ -1,7 +1,8 @@
 #ifndef RBOS_HAL_H
 #define RBOS_HAL_H
+#include <zephyr/autoconf.h>
 #define MRBC_TICK_UNIT 1
-#define MRBC_TIMESLICE_TICK_COUNT 10
+#define MRBC_TIMESLICE_TICK_COUNT CONFIG_RBOS_TIMESLICE_TICK_COUNT
 #define MRBC_SCHEDULER_EXIT 1
 #define MRBC_OUT_OF_MEMORY() mrbc_hal_abort("Ruby pool exhausted\n")
 void mrbc_hal_init(void);

@@ -70,6 +70,8 @@ class ChangedInputsTests(unittest.TestCase):
                   'firmware/ruby/stress/spinner_a.rb', 'firmware/ruby/fault/oom.rb']
         paths = {
             'firmware': ['firmware/src/main.c', 'firmware/stress.conf', 'firmware/oom.conf',
+                         'firmware/stress-x.conf', 'firmware/stress-y.conf',
+                         'tools/bm-build/simulate-spinner.py',
                          'tools/bm-build/modules.txt', 'tools/bm-build/check-dk-log.py',
                          '.github/actions/ncs-bm-setup/action.yml',
                          '.github/workflows/firmware.yml',
@@ -136,10 +138,10 @@ class ChangedInputsTests(unittest.TestCase):
 class SummaryTests(unittest.TestCase):
     def test_firmware_profile_arguments(self):
         workflow = (ROOT / '.github/workflows/firmware.yml').read_text()
-        self.assertIn('variant: [debug, release, stress, oom]', workflow)
+        self.assertIn('variant: [debug, release, stress, stress-x, stress-y, oom]', workflow)
         script = textwrap.dedent(workflow.split('      - name: 選んだ構成を build する\n')[1]
                                  .split('        run: |\n')[1].split('\n      - name:')[0])
-        for variant in ['debug', 'release', 'stress', 'oom']:
+        for variant in ['debug', 'release', 'stress', 'stress-x', 'stress-y', 'oom']:
             with self.subTest(variant=variant):
                 result = subprocess.run(
                     ['bash', '-eo', 'pipefail', '-c',
@@ -157,7 +159,7 @@ class SummaryTests(unittest.TestCase):
                                   '"/runner/keys/rbos-test-release.pem"', args)
                 else:
                     self.assertFalse(any('SIGNATURE_KEY_FILE' in arg for arg in args))
-                if variant in ['stress', 'oom']:
+                if variant in ['stress', 'stress-x', 'stress-y', 'oom']:
                     self.assertIn(f'-DEXTRA_CONF_FILE=/repo with space/firmware/{variant}.conf', args)
                 else:
                     self.assertFalse(any('EXTRA_CONF_FILE' in arg for arg in args))

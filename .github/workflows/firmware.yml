@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [debug, release, stress, oom]
+        variant: [debug, release, stress, stress-x, stress-y, oom]
     runs-on: ubuntu-26.04
     timeout-minutes: 60
     env:
@@ -107,7 +107,7 @@ jobs:
           if [ "$VARIANT" = release ]; then
             args+=(-- -DFILE_SUFFIX=release
               "-DSB_CONFIG_BM_BOOTLOADER_MCUBOOT_SIGNATURE_KEY_FILE=\"$RUNNER_TEMP/keys/rbos-test-release.pem\"")
-          elif [ "$VARIANT" = stress ] || [ "$VARIANT" = oom ]; then
+          elif [[ "$VARIANT" == stress* || "$VARIANT" == oom ]]; then
             args+=(-- "-DEXTRA_CONF_FILE=$GITHUB_WORKSPACE/firmware/$VARIANT.conf")
           fi
           cd "$BM_WORKSPACE"
