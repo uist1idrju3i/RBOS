@@ -1,6 +1,6 @@
 # 実装へ進むための段階計画
 
-この文書は実装の段階案です。P0 は最小構成の build と利用者による実機確認の記録があります（[build 再現手順](bm-build.md)、[P0 の振り返り](retrospective-P0.md)）。P1 は mruby/c・BM HAL・BLE を実装し、debug/release build と Wasm の検査まで進めました。P1 の実機確認は未実施で、受け入れ条件は未達です（[P1 の振り返り](retrospective-P1.md)）。P2〜P6 の段階完了は主張しません。各段階を独立した PR に分け、受け入れ条件を満たしてから次へ進みます。
+この文書は実装の段階案です。P0 は最小構成の build と利用者による実機確認の記録があります（[build 再現手順](bm-build.md)、[P0 の振り返り](retrospective-P0.md)）。P1 は mruby/c・BM HAL・BLE を実装し、debug/release build と Wasm の検査に加え、利用者が CI debug image の DK 自己検査・BLE 接続中の統計を採取しました。観測値の限界と未確認項目は [P1 の振り返り](retrospective-P1.md)に記録しています。P2〜P6 の段階完了は主張しません。各段階を独立した PR に分け、受け入れ条件を満たしてから次へ進みます。
 
 ## 段階の進め方
 
@@ -25,7 +25,7 @@
 
 ## P1: mruby/c を OS の中核として動かす
 
-**状況**: 実装、debug/release build、移植可能な selftest の Wasm 実行は完了。BLE 接続中の tick jitter、stack/pool 最大値を含む実機試験は未実施です。[P1 の振り返り](retrospective-P1.md)と[証拠付き checklist](checklist.md#p1-vm-と時間)を参照してください。以下は引き続き受け入れの条件です。
+**状況**: 実装、debug/release build、selftest の Wasm 実行に続き、利用者が `ff4c23e` の CI debug image を DK で実行しました。全自己検査 PASS、完全 BLE 接続区間936..1049 µs、pool の最大標本11560/65536 B、main/ISR paint scan 688/560 B を記録。厳密な資源上限・常時 ready worker と BLE の同時負荷・release 実機等は未確認です。[P1 の振り返り](retrospective-P1.md)と[証拠付き checklist](checklist.md#p1-vm-と時間)を参照してください。以下の受け入れ条件は変更しません。
 
 - vendor/mruby 4.0.0 の mrbc を build して固定し、RITE0400 の最小プログラムを作る。
 - mruby/c を `firmware/` へ結合したら、debug と release の両方を build し、P0 の map と比べた増分を記録する。
