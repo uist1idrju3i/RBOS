@@ -38,7 +38,7 @@
 
 **受け入れ条件**: 二つ以上の task の同時実行、同 priority の巡回、priority 変更、sleep、mutex、suspend/resume、idle wakeupを試験すること。BLE 接続中の tick jitter と stack/pool 最大使用量を計測すること。
 
-**承認済み closeout 条件**: 上の受け入れ条件を維持し、Wasm の Mutex owner 終了・例外・優先度差試験と規約、DK の二つの常時 ready task＋BLE による30分 stress、DK OOM/abort の証拠をそろえます。Wasm 試験は完了、DK 二試験は未実施です。stress では境界を除いた jitter、drain_us、二度目の接続、slow 広告180秒後の停止も記録します。
+**承認済み closeout 条件**: Wasm の Mutex owner 終了・例外・優先度差試験と規約、DK の二つの常時 ready task 負荷中の BLE 完全接続 stats 窓5分（300秒）、DK OOM/abort の証拠をそろえます。利用者の決定で stress 時間だけを30分から5分へ変更しました。Wasm と DK OOM は完了。利用者の stress log は境界を除くと230.067537秒なので、stress は未達です。jitter、drain_us、再接続と slow 広告180秒後の停止も記録します。spinner の rate 比は当面 WARN とし、偏りだけで FAIL にはしません。BLE 応答修正後の実機再試験は未実施です。
 
 根拠: `vendor/mrubyc/src/rrt0.c:146-181,339-425`、`vendor/mrubyc/hal/minimal.h:1-55`、`vendor/sdk-nrf-bm/include/bm/bm_timer.h:30-112`、[HAL](../mrubyc/hal-porting.md)、[割り込み](../nrf-bm/softdevice-and-interrupts.md)。
 

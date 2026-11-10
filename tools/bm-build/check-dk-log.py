@@ -56,7 +56,9 @@ def safe(value):
 
 
 def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
-            spinner_interval=10, require_connected=0):
+            spinner_interval=10, require_connected=None):
+    if require_connected is None:
+        require_connected = 300 if profile == "stress" else 0
     lines = ANSI.sub("", data.decode("utf-8", errors="replace")).splitlines()
     errors, warnings, stats, events, boots, versions = [], [], [], [], [], []
     boot_starts = []
@@ -78,6 +80,7 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
             warnings.append("Detected %d boots; judging only the last boot (not merged)" % len(boot_starts))
     starts = {key: [] for key in "ab"}
     progress = {key: [] for key in "ab"}
+    counters = {key: [] for key in "ab"}
     passed, fatal_lines, oom_starts, oom_fatals = set(), [], [], []
     clock = None
     for number, line in enumerate(lines, first_line):
@@ -128,8 +131,13 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
         for key in "ab":
             if "STRESS: spinner %s started" % key in line:
                 starts[key].append((clock, number))
-            if re.search(r"\bstress %s=\d+\s*$" % key, line):
+            match = re.search(r"\bstress %s=(\d+)\s*$" % key, line)
+            if match:
                 progress[key].append((clock, number))
+                if len(match[1]) <= 6:
+                    counters[key].append((stats[-1]["time"] if stats else None, int(match[1])))
+                elif profile == "stress":
+                    errors.append("Invalid spinner %s counter at line %d" % (key, number))
 
     if len(boots) != 1:
         errors.append("Expected exactly one application boot banner; found %d" % len(boots))
@@ -166,6 +174,8 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
     rates = {key: [] for key in ("idle", "service")}
     transitions = [event for event in events if event["kind"] in jitter]
     excluded = 0
+    loaded_connected = 0
+    load_line = max((rows[0][1] for rows in starts.values() if rows), default=None)
     for previous, row in zip(stats, stats[1:]):
         dt = row["time"] - previous["time"]
         if dt <= 0:
@@ -192,13 +202,17 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
         window = jitter[state]
         window["windows"] += 1
         window["duration_s"] += dt
+        if state == "connected" and all(starts.values()) and previous["line"] > load_line:
+            loaded_connected += dt
         window["tick_us_min"] = min(row["tick_min"] if window["tick_us_min"] is None else window["tick_us_min"], row["tick_min"])
         window["tick_us_max"] = max(row["tick_max"] if window["tick_us_max"] is None else window["tick_us_max"], row["tick_max"])
     if stats and profile != "oom" and clock is not None and clock - stats[-1]["time"] > stats_interval * 1.5:
         errors.append("Stats stopped before the final timestamp")
     connected = jitter["connected"]["duration_s"]
-    if connected < require_connected:
-        errors.append("Fully-connected stats coverage too short: %.3f s < %.3f s" % (connected, require_connected))
+    coverage = loaded_connected if profile == "stress" else connected
+    if coverage < require_connected:
+        errors.append("Fully-connected stats coverage too short%s: %.3f s < %.3f s" % (
+            " under spinner load" if profile == "stress" else "", coverage, require_connected))
     ble_duration, connected_at = 0, None
     end = clock or 0
     for event in transitions:
@@ -213,6 +227,8 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
         ble_duration += end - connected_at
 
     spinner_report = {}
+    spinner_ratio = None
+    spinner_imbalance = None
     if profile == "stress":
         warnings.append("Spinner times use preceding timestamps (quantized); time after the final timestamp is unobservable")
         for key in "ab":
@@ -231,7 +247,33 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
             maximum = max(gaps, default=0)
             if maximum > spinner_interval * 2.1:
                 errors.append("Spinner %s stalled: estimated gap %.3f s" % (key, maximum))
-            spinner_report[key] = {"progress_lines": len(progress[key]), "max_gap_s": maximum}
+            intervals = []
+            for (before, old), (after, new) in zip(counters[key], counters[key][1:]):
+                if before is None or after is None or after <= before:
+                    continue
+                dt = after - before
+                delta = (new - old) % 1000000
+                intervals.append({"start_s": before, "end_s": after, "delta": delta,
+                                  "per_stats_interval": delta * stats_interval / dt,
+                                  "per_s": delta / dt})
+            duration = sum(row["end_s"] - row["start_s"] for row in intervals)
+            spinner_report[key] = {
+                "progress_lines": len(progress[key]), "max_gap_s": maximum,
+                "intervals": intervals,
+                "mean_per_s": sum(row["delta"] for row in intervals) / duration if duration else None,
+                "per_stats_interval_min": min((row["per_stats_interval"] for row in intervals), default=None),
+                "per_stats_interval_max": max((row["per_stats_interval"] for row in intervals), default=None),
+            }
+        a, b = (spinner_report[key]["mean_per_s"] for key in "ab")
+        if a is not None and b is not None:
+            spinner_ratio = a / b if b else None
+            spinner_imbalance = max(a, b) / min(a, b) if min(a, b) else None
+            if max(a, b) > 2 * min(a, b):
+                warnings.append("WARN: Spinner rate imbalance exceeds 2x (a/b=%s; max/min=%s)" % (
+                    "%.3f" % spinner_ratio if b else "unbounded",
+                    "%.3f" % spinner_imbalance if min(a, b) else "unbounded"))
+        if any(spinner_report[key]["mean_per_s"] is None for key in "ab"):
+            warnings.append("Spinner rates unavailable: need two progress samples on distinct stats anchors")
     peak = {key: max((row[key] for row in stats if row[key] is not None), default=None)
             for key in ("pool", "main", "isr", "drain_us")}
     totals = sorted({row["pool_total"] for row in stats})
@@ -248,6 +290,9 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
                               "max": max((row["ticks"] for row in stats[1:]), default=None)},
         "jitter": jitter, "boundary_windows_excluded": excluded,
         "fully_connected_duration_s": connected, "ble_connected_duration_s": ble_duration,
+        "stress_connected_duration_s": loaded_connected,
+        "required_connected_duration_s": require_connected,
+        "spinner_a_b_ratio": spinner_ratio, "spinner_imbalance_ratio": spinner_imbalance,
         "peaks": peak, "rates_per_s": {key: {"min": min(values), "max": max(values)} if values else None
                                             for key, values in rates.items()},
         "spinners": spinner_report, "events": events, "errors": errors, "warnings": warnings,
@@ -281,13 +326,20 @@ def human(report):
     for key, value in report["rates_per_s"].items():
         output.append("| %s / s | %s |" % (key, "%s..%s" % (value["min"], value["max"]) if value else "unavailable"))
     for key, value in report["spinners"].items():
-        output.append("| Spinner %s | %s |" % (key, value))
+        output.append("| Spinner %s | %s progress lines; estimated max gap %s s; delta %s..%s / stats interval; mean %s / s |" % (
+            key, value["progress_lines"], value["max_gap_s"], value["per_stats_interval_min"],
+            value["per_stats_interval_max"], value["mean_per_s"]))
+    if report["profile"] == "stress":
+        output.append("| Fully connected under spinner load | %s / %s s required |" % (
+            report["stress_connected_duration_s"], report["required_connected_duration_s"]))
+        output.append("| Spinner a/b; max/min | %s; %s |" % (
+            report["spinner_a_b_ratio"], report["spinner_imbalance_ratio"]))
     if report["events"]:
         output += ["", "| BLE event | Uptime (s) | Line |", "|---|---|---|"]
         output += ["| %s | %s | %s |" % (event["kind"], event["time"], event["line"])
                    for event in report["events"]]
     output += ["ERROR: " + item for item in report["errors"]]
-    output += ["NOTE: " + item for item in report["warnings"]]
+    output += [item if item.startswith("WARN:") else "NOTE: " + item for item in report["warnings"]]
     if report["profile"] != "oom":
         output.append("NOTE: First stats excluded from jitter/rates; BLE boundary windows excluded from jitter.")
     return "\n".join(output)
@@ -310,8 +362,8 @@ def main(argv=None):
     parser.add_argument("log", type=Path, metavar="LOG")
     parser.add_argument("--profile", choices=("selftest", "stress", "oom"), default="selftest")
     parser.add_argument("--min-duration", type=seconds, default=0, metavar="SECONDS")
-    parser.add_argument("--require-connected", type=seconds, default=0, metavar="SECONDS",
-                        help="Minimum fully-connected stats-window coverage")
+    parser.add_argument("--require-connected", type=seconds, default=None, metavar="SECONDS",
+                        help="Minimum fully-connected stats-window coverage (stress: 300 s under spinner load; others: 0)")
     parser.add_argument("--stats-interval", type=seconds, default=10, metavar="SECONDS",
                         help="Stats interval (Kconfig default: 10 s)")
     parser.add_argument("--spinner-interval", type=seconds, default=10, metavar="SECONDS")

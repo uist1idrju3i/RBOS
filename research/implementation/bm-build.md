@@ -139,6 +139,15 @@ Python で GNU ld map の `Linker script and memory map` 以降の入力 section
 
 再集計時の入力は P0/P1 各 variant の app map/ELF と build log です。SDK toolchain 環境で `arm-zephyr-eabi-objdump -h <app.elf>`、`arm-zephyr-eabi-nm -S <app.elf>`、`arm-zephyr-eabi-size <app.elf>` を実行します。size の text/data/bss は領域外の KMU 等も含むので、単純合算を app RAM として使いません。
 
+### BLE 手順応答修正の追加 build
+
+親 `74cd704` の作業木に `firmware/src/ble.c` と `common.conf` の応答修正を加え、debug/stress を上の手順で pristine build しました。app の値を修正前の closeout build と比較します。両方 warning/error 0、MCUboot と loader は不変でした。以下の部品別表は旧 P1 の比較を維持し、この追加分の再帰属はしていません。実機での応答・切断の改善は未確認です。
+
+| app | 修正前 FLASH / RAM (B) | 修正後 FLASH / RAM (B) | 増分 FLASH / RAM (B) |
+|---|---:|---:|---:|
+| debug | 114288 / 83600 | 117152 / 83624 | +2864 / +24 |
+| stress | 115088 / 83600 | 117952 / 83624 | +2864 / +24 |
+
 ### 部品別増分（P1 − P0、byte）
 
 | 部品（帰属する入力） | debug FLASH | debug RAM | release FLASH | release RAM |

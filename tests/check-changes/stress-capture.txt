@@ -1,0 +1,145 @@
+[00:03:10.033,253] <inf> ble_adv: Idle
+[00:03:10.070,464] <inf> rbos_runtime: stats tick_us=944..1040 catchups=0 ticks=10006 po*** Booting MCUboot v2.3.0-dev-fce4dac2e629 ***
+*** Using nRF Connect SDK Bare Metal v2.0.1-51484143c091 ***
+I: Starting bootloader
+I: Booting main application
+I: Bootloader chainload address offset: 0xa000
+I: Image version: v0.1.0
+I: Jumping to the first image slot
+*** Booting My Application v0.1.0-3d1fd598c609 ***
+*** Using nRF Connect SDK Bare Metal v2.0.1-51484143c091 ***
+[00:00:00.008,931] <inf> nrf_sdh: SoftDevice forward address: 0x163800
+[00:00:00.025,687] <inf> rbos: RBOS 0.1.0+0
+[00:00:00.035,315] <inf> ble_adv: Fast advertising
+PASS: concurrent workers
+PASS: same-priority round robin
+PASS: priority change
+PASS: suspend
+PASS: resume
+PASS: mutex with sleeping owner
+PASS: workers joined
+PASS: idle wakeup
+PASS: P1 selftest
+STRESS: spinner a started
+STRESS: spinner b started
+[00:00:03.317,991] <inf> rbos_ble: BLE connected
+[00:00:10.010,530] <inf> rbos_runtime: stats tick_us=875..1109 catchups=0 ticks=9974 pool=15436/65536 main=688 isr=560 idle=152 service=905 drain_us=29
+stress a=38556
+stress b=375452
+[00:00:20.012,870] <inf> rbos_runtime: stats tick_us=922..1063 catchups=0 ticks=10003 pool=15436/65536 main=688 isr=560 idle=152 service=1813 drain_us=1
+stress a=76832
+stress b=751538
+[00:00:30.016,200] <inf> rbos_runtime: stats tick_us=922..1063 catchups=0 ticks=10003 pool=15436/65536 main=688 isr=560 idle=152 service=2721 drain_us=1
+stress b=127563
+stress a=115123
+[00:00:40.020,515] <inf> rbos_runtime: stats tick_us=922..1063 catchups=0 ticks=10004 pool=15436/65536 main=688 isr=560 idle=152 service=3629 drain_us=1
+stress b=503803
+stress a=153328
+[00:00:43.445,394] <inf> ble_adv: Fast advertising
+[00:00:43.445,495] <inf> rbos_ble: BLE disconnected
+[00:00:43.465,228] <inf> rbos_ble: BLE connected
+[00:00:50.025,824] <inf> rbos_runtime: stats tick_us=923..1063 catchups=0 ticks=10006 pool=15436/65536 main=704 isr=560 idle=152 service=4536 drain_us=144
+stress b=879145
+stress a=191519
+[00:01:00.029,161] <inf> rbos_runtime: stats tick_us=922..1063 catchups=0 ticks=10003 pool=15436/65536 main=704 isr=560 idle=152 service=5444 drain_us=1
+stress b=255104
+stress a=229786
+[00:01:10.032,486] <inf> rbos_runtime: stats tick_us=922..1063 catchups=0 ticks=10003 pool=15436/65536 main=704 isr=560 idle=152 service=6352 drain_us=1
+stress b=631062
+stress a=268078
+[00:01:20.034,817] <inf> rbos_runtime: stats tick_us=922..1062 catchups=0 ticks=10003 pool=15436/65536 main=704 isr=560 idle=152 service=7260 drain_us=1
+stress b=6852
+stress a=306304
+[00:01:23.579,731] <inf> ble_adv: Fast advertising
+[00:01:23.579,831] <inf> rbos_ble: BLE disconnected
+[00:01:23.599,564] <inf> rbos_ble: BLE connected
+[00:01:30.039,140] <inf> rbos_runtime: stats tick_us=922..1062 catchups=0 ticks=10004 pool=15436/65536 main=704 isr=560 idle=152 service=8167 drain_us=143
+stress b=382275
+stress a=344446
+[00:01:40.042,466] <inf> rbos_runtime: stats tick_us=922..1062 catchups=0 ticks=10003 pool=15436/65536 main=704 isr=560 idle=152 service=9075 drain_us=1
+stress b=758129
+stress a=382654
+[00:01:50.044,803] <inf> rbos_runtime: stats tick_us=922..1062 catchups=0 ticks=10003 pool=15436/65536 main=704 isr=560 idle=152 service=9983 drain_us=1
+stress b=133965
+stress a=420860
+[00:02:00.047,144] <inf> rbos_runtime: stats tick_us=922..1062 catchups=0 ticks=10002 pool=15436/65536 main=704 isr=560 idle=152 service=10891 drain_us=1
+stress b=509934
+stress a=459035
+[00:02:03.724,982] <inf> ble_adv: Fast advertising
+[00:02:03.725,083] <inf> rbos_ble: BLE disconnected
+[00:02:03.744,806] <inf> rbos_ble: BLE connected
+[00:02:10.052,458] <inf> rbos_runtime: stats tick_us=922..1062 catchups=0 ticks=10005 pool=15436/65536 main=704 isr=560 idle=152 service=11798 drain_us=144
+stress b=885125
+stress a=497267
+[00:02:20.054,784] <inf> rbos_runtime: stats tick_us=922..1062 catchups=0 ticks=10003 pool=15436/65536 main=704 isr=560 idle=152 service=12706 drain_us=1
+stress b=261030
+stress a=535476
+[00:02:30.057,120] <inf> rbos_runtime: stats tick_us=922..1063 catchups=0 ticks=10002 pool=15436/65536 main=704 isr=560 idle=152 service=13614 drain_us=1
+stress b=636900
+stress a=573683
+[00:02:40.060,452] <inf> rbos_runtime: stats tick_us=922..1063 catchups=0 ticks=10003 pool=15436/65536 main=704 isr=560 idle=152 service=14522 drain_us=1
+stress b=12595
+stress a=611890
+[00:02:43.869,234] <inf> ble_adv: Fast advertising
+[00:02:43.869,333] <inf> rbos_ble: BLE disconnected
+[00:02:43.890,063] <inf> rbos_ble: BLE connected
+[00:02:50.064,769] <inf> rbos_runtime: stats tick_us=921..1063 catchups=0 ticks=10005 pool=15436/65536 main=704 isr=560 idle=152 service=15429 drain_us=143
+stress b=387892
+stress a=650087
+[00:03:00.067,110] <inf> rbos_runtime: stats tick_us=922..1062 catchups=0 ticks=10002 pool=15436/65536 main=704 isr=560 idle=152 service=16337 drain_us=44
+stress b=763512
+stress a=688313
+[00:03:10.070,432] <inf> rbos_runtime: stats tick_us=922..1063 catchups=0 ticks=10003 pool=15436/65536 main=704 isr=560 idle=152 service=17245 drain_us=1
+stress b=139203
+stress a=726530
+[00:03:20.072,777] <inf> rbos_runtime: stats tick_us=922..1062 catchups=0 ticks=10003 pool=15436/65536 main=704 isr=560 idle=152 service=18153 drain_us=1
+stress b=515132
+stress a=764761
+[00:03:24.035,316] <inf> ble_adv: Fast advertising
+[00:03:24.035,416] <inf> rbos_ble: BLE disconnected
+[00:03:24.055,149] <inf> rbos_ble: BLE connected
+[00:03:30.076,097] <inf> rbos_runtime: stats tick_us=922..1062 catchups=0 ticks=10003 pool=15436/65536 main=704 isr=560 idle=152 service=19060 drain_us=144
+stress b=890270
+stress a=802963
+[00:03:40.080,429] <inf> rbos_runtime: stats tick_us=922..1063 catchups=0 ticks=10004 pool=15436/65536 main=704 isr=560 idle=152 service=19968 drain_us=1
+stress b=266193
+stress a=841207
+[00:03:50.082,757] <inf> rbos_runtime: stats tick_us=922..1063 catchups=0 ticks=10003 pool=15436/65536 main=704 isr=560 idle=152 service=20876 drain_us=1
+stress b=642199
+stress a=879422
+[00:04:00.085,089] <inf> rbos_runtime: stats tick_us=922..1062 catchups=0 ticks=10002 pool=15436/65536 main=704 isr=560 idle=152 service=21784 drain_us=1
+stress b=17984
+stress a=917669
+[00:04:04.180,563] <inf> ble_adv: Fast advertising
+[00:04:04.180,663] <inf> rbos_ble: BLE disconnected
+[00:04:04.200,396] <inf> rbos_ble: BLE connected
+[00:04:10.090,403] <inf> rbos_runtime: stats tick_us=922..1062 catchups=0 ticks=10005 pool=15436/65536 main=704 isr=560 idle=152 service=22691 drain_us=143
+stress b=393359
+stress a=955873
+[00:04:20.093,731] <inf> rbos_runtime: stats tick_us=922..1063 catchups=0 ticks=10004 pool=15436/65536 main=704 isr=560 idle=152 service=23599 drain_us=1
+stress b=769084
+stress a=994078
+[00:04:30.096,066] <inf> rbos_runtime: stats tick_us=922..1063 catchups=0 ticks=10002 pool=15436/65536 main=704 isr=560 idle=152 service=24507 drain_us=43
+stress b=144838
+stress a=32323
+[00:04:40.099,393] <inf> rbos_runtime: stats tick_us=922..1062 catchups=0 ticks=10003 pool=15436/65536 main=704 isr=560 idle=152 service=25415 drain_us=1
+stress b=520698
+stress a=70612
+[00:04:44.315,891] <inf> ble_adv: Fast advertising
+[00:04:44.315,992] <inf> rbos_ble: BLE disconnected
+[00:04:44.335,719] <inf> rbos_ble: BLE connected
+[00:04:50.103,796] <inf> rbos_runtime: stats tick_us=922..1062 catchups=0 ticks=10005 pool=15436/65536 main=720 isr=560 idle=152 service=26322 drain_us=144
+stress b=895831
+stress a=108869
+[00:05:00.107,039] <inf> rbos_runtime: stats tick_us=922..1062 catchups=0 ticks=10003 pool=15436/65536 main=720 isr=560 idle=152 service=27230 drain_us=1
+stress b=271664
+stress a=147129
+[00:05:10.110,367] <inf> rbos_runtime: stats tick_us=922..1063 catchups=0 ticks=10003 pool=15436/65536 main=720 isr=560 idle=152 service=28138 drain_us=1
+stress b=647376
+stress a=185386
+[00:05:13.028,339] <inf> ble_adv: Fast advertising
+[00:05:13.028,439] <inf> rbos_ble: BLE disconnected
+[00:05:20.110,720] <inf> rbos_runtime: stats tick_us=923..1062 catchups=0 ticks=10001 pool=15436/65536 main=720 isr=560 idle=152 service=29045 drain_us=143
+stress b=21518
+stress a=223588
+[00:05:23.041,574] <inf> ble_adv: Slow advertising

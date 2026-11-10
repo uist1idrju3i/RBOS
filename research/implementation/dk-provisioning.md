@@ -118,10 +118,10 @@ capture は reset 前に開始します。ほかの serial monitor は閉じて�
 次の一行を RBOS checkout root で実行します。`<PORT>` を選んだ port の末尾に置き換えます。必要なのは macOS の zsh、stty、Perl、tee と Python 3.9 以上です。追加 package や GNU timeout は使いません。
 
 ```zsh
-port='/dev/cu.usbmodem<PORT>'; duration=1860; log="dk-stress-$(date +%Y%m%d-%H%M%S).log"; (set -o pipefail; (stty 115200 raw -echo clocal <&3 && perl -e '$|=1; $SIG{ALRM}=sub { exit 0 }; alarm shift; while (1) { my $n=sysread(STDIN,my $buf,4096); die "VCOM read failed\n" unless defined $n; last unless $n; print $buf or die "VCOM write failed\n"; }' "$duration" <&3) 3<"$port" | tee "$log") && python3 tools/bm-build/check-dk-log.py "$log" --profile stress --min-duration 1800 --require-connected 1800
+port='/dev/cu.usbmodem<PORT>'; duration=420; log="dk-stress-$(date +%Y%m%d-%H%M%S).log"; (set -o pipefail; (stty 115200 raw -echo clocal <&3 && perl -e '$|=1; $SIG{ALRM}=sub { exit 0 }; alarm shift; while (1) { my $n=sysread(STDIN,my $buf,4096); die "VCOM read failed\n" unless defined $n; last unless $n; print $buf or die "VCOM write failed\n"; }' "$duration" <&3) 3<"$port" | tee "$log") && python3 tools/bm-build/check-dk-log.py "$log" --profile stress --min-duration 300 --require-connected 300
 ```
 
-開いた fd 3 に stty を適用し、同じ fd を Perl が読みます。alarm で1860秒後に読み取りを終え、表示と保存の pipeline が成功した場合だけ checker を実行します。capture 開始後、別の terminal で reset し、phone から BLE 接続を保ってください。stats の先頭から末尾までと、接続境界をまたがない窓の合計の双方に1800秒を要求します。接続準備が長引いた場合は `duration` を延ばして採り直します。これは Linux の PTY で設定・保存・終了まで検査した手順で、macOS 固有の port と zsh での実行は未確認です。
+開いた fd 3 に stty を適用し、同じ fd を Perl が読みます。alarm で420秒後に読み取りを終え、表示と保存の pipeline が成功した場合だけ checker を実行します。capture 開始後、別の terminal で reset し、phone から BLE 接続を保ってください。利用者の決定で stress の条件を30分から5分へ変更しました。stats 全体の長さに加え、両 spinner の開始後で接続境界をまたがない stats 窓の合計に300秒を要求します。再接続があれば、その境界窓は数えません。接続準備や境界の除外で不足した場合は `duration` を延ばして採り直します。これは Linux の PTY で設定・保存・終了まで検査した手順で、macOS 固有の port と zsh での実行は未確認です。
 
 ### log の判定
 
@@ -136,6 +136,8 @@ python3 tools/bm-build/check-dk-log.py capture.log --profile oom --json
 - 最初の stats は窓の開始が不明なので jitter 比較と rate 計算から除きます。connect/disconnect に触れる窓も jitter 比較から外します。BLE event 間の接続時間と、完全接続窓の合計は別の値です。`--require-connected` は後者を使います。
 - `pool` は保守時に標本化した累積 peak、main/isr は paint scan による使用量の推定、`drain_us` は区間最大の経過 µs です。drain のない旧 log も受け付け、未計測と表示します。idle/service の rate は累積 counter の差を timestamp 差で割った値で、IRQ 数や CPU 使用率ではありません。
 - stress は両 spinner の開始と進捗を要求します。進捗行には timestamp がないため、直前の timestamp を代用し、間隔の2.1倍（既定21秒）を超えたら失敗とします。stats 一区間程度のずれがあり、最終 timestamp 後の経過時間は分かりません。厳密な出力間隔の証明ではなく、`--spinner-interval` で基準を変更できます。
+- stress の `--require-connected` は既定300秒、他 profile は0です。stress では両 spinner の開始後の完全接続窓だけを数えます。短い診断 log は明示的に `--require-connected 0` で解析できますが、受け入れ完了とは扱いません。
+- spinner の counter は100万で巡回します。連続する進捗を直前の stats に対応させ、最初の標本を除いて modulo 差分・stats 間隔相当の進捗・平均毎秒 rate・a/b 比を出します。JSON の `spinners` に各 interval の差分と rate を含めます。初回の途中区間、同じ stats に対応する標本同士は rate に数えません。一組の標本間で二周以上した回数は復元できず、実時刻も stats 単位の推定です。遅い側に対して速い側が2倍を超えたら WARN とし、偏りだけでは FAIL にしません。
 - oom は `OOM: start` の後の `RBOS fatal: Ruby pool exhausted` を要求します。短時間で停止して stats がない場合は未計測とし、fatal 前の stats があれば pool 等を集計します。
 - 全 profile で最後の boot だけを判定し、複数回の boot は合算しません。各 boot の開始は `*** Booting MCUboot`、それがない boot は `*** Booting My Application` です。MCUboot 直後の app banner は同じ boot として扱います。marker が旧 log の断片と同じ行にあっても、それより前は無視します。除外した行数と複数 boot の選択を NOTE に出し、問題の行番号は元 log のまま保ちます。marker 前の行中の断片も、除外一行に数えます。最後の boot が不完全なら、前の成功した boot には戻りません。
 
