@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+mode=${1:-}
+if [[ $# -gt 1 || ( -n "$mode" && "$mode" != --pool-min ) ]]; then
+  echo 'Usage: check.sh [--pool-min]' >&2
+  exit 2
+fi
+started=$SECONDS
 root=$(cd "$(dirname "$0")/../.." && pwd)
 build="$root/tools/mrubyc-wasm/build"
 for tool in git ruby make cc emcc node python3 timeout; do
@@ -23,29 +29,71 @@ make -C "$build/mrubyc/mrblib" MRBC="$mrbc" all
 make -C "$build/mrubyc/src" autogen
 mapfile -t sources < <(find "$build/mrubyc/src" -maxdepth 1 -name '*.c' | sort)
 mapfile -t bindings < <(find "$root/src/rbos" -type f -name '*.c' | sort)
-emcc -O1 -Wall -Wextra -Wno-unused-parameter \
+build_runner() {
+  local pool=$1 output=$2
+  emcc -O1 -Wall -Wextra -Wno-unused-parameter \
   -include "$root/tools/mrubyc-wasm/runner_config.h" \
   -I"$root/include" \
   -I"$build/mrubyc/src" -I"$build/mrubyc/hal/emscripten" \
-  -DMAX_VM_COUNT=32 -sASYNCIFY -sNODERAWFS=1 -sENVIRONMENT=node \
+  -DRBOS_WASM_POOL_SIZE="$pool" -DMAX_VM_COUNT=32 -sASYNCIFY -sNODERAWFS=1 -sENVIRONMENT=node \
   -sEXIT_RUNTIME=1 -sALLOW_MEMORY_GROWTH=1 \
   -sASSERTIONS=1 -sSTACK_OVERFLOW_CHECK=1 -sCHECK_NULL_WRITES=1 \
   -sSTACK_SIZE=1048576 -sASYNCIFY_STACK_SIZE=65536 \
   "$root/tools/mrubyc-wasm/main.c" "${sources[@]}" \
   "${bindings[@]}" "$root/tools/mrubyc-wasm/backend.c" \
-  "$build/mrubyc/hal/emscripten/hal.c" -o "$build/runner.js"
+  "$build/mrubyc/hal/emscripten/hal.c" -o "$output"
+}
+build_runner 1048576 "$build/runner.js"
 
 for source in "$root"/tests/mruby/*.rb; do
   "$mrbc" -o "$build/$(basename "${source%.rb}").mrb" "$source"
 done
-timeout 30s node "$build/runner.js" "$build/scheduler.mrb" \
-  "$build/worker_a.mrb" "$build/worker_b.mrb" "$build/empty.mrb"
-echo 'PASS: multiple tasks and empty Ruby program'
-
 for source in "$root"/firmware/ruby/selftest/*.rb; do
   "$mrbc" -o "$build/p1-$(basename "${source%.rb}").mrb" "$source"
 done
 "$mrbc" -o "$build/p1-system.mrb" "$root/firmware/ruby/system.rb"
+
+if [[ "$mode" == --pool-min ]]; then
+  mkdir -p "$build/pool-min"
+  pool_trial() {
+    local kib=$1 runner="$build/runner.js" status=0 log="$build/pool-min/run-$1.log"
+    if [[ "$kib" != 1024 ]]; then
+      runner="$build/pool-min/runner.js"
+      if ! build_runner "$((kib * 1024))" "$runner" > "$build/pool-min/build-$kib.log" 2>&1; then
+        cat "$build/pool-min/build-$kib.log"
+        exit 1
+      fi
+    fi
+    timeout 30s node "$runner" "$build/p1-coordinator.mrb" \
+      "$build/p1-worker_a.mrb" "$build/p1-worker_b.mrb" > "$log" 2>&1 || status=$?
+    if [[ "$status" == 0 ]] && grep -Fxq 'PASS: P1 selftest' "$log" && ! grep -Fq 'FAIL:' "$log"; then
+      echo "POOL: $kib KiB PASS"
+      return 0
+    fi
+    if [[ "$status" != 0 && "$status" != 124 && "$status" != 137 ]] &&
+       grep -Fxq 'Fatal error: Out of memory.' "$log" && ! grep -Fq 'FAIL:' "$log"; then
+      echo "POOL: $kib KiB OOM (exit $status)"
+      return 1
+    fi
+    cat "$log"
+    echo "Unexpected pool trial failure: $kib KiB / exit $status" >&2
+    exit 1
+  }
+  pool_trial 1024 || { echo 'P1 baseline failed' >&2; exit 1; }
+  low=0 high=1024
+  while (( high - low > 1 )); do
+    mid=$(((low + high) / 2))
+    if pool_trial "$mid"; then high=$mid; else low=$mid; fi
+  done
+  echo "PASS: P1 selftest minimum pool=$high KiB ($((high * 1024)) bytes), lower neighbor=$low KiB"
+  echo "POOL: total elapsed=$((SECONDS - started)) s (includes build and system.rb compile; system task not run)"
+  exit 0
+fi
+
+timeout 30s node "$build/runner.js" "$build/scheduler.mrb" \
+  "$build/worker_a.mrb" "$build/worker_b.mrb" "$build/empty.mrb"
+echo 'PASS: multiple tasks and empty Ruby program'
+
 timeout 30s node "$build/runner.js" "$build/p1-coordinator.mrb" \
   "$build/p1-worker_a.mrb" "$build/p1-worker_b.mrb" | tee "$build/p1-selftest.log"
 grep -Fxq 'PASS: P1 selftest' "$build/p1-selftest.log"
@@ -57,6 +105,22 @@ for profile in stress fault; do
   done
 done
 echo 'PASS: compiled stress spinners and OOM fault task (compile only)'
+
+mutex_case() {
+  local expected=$1 log="$build/mutex-$1.log"
+  shift
+  timeout 30s node "$build/runner.js" "$@" | tee "$log"
+  if grep -Fq 'FAIL:' "$log" || ! grep -Fxq "PASS: $expected" "$log"; then
+    echo "Missing mutex PASS or unexpected FAIL: $expected" >&2
+    exit 1
+  fi
+}
+mutex_case 'mutex owner termination' "$build/mutex_terminated.mrb" \
+  "$build/mutex_fault_owner.mrb" "$build/mutex_fault_waiter.mrb"
+mutex_case 'mutex ensure release' "$build/mutex_ensure.mrb" \
+  "$build/mutex_fault_owner.mrb" "$build/mutex_fault_waiter.mrb"
+mutex_case 'mutex priority inversion' "$build/mutex_inversion.mrb" \
+  "$build/mutex_fault_owner.mrb" "$build/mutex_fault_middle.mrb" "$build/mutex_fault_waiter.mrb"
 
 for fixture in idiom_collections idiom_objects idiom_values idiom_resources; do
   timeout 30s node "$build/runner.js" "$build/$fixture.mrb"
@@ -75,6 +139,14 @@ expect_failure() {
   echo "PASS: expected failure detected (exit $status / $marker)"
 }
 expect_failure 1 'expected smoke failure' "$build/expected_failure.mrb" "$build/empty.mrb"
+expect_failure 1 'Mutex unlock error. not owner or not locked.' \
+  "$build/mutex_non_owner.mrb" "$build/mutex_fault_owner.mrb"
+if grep -Fq 'FAIL:' "$build/expected-failure.log" ||
+   ! grep -Fxq 'PASS: non-owner unlock ready' "$build/expected-failure.log"; then
+  echo 'Missing non-owner assertion setup PASS or unexpected FAIL' >&2
+  exit 1
+fi
+echo 'PASS: mutex non-owner unlock assertion'
 expect_failure 1 'Unimplemented opcode (0x61) found (Exception)' "$build/idiom_avoid_lambda.mrb"
 expect_failure 1 'no block given (yield)' "$build/idiom_avoid_symbol_proc.mrb"
 expect_failure 2 'Unsupported int64 (set MRBC_INT64 in vm_config)' "$build/idiom_avoid_int64.mrb"
