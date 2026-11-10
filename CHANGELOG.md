@@ -6,6 +6,7 @@
 
 ### Added
 
+- DK console log の自己検査・stress・OOM 判定ツールと、macOS で時刻付き file に保存する手順を追加しました。BLE 接続境界を除いた統計、spinner の進捗、試験時間を検査します。capture pipeline は Linux PTY で検査し、macOS 実機では未確認です。
 - P1 の30分 DK 負荷試験と OOM/abort 試験に向け、STRESS/OOM profile、自己検査後の常時 ready spinner、保持割当て fault task、CI artifact を追加しました。統計の末尾には区間内の BM scheduler drain 最大経過時間を出力します。実機試験の完了記録ではありません。
 - P1 の CI debug image による利用者の DK 自己検査、BLE 接続・切断後の再広告、区間 tick 統計と stack/pool 観測値を記録しました。範囲 erase の通常更新と、未確認の ERASE_NONE・release 実機等を区別しています。
 - BM firmware に mruby/c scheduler、BLE 広告、system task による保守処理と統計出力を追加しました。Ruby は build 時に vendor の mruby から作った mrbc で組み込み、P1 の scheduler self-test を実行します。

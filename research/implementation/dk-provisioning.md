@@ -111,6 +111,33 @@ I: Jumping to the first image slot
 
 期待する RBOS の log は `RBOS 0.1.0+0` です。`RBOS v0.1.0...` ではありません。起動 banner の application 名は現在 `My Application` です。
 
+## macOS で P1 stress log を採る
+
+capture は reset 前に開始します。ほかの serial monitor は閉じてください。`ls /dev/cu.usbmodem*` で候補を調べ、port を一つ明示して選びます。DK には二つの VCOM port があります。P0/P1 で console に使った方、または別の terminal から `nrfutil device reset --serial-number "<SN>"` を実行すると `*** Booting My Application ... ***` が出る方です。識別値や port 名を共有 log に書き足しません。
+
+次の一行を RBOS checkout root で実行します。`<PORT>` を選んだ port の末尾に置き換えます。必要なのは macOS の zsh、stty、Perl、tee と Python 3.9 以上です。追加 package や GNU timeout は使いません。
+
+```zsh
+port='/dev/cu.usbmodem<PORT>'; duration=1860; log="dk-stress-$(date +%Y%m%d-%H%M%S).log"; (set -o pipefail; (stty 115200 raw -echo clocal <&3 && perl -e '$|=1; $SIG{ALRM}=sub { exit 0 }; alarm shift; while (1) { my $n=sysread(STDIN,my $buf,4096); die "VCOM read failed\n" unless defined $n; last unless $n; print $buf or die "VCOM write failed\n"; }' "$duration" <&3) 3<"$port" | tee "$log") && python3 tools/bm-build/check-dk-log.py "$log" --profile stress --min-duration 1800 --require-connected 1800
+```
+
+開いた fd 3 に stty を適用し、同じ fd を Perl が読みます。alarm で1860秒後に読み取りを終え、表示と保存の pipeline が成功した場合だけ checker を実行します。capture 開始後、別の terminal で reset し、phone から BLE 接続を保ってください。stats の先頭から末尾までと、接続境界をまたがない窓の合計の双方に1800秒を要求します。接続準備が長引いた場合は `duration` を延ばして採り直します。これは Linux の PTY で設定・保存・終了まで検査した手順で、macOS 固有の port と zsh での実行は未確認です。
+
+### log の判定
+
+checker は [check-dk-log.py](../../tools/bm-build/check-dk-log.py) です。raw log を再表示せず、版・SHA・統計・BLE event と問題の行番号を出します。`--json` なら機械処理用の出力です。終了値は PASS=0、FAIL=1、引数・入力 file のエラー=2 です。
+
+```sh
+python3 tools/bm-build/check-dk-log.py capture.log --profile selftest
+python3 tools/bm-build/check-dk-log.py capture.log --profile oom --json
+```
+
+- selftest/stress は9個の PASS、fatal/assert 不在、stats を要求します。`catchups>0` は失敗です。stats 間隔は Kconfig 既定の10秒で、`--stats-interval` で変更できます。1.5倍を超える欠落を失敗とし、初回を除く ticks は実 timestamp 差×1000 に対して±1%で判定します。
+- 最初の stats は窓の開始が不明なので jitter 比較と rate 計算から除きます。connect/disconnect に触れる窓も jitter 比較から外します。BLE event 間の接続時間と、完全接続窓の合計は別の値です。`--require-connected` は後者を使います。
+- `pool` は保守時に標本化した累積 peak、main/isr は paint scan による使用量の推定、`drain_us` は区間最大の経過 µs です。drain のない旧 log も受け付け、未計測と表示します。idle/service の rate は累積 counter の差を timestamp 差で割った値で、IRQ 数や CPU 使用率ではありません。
+- stress は両 spinner の開始と進捗を要求します。進捗行には timestamp がないため、直前の timestamp を代用し、間隔の2.1倍（既定21秒）を超えたら失敗とします。stats 一区間程度のずれがあり、最終 timestamp 後の経過時間は分かりません。厳密な出力間隔の証明ではなく、`--spinner-interval` で基準を変更できます。
+- oom は `OOM: start` の後の `RBOS fatal: Ruby pool exhausted` を要求します。短時間で停止して stats がない場合は未計測とし、fatal 前の stats があれば pool 等を集計します。複数回の boot は一回の試験として合算しません。
+
 ## 2026-11-09 JST の実機結果（利用者報告）
 
 対象は macOS に接続した PCA10156 revision 1.0.0、認証表示 `220-JP8930` の nRF54L15-DK です。[ハードウェア調査](../hardware/nrf54l15-dk.md)と照合しました。背面印字は LED0 P2.09、BUTTON0 P1.13、TXD1 P1.04 で、SDK の board-config と一致したとの報告です。これは観察した表示・pin の照合であり、任意の無線設定の認証適合を保証しません。

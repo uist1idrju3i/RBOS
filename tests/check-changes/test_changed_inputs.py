@@ -63,13 +63,14 @@ class ChangedInputsTests(unittest.TestCase):
 
     def test_all_inputs_and_unusual_filenames(self):
         common = ['.gitmodules', '.github/scripts/changed-inputs.sh', 'tests/check-changes/test.py',
+                  'tests/check-changes/test_dk_log.py',
                   'vendor/mruby', 'vendor/mrubyc', 'src/new\nfile.rb', 'include/space name.h',
                   'src/rbos/new.c', 'include/rbos/new.h',
                   'firmware/ruby/system.rb', 'firmware/ruby/selftest/coordinator.rb',
                   'firmware/ruby/stress/spinner_a.rb', 'firmware/ruby/fault/oom.rb']
         paths = {
             'firmware': ['firmware/src/main.c', 'firmware/stress.conf', 'firmware/oom.conf',
-                         'tools/bm-build/modules.txt',
+                         'tools/bm-build/modules.txt', 'tools/bm-build/check-dk-log.py',
                          '.github/actions/ncs-bm-setup/action.yml',
                          '.github/workflows/firmware.yml',
                          '.github/workflows/firmware-release.yml', 'vendor/sdk-nrf-bm'],
