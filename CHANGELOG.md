@@ -6,7 +6,7 @@
 
 ### Added
 
-- P1 closeout 向けに STRESS/OOM profile、二つの常時 ready spinner、保持割当て fault task、四 variant の CI artifact、区間最大の `drain_us` を追加しました。DK 30分 stress と OOM/abort は未実施です。
+- P1 closeout 向けに STRESS/OOM profile、二つの常時 ready spinner、保持割当て fault task、四 variant の CI artifact、区間最大の `drain_us` を追加しました。利用者の決定で stress 条件を完全接続窓5分へ変更しました。DK OOM/abort は利用者 log で確認済み、stress 条件は未達です。
 - 固定 mruby/c の Mutex owner 終了・ensure 解放・priority inversion・非 owner unlock の Wasm fault test と、pool 最小値の任意実行探索を追加しました。自己検査は Wasm 10 KiB で成功、9 KiB で OOM でした。Mutex 利用規約と P2/P3/P5/P6 の担当・検証条件は承認済みの方針として記録し、未実装の項目を区別しました。
 - DK console log の自己検査・stress・OOM checker と、macOS の時間制限付き capture 手順を追加しました。BLE 境界を除いた統計、spinner、試験時間を判定します。capture は Linux PTY で検査し、macOS 実機では未確認です。
 - P1 の CI debug image による利用者の DK 自己検査、BLE 接続・切断後の再広告、区間 tick 統計と stack/pool 観測値を記録しました。範囲 erase の通常更新と、未確認の ERASE_NONE・release 実機等を区別しています。
@@ -18,6 +18,8 @@
 
 ### Fixed
 
+- BLE の PHY・data length・ATT MTU 要求に SDK の connection-parameters library で応答し、未保存の system attributes を初期化します。切断 reason と手順の要求・結果を低頻度で記録し、pairing は非対応として応答します。約40秒周期の切断に対する効果は DK で再確認が必要です。
+- stress checker の既定条件を spinner 負荷中の完全接続 stats 窓300秒にし、100万で巡回する counter の差分 rate、a/b 比と2倍超の偏りの WARN を追加しました。利用者の stress/OOM capture を fixture と実機証拠に記録しました。scheduler は変更していません。
 - DK log checker は行中の boot marker も認識し、最後の boot だけを判定するようにしました。reset 前の旧 stats や時刻を混ぜず、除外行数と選択を NOTE で知らせます。実 OOM capture を回帰 fixture に追加しました。
 - actionlint 設定に `ubuntu-26.04` を登録し、未知 runner の診断を ignore せず検査できるようにしました。P1 の CI 成功記録と build 容量の履歴も更新しました。
 - P1 の tick 統計を区間ごとにリセットし、区間内の mruby/c tick 回数を表示するようにしました。生成 bytecode の形式検査と、P1 self-test・VM source の依存関係を CI に追加しました。
