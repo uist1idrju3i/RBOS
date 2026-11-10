@@ -8,6 +8,7 @@ end
 
 Task.current.name = "coordinator"
 Task.current.priority = 20
+$p1_done = false
 $p1_counts = [0, 0]
 $p1_phase = "busy"
 $p1_mutex = Mutex.new
@@ -46,3 +47,4 @@ started = VM.tick
 sleep_ms 30
 check(VM.tick > started, "idle wakeup")
 puts "PASS: P1 selftest"
+$p1_done = true

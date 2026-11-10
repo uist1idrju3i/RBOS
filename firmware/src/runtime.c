@@ -13,6 +13,7 @@ static mrbc_tcb *system_task;
 static unsigned int pool_max;
 static unsigned int idle_count;
 static unsigned int service_count;
+static unsigned int drain_max_us;
 static int64_t last_stats;
 
 void rbos_stack_paint(void)
@@ -37,7 +38,10 @@ void rbos_maintenance(bool service)
 {
 	if (service) ++service_count;
 	else ++idle_count;
+	uint32_t drain_start = k_cycle_get_32();
 	bm_scheduler_process();
+	uint32_t drain_us = k_cyc_to_us_floor32(k_cycle_get_32() - drain_start);
+	if (drain_us > drain_max_us) drain_max_us = drain_us;
 	for (int i = 0; i < 4; ++i) {
 		if (!log_process()) break;
 	}
@@ -55,9 +59,10 @@ void rbos_maintenance(bool service)
 		main_painted_end ? main_painted_end : main_base);
 	unsigned int isr_used = stack_used(isr_base, CONFIG_ISR_STACK_SIZE,
 		isr_base + CONFIG_ISR_STACK_SIZE);
-	LOG_INF("stats tick_us=%u..%u catchups=%u ticks=%u pool=%u/%u main=%u isr=%u idle=%u service=%u",
+	LOG_INF("stats tick_us=%u..%u catchups=%u ticks=%u pool=%u/%u main=%u isr=%u idle=%u service=%u drain_us=%u",
 		ticks.min_us, ticks.max_us, ticks.catchups, ticks.count, pool_max, pool.total,
-		main_used, isr_used, idle_count, service_count);
+		main_used, isr_used, idle_count, service_count, drain_max_us);
+	drain_max_us = 0;
 }
 
 static void system_service(mrbc_vm *vm, mrbc_value v[], int argc)

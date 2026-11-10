@@ -65,9 +65,11 @@ class ChangedInputsTests(unittest.TestCase):
         common = ['.gitmodules', '.github/scripts/changed-inputs.sh', 'tests/check-changes/test.py',
                   'vendor/mruby', 'vendor/mrubyc', 'src/new\nfile.rb', 'include/space name.h',
                   'src/rbos/new.c', 'include/rbos/new.h',
-                  'firmware/ruby/system.rb', 'firmware/ruby/selftest/coordinator.rb']
+                  'firmware/ruby/system.rb', 'firmware/ruby/selftest/coordinator.rb',
+                  'firmware/ruby/stress/spinner_a.rb', 'firmware/ruby/fault/oom.rb']
         paths = {
-            'firmware': ['firmware/src/main.c', 'tools/bm-build/modules.txt',
+            'firmware': ['firmware/src/main.c', 'firmware/stress.conf', 'firmware/oom.conf',
+                         'tools/bm-build/modules.txt',
                          '.github/actions/ncs-bm-setup/action.yml',
                          '.github/workflows/firmware.yml',
                          '.github/workflows/firmware-release.yml', 'vendor/sdk-nrf-bm'],
@@ -131,6 +133,34 @@ class ChangedInputsTests(unittest.TestCase):
 
 
 class SummaryTests(unittest.TestCase):
+    def test_firmware_profile_arguments(self):
+        workflow = (ROOT / '.github/workflows/firmware.yml').read_text()
+        self.assertIn('variant: [debug, release, stress, oom]', workflow)
+        script = textwrap.dedent(workflow.split('      - name: 選んだ構成を build する\n')[1]
+                                 .split('        run: |\n')[1].split('\n      - name:')[0])
+        for variant in ['debug', 'release', 'stress', 'oom']:
+            with self.subTest(variant=variant):
+                result = subprocess.run(
+                    ['bash', '-eo', 'pipefail', '-c',
+                     'cd() { :; }; west() { printf "%s\\n" "$@"; };\n' + script],
+                    env={**os.environ, 'VARIANT': variant, 'BM_WORKSPACE': '/workspace',
+                         'GITHUB_WORKSPACE': '/repo with space', 'RUNNER_TEMP': '/runner'},
+                    capture_output=True, text=True,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                args = result.stdout.splitlines()
+                self.assertIn('/repo with space/firmware', args)
+                if variant == 'release':
+                    self.assertIn('-DFILE_SUFFIX=release', args)
+                    self.assertIn('-DSB_CONFIG_BM_BOOTLOADER_MCUBOOT_SIGNATURE_KEY_FILE='
+                                  '"/runner/keys/rbos-test-release.pem"', args)
+                else:
+                    self.assertFalse(any('SIGNATURE_KEY_FILE' in arg for arg in args))
+                if variant in ['stress', 'oom']:
+                    self.assertIn(f'-DEXTRA_CONF_FILE=/repo with space/firmware/{variant}.conf', args)
+                else:
+                    self.assertFalse(any('EXTRA_CONF_FILE' in arg for arg in args))
+
     def test_required_names_and_summary_results(self):
         agent = (ROOT / '.github/workflows/agent-docs.yml').read_text()
         self.assertIn('\n  agent-docs:\n', agent)

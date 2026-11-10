@@ -51,6 +51,13 @@ timeout 30s node "$build/runner.js" "$build/p1-coordinator.mrb" \
 grep -Fxq 'PASS: P1 selftest' "$build/p1-selftest.log"
 echo 'PASS: compiled system task and ran P1 selftests'
 
+for profile in stress fault; do
+  for source in "$root"/firmware/ruby/"$profile"/*.rb; do
+    "$mrbc" -o "$build/p1-$profile-$(basename "${source%.rb}").mrb" "$source"
+  done
+done
+echo 'PASS: compiled stress spinners and OOM fault task (compile only)'
+
 for fixture in idiom_collections idiom_objects idiom_values idiom_resources; do
   timeout 30s node "$build/runner.js" "$build/$fixture.mrb"
 done
