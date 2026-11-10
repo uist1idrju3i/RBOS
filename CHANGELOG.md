@@ -6,8 +6,9 @@
 
 ### Added
 
-- DK console log の自己検査・stress・OOM 判定ツールと、macOS で時刻付き file に保存する手順を追加しました。BLE 接続境界を除いた統計、spinner の進捗、試験時間を検査します。capture pipeline は Linux PTY で検査し、macOS 実機では未確認です。
-- P1 の30分 DK 負荷試験と OOM/abort 試験に向け、STRESS/OOM profile、自己検査後の常時 ready spinner、保持割当て fault task、CI artifact を追加しました。統計の末尾には区間内の BM scheduler drain 最大経過時間を出力します。実機試験の完了記録ではありません。
+- P1 closeout 向けに STRESS/OOM profile、二つの常時 ready spinner、保持割当て fault task、四 variant の CI artifact、区間最大の `drain_us` を追加しました。DK 30分 stress と OOM/abort は未実施です。
+- 固定 mruby/c の Mutex owner 終了・ensure 解放・priority inversion・非 owner unlock の Wasm fault test と、pool 最小値の任意実行探索を追加しました。自己検査は Wasm 10 KiB で成功、9 KiB で OOM でした。Mutex 利用規約と P2/P3/P5/P6 の担当・検証条件は承認済みの方針として記録し、未実装の項目を区別しました。
+- DK console log の自己検査・stress・OOM checker と、macOS の時間制限付き capture 手順を追加しました。BLE 境界を除いた統計、spinner、試験時間を判定します。capture は Linux PTY で検査し、macOS 実機では未確認です。
 - P1 の CI debug image による利用者の DK 自己検査、BLE 接続・切断後の再広告、区間 tick 統計と stack/pool 観測値を記録しました。範囲 erase の通常更新と、未確認の ERASE_NONE・release 実機等を区別しています。
 - BM firmware に mruby/c scheduler、BLE 広告、system task による保守処理と統計出力を追加しました。Ruby は build 時に vendor の mruby から作った mrbc で組み込み、P1 の scheduler self-test を実行します。
 - nRF54L15 DK の S115・MCUboot 向けに、版 0.1.0 の最小 firmware を追加しました。UARTE に版を表示し、LED0 を点灯します。
@@ -17,6 +18,7 @@
 
 ### Fixed
 
+- actionlint 設定に `ubuntu-26.04` を登録し、未知 runner の診断を ignore せず検査できるようにしました。P1 の CI 成功記録と build 容量の履歴も更新しました。
 - P1 の tick 統計を区間ごとにリセットし、区間内の mruby/c tick 回数を表示するようにしました。生成 bytecode の形式検査と、P1 self-test・VM source の依存関係を CI に追加しました。
 - CI artifact の保存が実装済みだった P0・P6 のチェックリストと振り返りを訂正しました。通常 CI の7日間の保存と、正式 release の証拠の長期保管を区別しました。
 - nRF54L15-DK の準備手順に、利用者報告の初回 KMU 準備、通常更新、LED・console・loader 入口の実機結果を記録しました。BM workspace 内での build、macOS の VCOM 設定、正しい期待 log を追記しました。erase なしの初回準備と DFU 後の新 image 起動は未確認です。試験用 v0.1.1 は未 commit の写しで、公開版の追加ではありません。

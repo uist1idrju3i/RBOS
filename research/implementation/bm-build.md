@@ -94,6 +94,14 @@ west build -b bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot \
   <RBOS>/firmware --sysbuild -d <build-release> -p always -- \
   -DFILE_SUFFIX=release \
   '-DSB_CONFIG_BM_BOOTLOADER_MCUBOOT_SIGNATURE_KEY_FILE="<key-dir>/rbos-release.pem"'
+
+# stress/oom: Add an overlay to debug; no release key is used.
+west build -b bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot \
+  <RBOS>/firmware --sysbuild -d <build-stress> -p always -- \
+  -DEXTRA_CONF_FILE=<RBOS>/firmware/stress.conf
+west build -b bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot \
+  <RBOS>/firmware --sysbuild -d <build-oom> -p always -- \
+  -DEXTRA_CONF_FILE=<RBOS>/firmware/oom.conf
 ```
 
 ### P0 の build 記録（履歴）
@@ -123,6 +131,8 @@ P1 も上の `west build --sysbuild -p always` を debug と外部試験鍵の r
 
 ### 集計方法
 
+部品別表は初期 P1 と P0 の比較であり、後述の closeout build の再集計ではありません。
+
 Python で GNU ld map の `Linker script and memory map` 以降の入力 section（object/archive member 付き）を解析しました。`arm-zephyr-eabi-objdump -h` の ALLOC な出力 section 内だけを対象とし、discarded section と非 ALLOC の debug 情報を除外します。merge/relax 前の長さが出力 section を越える場合は出力の境界で切ります。LOAD と VMA/LMA で RAM 初期値を照合し、RAM と FLASH の両方に計上しました。`arm-zephyr-eabi-nm -S` で `vm_pool` と `z_main_stack` の領域を先に分離しています。
 
 残る各 byte は map の出現順で最初の部品に一度だけ割り当てます。文字列の merge による重複範囲も二重計上しません。各 memory region の origin から link summary の使用末尾までを対象にし、未帰属 byte、配置 gap、padding と下表にない依存を「その他」に含めました。これは配置上の帰属であり、個々の機能を無効にした差分実験ではありません。共有文字列の帰属は link 順に依存します。
@@ -148,6 +158,27 @@ Python で GNU ld map の `Linker script and memory map` 以降の入力 section
 各列の和は上の app summary の差と一致します。logging の減少を単体の最適化効果とは解釈しません。bytecode 行には task の名前・table も含みます。const blob の RAM コピーはありませんが、IREP や String など実行時の追加確保は pool 内に別途必要です。ISR stack は両方 2,048 B のままで「その他」に含み、増分はありません。
 
 P1 debug app の `zephyr.signed.bin` は SHA-256 `16713af249a4f0ab4e98100a6d633e962d319db75ffb00f6b44f2c7c4f7f7f10` でした。これは CI artifact の hash ではなく、上記 commit 前作業木の識別情報です。起動 banner の commit 表記が変わるため、文書変更だけの commit でも firmware の hash は変わり得ます。release は鍵でも変わります。
+
+### P1 closeout の四 variant
+
+`37c995e` に commit した変更を含む作業木で、workspace 検査後に同じ target の四 variant を pristine build しました。全て compiler warning/error 0 です。commit 前の build なので banner は親 `6cad3f5` を示し、commit 後の artifact と hash は異なり得ます。
+
+| app | FLASH (B) | RAM (B) | Ruby task |
+|---|---:|---:|---|
+| debug / SELFTEST | 114,288 | 83,600 | system＋coordinator＋二 worker |
+| release / SELFTEST | 98,548 | 83,360 | 同上、VM source の NDEBUG 有効 |
+| stress | 115,088 | 83,600 | SELFTEST＋二つの常時 ready spinner |
+| oom | 112,380 | 83,600 | system＋保持割当て fault task |
+
+`firmware/Kconfig` の choice は SELFTEST が既定で、`firmware/cmake/mrubyc.cmake` は常に system.rb を先頭にします。stress は自己検査完了後に priority 128 の spinner 二つを起動し、10000 VM ticks ごとに進捗を表示します。`VM.tick` は `mrbc_tick` の呼出数です（`vendor/mrubyc/src/rrt0.c:145-147,1457-1467`）。oom は `OOM: start` 後に文字列を保持し、pool 枯渇で HAL abort に入ります。いずれも DK の長時間・fault 実行は未確認です。
+
+現在の stats 形式は次です。原文の旧 P1 実機 log に drain 値を補ってはいけません。
+
+```text
+stats tick_us=<min>..<max> catchups=<count> ticks=<count> pool=<used_max>/<total> main=<bytes> isr=<bytes> idle=<count> service=<count> drain_us=<max>
+```
+
+`firmware/src/runtime.c:41-44,62-65` は bm_scheduler_process の前後の cycle 差を µs に換算し、区間最大を出力後に reset します。割り込みによる中断も含む経過時間で、queue drain の時間上限を設ける変更ではありません。実行・判定は [capture と checker](dk-provisioning.md#macos-で-p1-stress-log-を採る)、残る実機条件は [P1 closeout](retrospective-P1.md#p1-closeout-の追加実装と判定)を参照してください。
 
 ## 鍵の分離
 
@@ -217,7 +248,7 @@ hash は SDK の開発用鍵で署名した debug のものです。release の 
 
 ## CI
 
-`firmware.yml` は debug / release の matrix を並列に動かします。一方が失敗しても他方は止めません。release 側だけで試験用 ED25519 鍵を作り、成功・失敗にかかわらず削除します。成果物名は `firmware-evidence-<variant>-<sha>` です。`.config` を含む証拠を zip に保存し、保存前に PEM と `keyfile.json` がないことを検査します。
+`firmware.yml` は debug / release / stress / oom の matrix を並列に動かします。一つが失敗しても他は止めません。stress/oom は debug に overlay を追加します。release 側だけで試験用 ED25519 鍵を作り、成功・失敗にかかわらず削除します。成果物名は `firmware-evidence-<variant>-<sha>` です。`production.hex`、`.config`、map、SHA256SUMS を含む証拠を保存し、保存前に PEM と `keyfile.json` がないことを検査します。workspace 保存は従来どおり debug だけです。
 
 toolchain は bundle ID、workspace は BM v2.0.1 と `modules.txt` の hash で cache を分けます。workspace cache の保存は main の debug job だけです。復元時は init を省きますが、west update と全 module の SHA・clean tree 検査は毎回行います。log に restore / init / update / check の秒数を残します。GitHub 上の warm cache と fresh 取得の比較は未実施です。復元が遅ければ workspace cache を外します。
 
@@ -240,7 +271,7 @@ compiler cache は variant、bundle ID、module hash、run ID・attempt ごと�
 
 `.github/scripts/changed-inputs.sh` が入力の directory と submodule pointer を判定します。変更判定 script とそのテストを変えた場合は両方の検査を実行します。before が空・全ゼロ、commit が取得できない、force push、履歴が連続しない場合も入力変更ありとして扱います。関係のない変更なら重い build / test だけを省きます。
 
-最後の同名 job は `if: always()` で結果をまとめます。変更判定が成功し、必要な build / test が成功した場合、または入力変更なしで省略した場合だけ成功します。判定や build / test の失敗・取消は成功にしません。matrix の check 名は `build (debug)` / `build (release)` で、必須にするのは集約した `firmware` だけです。workflow 全体を paths で省略すると必須 check が pending のまま残るため、この形にしています。
+最後の同名 job は `if: always()` で結果をまとめます。変更判定が成功し、必要な build / test が成功した場合、または入力変更なしで省略した場合だけ成功します。判定や build / test の失敗・取消は成功にしません。matrix の check 名は `build (debug)` / `build (release)` / `build (stress)` / `build (oom)` で、必須にするのは集約した `firmware` だけです。workflow 全体を paths で省略すると必須 check が pending のまま残るため、この形にしています。
 
 マージ後に管理者が Settings → Rules → Rulesets → main → Require status checks で、source が GitHub Actions の `agent-docs`、`mruby-wasm`、`firmware` を追加します。Require branches to be up to date は off のままにします。必要なら Require code scanning results も追加し、CodeQL の threshold を High 以上に設定してください。今回の変更では ruleset を操作しません。
 
