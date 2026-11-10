@@ -32,17 +32,18 @@
 - [x] P1 自己検査で stack/pool の観測値を記録する。利用者の CI debug 実機 log は pool 最大標本11560/65536 B（17.6%）、main paint scan 688/8192 B、ISR 560/2048 B。main は256 Bの未塗布余裕を含み、厳密な使用上限ではありません（[実機結果と統計の意味](retrospective-P1.md)）。
 - [x] tick、同 priority の巡回、sleep、mutex、suspend/resume を確認する。`firmware/ruby/selftest/` の全 PASS を利用者の DK log で確認。`PASS: workers joined` と `PASS: idle wakeup` も確認しました（[実機結果](retrospective-P1.md)）。
 - [x] BLE 接続中の tick callback 間隔を測る。完全接続区間936..1049 µs、接続前930..1040 µs、全行 catchups=0。tick は約10000回/10秒。境界混在区間は比較から除外しました（[区間の根拠](retrospective-P1.md)）。
-- [x] BLE の接続・切断後の再広告を確認する。利用者 log の接続・切断と fast→slow の再広告が証拠です。二度目の接続や slow 広告180秒後の停止は未確認です（[実機結果](retrospective-P1.md)）。
+- [x] BLE の接続・切断後の再広告、二度目の接続、slow 広告180秒後の停止を確認する。image `f85c2fbe5456` の利用者 log で二接続と remote 終了 reason=0x13を確認。最後の切断102.890137秒→slow 112.880452秒→Idle 292.847109秒が証拠です（[修正後の実機結果](retrospective-P1.md#ble-応答修正後の-dk-証拠)）。
 - [x] mruby/c の結合後に debug/release を build し、P0 からの map の増分を記録する。[部品別表と集計方法](bm-build.md#p1-の-build-結果と-map-比較)に app の FLASH/RAM 差を記録。debug は +82,444 / +78,152 B、release は +71,444 / +77,920 B でした。
 - [x] Mutex owner 終了・例外・優先度差の fault test を Wasm で実行し、利用規約を文書化する。`6819755` の `tests/mruby/mutex_*.rb` と `tools/mrubyc-wasm/check.sh` が owner 終了後の保持、ensure 解放、inversion、非 owner unlock の assertion を確認しました。[採用済み規約](../mrubyc/task-scheduler.md#rbos-の-mutex-利用規約採用)参照。実機の fault 試験は未実施です。
-- [ ] 二つの常時 ready task の負荷中に、BLE の完全接続 stats 窓の合計5分（300秒）を満たし、境界を除いた jitter と `drain_us` 最大値を保存する。利用者の決定で30分から5分へ変更しました。`stress` profile と [checker](dk-provisioning.md#macos-で-p1-stress-log-を採る)が既定300秒を要求します。利用者 log は230.067537秒で未達、接続窓922..1063 µs、drain 最大144 µs、spinner に約10倍の偏りがありました。再接続は確認済みですが、BLE 応答修正後の再試験と slow 広告180秒後の停止確認が残ります。
+- [x] 二つの常時 ready task の負荷中に、BLE の完全接続 stats 窓の合計5分（300秒）を満たし、境界を除いた jitter と `drain_us` 最大値を保存する。利用者の決定で30分から5分へ変更しました。image `f85c2fbe5456` の [利用者 log](../../tests/check-changes/stress-connected-capture.txt) は checker の stress 既定条件で PASS。完全接続400.122214秒、切断なし、tick 920..1064 µs、catchups=0、drain 最大60 µsです。旧 log の230.067537秒未達とは分けて記録します。
+- [ ] 同 priority spinner の公平性の扱いを利用者と決める。BLE 応答修正後も a/b=0.100775（約1:9.9）の偏りが残りました。checker は WARN のみですが、P1 完了とはせず判断待ちです。[調査と選択肢](retrospective-P1.md#同-priority-spinner-の偏りと-wasm-調査)参照。scheduler は未変更です。
 - [x] `oom` profile で DK の OOM/abort 経路を確認する。利用者の image `3d1fd598c609` は `OOM: start` → `RBOS fatal: Ruby pool exhausted` を出し、[実 capture fixture](../../tests/check-changes/oom-capture.txt)を OOM checker で PASS と確認しました。fatal 前の stats はなく pool 上限は未計測です。
 - [ ] idle と deferred event が常時 ready の task に妨げられないようにする。DK の idle wakeup は PASS。stress の二 spinner と BLE の同時負荷でも service 約90.7回/秒と drain 最大144 µsを確認しました。queue の上限と一般的な進行保証は未確認です。
 - [x] SoftDevice priority 0/1 と GRTC channel0 を予約する。静的確認: 両 app の ZERO_LATENCY_IRQS=y / ZERO_LATENCY_LEVELS=1、3 priority bits、BASEPRI=0x40（NVIC 2以上を mask）。`firmware/src/hal/hal.c` は SDK の irq_lock と bm_timer のみを使い、直接 GRTC/channel を操作しません。bm_timer は `k_timer` を経由し、SDK の channel0 予約を維持（[根拠と確認の境界](retrospective-P1.md#達成と未達)）。
 - [ ] peripheral、DPPI、IRQ の完全な予約表を対象 SoftDevice の仕様と照合する。
-- [ ] SDH 配送 model と SD RAM usage、BM queue の容量と drain 時間を .config/map/実測で確認する。両 app の `.config` は SCHED、BM_SCHEDULER_BUF_SIZE=512。queue drain 時間と SD RAM の実測は未実施です。[SDK 調査](../nrf-bm/component-catalog.md)参照。
+- [ ] SDH 配送 model と SD RAM usage、BM queue の容量と drain 時間を .config/map/実測で確認する。両 app の `.config` は SCHED、BM_SCHEDULER_BUF_SIZE=512。修正後の DK 接続 stress では drain 最大60 µs、再接続 log では148 µsを観測しましたが、一般的な上限と SD RAM の実測は未確認です。[SDK 調査](../nrf-bm/component-catalog.md)参照。
 
-実機の証拠は `ff4c23e` の CI debug image による約130秒の自己検査に加え、`3d1fd598c609` の stress/OOM 利用者 log です。[追加結果](retrospective-P1.md#利用者の-stressoom-証拠と5分条件)に限界も記録しました。P1 closeout は Wasm Mutex 試験、DK の完全接続窓5分 stress、DK OOM を要求し、stress は未達です。release 実機・ERASE_NONE・保存データの検証は P5/P6 が担当します。通常更新は P0 と同じ ERASE_RANGES_TOUCHED_BY_FIRMWARE で、全体 erase・鍵の再 provision は行っていません。
+実機の証拠は `ff4c23e` の自己検査、`3d1fd598c609` の stress/OOM、`f85c2fbe5456` の BLE 応答修正後の二 log です。[追加結果](retrospective-P1.md#ble-応答修正後の-dk-証拠)に image・hash・観測の限界を記録しました。Wasm Mutex、DK の5分 stress、OOM、再接続と広告停止の証拠はそろいましたが、spinner 公平性の利用者判断が未決なので P1 closeout は未完了です。release 実機・ERASE_NONE・保存データ検証は P5/P6 が担当します。通常更新は ERASE_RANGES_TOUCHED_BY_FIRMWARE で、全体 erase・鍵の再 provision は行っていません。
 
 出典: [scheduler](../mrubyc/task-scheduler.md)、[設定とメモリ](../mrubyc/configuration-and-memory.md)、[IRQ](../nrf-bm/softdevice-and-interrupts.md)。
 

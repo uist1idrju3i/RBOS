@@ -9,9 +9,9 @@ mruby/c の VM と rrt0 task scheduler を中核に、Nordic nRF54L15-DK 上で�
 
 ## 現状
 
-**研究段階であり、RBOS の実装はまだありません。**
-SDK のビルド、実機動作、DFU、性能・消費電力は本リポジトリでは未検証です。
-調査済みの仕様、設計案、未確認事項を [research/README.md](research/README.md) に分けて記録しています。
+[firmware/](firmware/) に mruby/c・BM HAL・BLE の初期実装があります。P0 の build・実機確認に加え、P1 は利用者の DK log で自己検査、OOM、BLE 接続中の5分 stress、再接続と広告停止を確認しました。
+**P1 は未完了です。** BLE 応答修正後も同 priority spinner の進捗比約1:9.9が残り、公平性の扱いは利用者の判断待ちです。[P1 の実機証拠と限界](research/implementation/retrospective-P1.md#ble-応答修正後の-dk-証拠)と [checklist](research/implementation/checklist.md#p1-vm-と時間)に記録しています。
+周辺 API、権限分離、release 実機、消費電力等は今後の検証対象です。調査済みの仕様、設計案、未確認事項は [research/README.md](research/README.md) を参照してください。
 
 ## 目標/特徴
 

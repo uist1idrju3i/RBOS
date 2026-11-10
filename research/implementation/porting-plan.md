@@ -25,7 +25,7 @@
 
 ## P1: mruby/c を OS の中核として動かす
 
-**状況**: 実装、debug/release build、selftest の Wasm 実行に続き、利用者が `ff4c23e` の CI debug image を DK で実行しました。全自己検査 PASS、完全 BLE 接続区間936..1049 µs、pool の最大標本11560/65536 B、main/ISR paint scan 688/560 B を記録。厳密な資源上限と常時 ready worker＋BLE の同時負荷は未確認です。release 実機・ERASE_NONE は P5、保存データ保持は P5/P6 に移しました。[P1 の振り返り](retrospective-P1.md)と[証拠付き checklist](checklist.md#p1-vm-と時間)を参照してください。以下の受け入れ条件は変更しません。
+**状況**: debug/release build と Wasm 検査に続き、利用者が `ff4c23e` の DK 自己検査、`3d1fd598c609` の OOM、`f85c2fbe5456` の二つの常時 ready task＋BLE の完全接続400秒 stress を確認しました。後者は tick 920..1064 µs、pool 最大標本15428/65536 B、main/ISR 696/560 B、drain 最大60 µsです。再接続・広告停止も確認済みですが、厳密な資源上限と公平性の扱いは未確定で、P1 は未完了です。release 実機・ERASE_NONE は P5、保存データ保持は P5/P6 が担当します。[P1 の振り返り](retrospective-P1.md)と[証拠付き checklist](checklist.md#p1-vm-と時間)を参照してください。
 
 - vendor/mruby 4.0.0 の mrbc を build して固定し、RITE0400 の最小プログラムを作る。
 - mruby/c を `firmware/` へ結合したら、debug と release の両方を build し、P0 の map と比べた増分を記録する。
@@ -38,7 +38,7 @@
 
 **受け入れ条件**: 二つ以上の task の同時実行、同 priority の巡回、priority 変更、sleep、mutex、suspend/resume、idle wakeupを試験すること。BLE 接続中の tick jitter と stack/pool 最大使用量を計測すること。
 
-**承認済み closeout 条件**: Wasm の Mutex owner 終了・例外・優先度差試験と規約、DK の二つの常時 ready task 負荷中の BLE 完全接続 stats 窓5分（300秒）、DK OOM/abort の証拠をそろえます。利用者の決定で stress 時間だけを30分から5分へ変更しました。Wasm と DK OOM は完了。利用者の stress log は境界を除くと230.067537秒なので、stress は未達です。jitter、drain_us、再接続と slow 広告180秒後の停止も記録します。spinner の rate 比は当面 WARN とし、偏りだけで FAIL にはしません。BLE 応答修正後の実機再試験は未実施です。
+**承認済み closeout 条件**: Wasm の Mutex fault と規約、DK の二つの常時 ready task 負荷中の BLE 完全接続 stats 窓5分（300秒）、DK OOM/abort の証拠をそろえます。利用者の決定で stress 時間だけを30分から5分へ変更しました。Wasm と DK OOM に加え、image `f85c2fbe5456` の利用者 log で完全接続400.122214秒、jitter 920..1064 µs、drain 最大60 µs、再接続と slow 広告の約180秒後停止を確認しました（[証拠](retrospective-P1.md#ble-応答修正後の-dk-証拠)）。ただし spinner は約1:9.9の偏りを保ち、扱いは利用者の判断待ちです。checker は WARN にとどめますが、**P1 完了は宣言しません**。scheduler は未変更です。
 
 根拠: `vendor/mrubyc/src/rrt0.c:146-181,339-425`、`vendor/mrubyc/hal/minimal.h:1-55`、`vendor/sdk-nrf-bm/include/bm/bm_timer.h:30-112`、[HAL](../mrubyc/hal-porting.md)、[割り込み](../nrf-bm/softdevice-and-interrupts.md)。
 
