@@ -1,0 +1,14 @@
+[00:07:15.033,847] <inf> rbos_runtime: stats tick_us=979..1009 catchups=0 ticks=10000 pool=11560/65536 main=688 isr=560 idle=481*** Booting MCUboot v2.3.0-dev-fce4dac2e629 ***
+*** Using nRF Connect SDK Bare Metal v2.0.1-51484143c091 ***
+I: Starting bootloader
+I: Booting main application
+I: Bootloader chainload address offset: 0xa000
+I: Image version: v0.1.0
+I: Jumping to the first image slot
+*** Booting My Application v0.1.0-3d1fd598c609 ***
+*** Using nRF Connect SDK Bare Metal v2.0.1-51484143c091 ***
+[00:00:00.008,938] <inf> nrf_sdh: SoftDevice forward address: 0x163800
+[00:00:00.025,703] <inf> rbos: RBOS 0.1.0+0
+[00:00:00.035,348] <inf> ble_adv: Fast advertising
+OOM: start
+RBOS fatal: Ruby pool exhausted

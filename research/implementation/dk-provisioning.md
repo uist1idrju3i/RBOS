@@ -136,7 +136,8 @@ python3 tools/bm-build/check-dk-log.py capture.log --profile oom --json
 - 最初の stats は窓の開始が不明なので jitter 比較と rate 計算から除きます。connect/disconnect に触れる窓も jitter 比較から外します。BLE event 間の接続時間と、完全接続窓の合計は別の値です。`--require-connected` は後者を使います。
 - `pool` は保守時に標本化した累積 peak、main/isr は paint scan による使用量の推定、`drain_us` は区間最大の経過 µs です。drain のない旧 log も受け付け、未計測と表示します。idle/service の rate は累積 counter の差を timestamp 差で割った値で、IRQ 数や CPU 使用率ではありません。
 - stress は両 spinner の開始と進捗を要求します。進捗行には timestamp がないため、直前の timestamp を代用し、間隔の2.1倍（既定21秒）を超えたら失敗とします。stats 一区間程度のずれがあり、最終 timestamp 後の経過時間は分かりません。厳密な出力間隔の証明ではなく、`--spinner-interval` で基準を変更できます。
-- oom は `OOM: start` の後の `RBOS fatal: Ruby pool exhausted` を要求します。短時間で停止して stats がない場合は未計測とし、fatal 前の stats があれば pool 等を集計します。複数回の boot は一回の試験として合算しません。
+- oom は `OOM: start` の後の `RBOS fatal: Ruby pool exhausted` を要求します。短時間で停止して stats がない場合は未計測とし、fatal 前の stats があれば pool 等を集計します。
+- 全 profile で最後の boot だけを判定し、複数回の boot は合算しません。各 boot の開始は `*** Booting MCUboot`、それがない boot は `*** Booting My Application` です。MCUboot 直後の app banner は同じ boot として扱います。marker が旧 log の断片と同じ行にあっても、それより前は無視します。除外した行数と複数 boot の選択を NOTE に出し、問題の行番号は元 log のまま保ちます。marker 前の行中の断片も、除外一行に数えます。最後の boot が不完全なら、前の成功した boot には戻りません。
 
 ## 2026-11-09 JST の実機結果（利用者報告）
 

@@ -131,8 +131,57 @@ class LogTests(unittest.TestCase):
         report = dk_log.analyze(data, profile="oom")
         self.assertEqual(report["errors"], [])
         self.assertEqual(report["peaks"]["pool"], 11560)
-        self.assert_fails(b"RBOS fatal: Ruby pool exhausted\nOOM: start\n" + synthetic(),
+        self.assert_fails(synthetic("oom").replace(b"OOM: start\nRBOS fatal: Ruby pool exhausted",
+                                                  b"RBOS fatal: Ruby pool exhausted\nOOM: start"),
                           "precedes OOM start", profile="oom")
+
+    def test_real_oom_capture(self):
+        path = Path(__file__).with_name("oom-capture.txt")
+        report = dk_log.analyze(path.read_bytes(), profile="oom")
+        self.assertEqual(report["errors"], [])
+        self.assertEqual(report["boot"]["sha"], "3d1fd598c609")
+        self.assertEqual(report["stats_lines"], 0)
+        self.assertEqual(report["peaks"]["pool"], None)
+        self.assertEqual(report["oom"], {"start_line": 13, "fatal_line": 14})
+        self.assertEqual(report["events"][0]["line"], 12)
+        self.assertTrue(any("Ignored 1 pre-boot line(s)" in note for note in report["warnings"]))
+        self.assertFalse(any("Detected 2 boots" in note for note in report["warnings"]))
+        result = subprocess.run([sys.executable, str(CHECKER), str(path), "--profile", "oom"],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("PASS: oom", result.stdout)
+        self.assertIn("NOTE: Ignored 1 pre-boot line(s)", result.stdout)
+
+    def test_last_boot_only(self):
+        for profile in ("selftest", "stress", "oom"):
+            for marker in (b"", b"*** Booting MCUboot vtest ***\n"):
+                with self.subTest(profile=profile, marker=marker):
+                    old = marker + synthetic(profile) + b"FAIL: old boot\n"
+                    current = marker + synthetic(profile).replace(b"abcdef123456", b"123abc456def")
+                    report = dk_log.analyze(old + current, profile=profile)
+                    self.assertEqual(report["errors"], [])
+                    self.assertEqual(report["boot"]["sha"], "123abc456def")
+                    self.assertEqual(report["stats_lines"], 0 if profile == "oom" else 6)
+                    self.assertTrue(any("Detected 2 boots" in note for note in report["warnings"]))
+                    if profile != "oom":
+                        self.assert_fails(old + current.replace(b"PASS: P1 selftest\n", b""),
+                                          "Missing PASS: P1 selftest", profile=profile)
+                    else:
+                        self.assert_fails(old + current.replace(b"RBOS fatal: Ruby pool exhausted", b""),
+                                          "exact pool-exhaustion fatal", profile=profile)
+        self.assert_fails(synthetic() + b"*** Booting MCUboot vtest ***", "boot banner")
+        report = dk_log.analyze(real_log() + synthetic())
+        self.assertEqual(report["errors"], [])
+        self.assertEqual(report["boot"]["sha"], "abcdef123456")
+        self.assertEqual(report["events"], [])
+
+    def test_midline_app_boot_and_original_line_numbers(self):
+        data = b"FAIL: old boot\n" + stamp(100).encode() + b" stats tick_us=9" + synthetic("oom")
+        report = dk_log.analyze(data, profile="oom")
+        self.assertEqual(report["errors"], [])
+        self.assertTrue(any("Ignored 2 pre-boot line(s)" in note for note in report["warnings"]))
+        self.assertEqual(report["oom"], {"start_line": 4, "fatal_line": 5})
+        self.assert_fails(data.replace(b"pool exhausted", b"bad pool"), "Unexpected fatal/assert", profile="oom")
 
     def test_garbage_crlf_ansi_and_partial_first_line(self):
         data = b"partial \xff\xfe\r" + b"\x1b[32m" + real_log().replace(b"\n", b"\r\n") + b"\x1b[0m"
@@ -140,10 +189,9 @@ class LogTests(unittest.TestCase):
         self.assertEqual(dk_log.analyze(b"stats tick_us=9\r" + real_log())["status"], "PASS")
         self.assertEqual(dk_log.analyze(b"\x1b]0;title\x1b\\" + real_log() + b"\x1b]0;end\x1b\\")["status"], "PASS")
 
-    def test_empty_headers_and_reboots(self):
+    def test_empty_headers(self):
         self.assert_fails(b"", "boot banner")
         self.assert_fails(synthetic().replace(b"RBOS 0.1.0+0", b""), "Missing RBOS")
-        self.assert_fails(synthetic() + synthetic(), "boot banner")
 
     def test_malformed_zero_capacity_and_counter_reset(self):
         self.assert_fails(synthetic().replace(b"drain_us=42", b"drain_us=bad", 1), "Malformed")

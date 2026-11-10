@@ -17,6 +17,7 @@ PASSES = (
 ANSI = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*?(?:\x07|\x1b\\))")
 STAMP = re.compile(r"\[(\d{1,4}):([0-5]\d):([0-5]\d)\.(\d{3})(?:,(\d{3}))?\]")
 BOOT = re.compile(r"\*\*\* Booting My Application v([\w.+-]+?)-([0-9a-fA-F]{12}) \*\*\*")
+BOOT_START = re.compile(r"\*\*\* Booting (MCUboot|My Application)\b")
 STATS = re.compile(
     r"\bstats tick_us=(\d+)\.\.(\d+) catchups=(\d+) ticks=(\d+) "
     r"pool=(\d+)/(\d+) main=(\d+) isr=(\d+) idle=(\d+) service=(\d+)"
@@ -58,11 +59,28 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
             spinner_interval=10, require_connected=0):
     lines = ANSI.sub("", data.decode("utf-8", errors="replace")).splitlines()
     errors, warnings, stats, events, boots, versions = [], [], [], [], [], []
+    boot_starts = []
+    previous_marker = None
+    for number, line in enumerate(lines, 1):
+        for match in BOOT_START.finditer(line):
+            kind = match[1]
+            if kind == "MCUboot" or previous_marker != "MCUboot":
+                boot_starts.append((number, match.start()))
+            previous_marker = kind
+    first_line = 1
+    if boot_starts:
+        first_line, column = boot_starts[-1]
+        ignored = first_line - 1 + int(column > 0)
+        lines = [lines[first_line - 1][column:]] + lines[first_line:]
+        if ignored:
+            warnings.append("Ignored %d pre-boot line(s), counting any residue before the selected marker; original line numbers retained" % ignored)
+        if len(boot_starts) > 1:
+            warnings.append("Detected %d boots; judging only the last boot (not merged)" % len(boot_starts))
     starts = {key: [] for key in "ab"}
     progress = {key: [] for key in "ab"}
     passed, fatal_lines, oom_starts, oom_fatals = set(), [], [], []
     clock = None
-    for number, line in enumerate(lines, 1):
+    for number, line in enumerate(lines, first_line):
         at = timestamp(line)
         if at is not None:
             if clock is not None and at < clock:
@@ -130,7 +148,7 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
             errors.append("Need one OOM start followed by one exact pool-exhaustion fatal")
         elif oom_starts[0] >= oom_fatals[0]:
             errors.append("Pool-exhaustion fatal precedes OOM start")
-        boundary = oom_fatals[0] if oom_fatals else len(lines) + 1
+        boundary = oom_fatals[0] if oom_fatals else first_line + len(lines)
         if any(number < boundary for number in fatal_lines):
             errors.append("Unexpected fatal/assert before pool-exhaustion fatal")
         stats = [row for row in stats if row["line"] < boundary]

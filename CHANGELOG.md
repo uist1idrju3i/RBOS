@@ -18,6 +18,7 @@
 
 ### Fixed
 
+- DK log checker は行中の boot marker も認識し、最後の boot だけを判定するようにしました。reset 前の旧 stats や時刻を混ぜず、除外行数と選択を NOTE で知らせます。実 OOM capture を回帰 fixture に追加しました。
 - actionlint 設定に `ubuntu-26.04` を登録し、未知 runner の診断を ignore せず検査できるようにしました。P1 の CI 成功記録と build 容量の履歴も更新しました。
 - P1 の tick 統計を区間ごとにリセットし、区間内の mruby/c tick 回数を表示するようにしました。生成 bytecode の形式検査と、P1 self-test・VM source の依存関係を CI に追加しました。
 - CI artifact の保存が実装済みだった P0・P6 のチェックリストと振り返りを訂正しました。通常 CI の7日間の保存と、正式 release の証拠の長期保管を区別しました。
