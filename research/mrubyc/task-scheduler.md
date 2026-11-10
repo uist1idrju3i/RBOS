@@ -90,9 +90,32 @@ Ruby 側には `Mutex.new/lock/unlock/try_lock/locked?/owned?` が登録され�
 - trylock は成功 0、失敗 1。
 - **terminate は mutex の lock 状態を解除しません**。停止後の資源回収を設計します。
 
-出典: `vendor/mrubyc/src/rrt0.c:648-665,698-832`。この実装から優先度継承やデッドロック検出を保証する記述は確認していません。
+出典: `vendor/mrubyc/src/rrt0.c:648-665,698-832`。優先度継承はありません。lock 待機処理は owner の priority を変更しません（同 `:717-749`）。デッドロック検出も保証しません。
 
 Ruby の `lock` と `unlock` は成功時 self、`try_lock` は bool、`locked?` は lock 状態、`owned?` は自タスク所有を返します。再帰 lock・非所有者 unlock の処理はコメント上の ThreadError ではなく **assert** です。assert 無効時も通常の Ruby 例外になると仮定しません。出典: `vendor/mrubyc/src/rrt0.c:1382-1436`。
+
+### RBOS の Mutex 利用規約（採用）
+
+利用者承認済みの製品 Ruby 規約です。実機の fault 試験完了を意味しません。
+
+- 必ず `lock` の直後から `begin … ensure unlock end` で保護します。
+- lock を保持する可能性がある task を terminate してはいけません。terminate は ensure による解放を保証しません。
+- 同じ Mutex を共有する task は同じ priority にします。優先度継承を前提にしません。
+- 非 owner の unlock は禁止します。終了済み owner の代わりに unlock する回復処理も書きません。
+
+非 owner の C unlock は2を返し、Ruby binding は assert します（`vendor/mrubyc/src/rrt0.c:761-767,1396-1403`）。固定構成での違いは次のとおりです。
+
+| 構成 | 非 owner unlock の結果 |
+|---|---|
+| Wasm（assert 有効） | C assert → Emscripten abort、プロセス exit 1。Ruby の ThreadError ではなく、`RBOS fatal` 行も出ない。BM kernel はなく k_panic は通らない |
+| BM debug（assert 有効） | Picolibc `__assert_no_args` → libc abort → k_panic →標準 fatal handler → system halt。`mrbc_hal_abort` を通らず、`RBOS fatal` 行は出ない |
+| BM release（NDEBUG） | assert が消え、戻り値2を黙って無視する。lock は保持されたまま、Ruby 例外も出ない |
+
+debug/release は実際の compile command の前処理と debug map で照合しました。`firmware/prj_release.conf:2` と `firmware/cmake/mrubyc.cmake:58-60` が VM source に NDEBUG を設定します。BM の停止経路は固定 Zephyr の [Picolibc assert](https://github.com/nrfconnect/sdk-zephyr/blob/fd9204a02d52630660ce8d729945a4dd743feabf/lib/libc/picolibc/assert.c#L24-L30)、[libc abort](https://github.com/nrfconnect/sdk-zephyr/blob/fd9204a02d52630660ce8d729945a4dd743feabf/lib/libc/common/source/stdlib/abort.c#L10-L15)、[fatal handler](https://github.com/nrfconnect/sdk-zephyr/blob/fd9204a02d52630660ce8d729945a4dd743feabf/kernel/fatal.c#L21-L45)が根拠です。実機で assertion を発火させた証拠ではありません。
+
+挙動を固定する Wasm 試験は [owner 終了](../../tests/mruby/mutex_terminated.rb)、[例外と ensure](../../tests/mruby/mutex_ensure.rb)、[priority inversion](../../tests/mruby/mutex_inversion.rb)、[非 owner unlock の想定失敗](../../tests/mruby/mutex_non_owner.rb)です。[check.sh](../../tools/mrubyc-wasm/check.sh) は PASS 欠落・FAIL・異常な終了値を拒否します。
+
+優先度継承は現時点で追加しません。規約の下でも inversion が実測上の問題になった場合だけ、RBOS 側の Mutex または上流への提案を再検討します。上流への連絡は、その時点で利用者の承認を得ます。
 
 ## tick と idle の移植条件
 

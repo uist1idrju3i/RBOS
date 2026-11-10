@@ -34,29 +34,36 @@
 - [x] BLE 接続中の tick callback 間隔を測る。完全接続区間936..1049 µs、接続前930..1040 µs、全行 catchups=0。tick は約10000回/10秒。境界混在区間は比較から除外しました（[区間の根拠](retrospective-P1.md)）。
 - [x] BLE の接続・切断後の再広告を確認する。利用者 log の接続・切断と fast→slow の再広告が証拠です。二度目の接続や slow 広告180秒後の停止は未確認です（[実機結果](retrospective-P1.md)）。
 - [x] mruby/c の結合後に debug/release を build し、P0 からの map の増分を記録する。[部品別表と集計方法](bm-build.md#p1-の-build-結果と-map-比較)に app の FLASH/RAM 差を記録。debug は +82,444 / +78,152 B、release は +71,444 / +77,920 B でした。
-- [ ] priority inversion、mutex owner 終了時の方針を決める。[上流実装の事実](retrospective-P1.md#判明したリスクと-blocker)を記録しましたが、方針は未決です。
+- [x] Mutex owner 終了・例外・優先度差の fault test を Wasm で実行し、利用規約を文書化する。`6819755` の `tests/mruby/mutex_*.rb` と `tools/mrubyc-wasm/check.sh` が owner 終了後の保持、ensure 解放、inversion、非 owner unlock の assertion を確認しました。[採用済み規約](../mrubyc/task-scheduler.md#rbos-の-mutex-利用規約採用)参照。実機の fault 試験は未実施です。
+- [ ] 二つの常時 ready task と BLE 接続による30分試験を行い、境界を除いた jitter と `drain_us` 最大値を保存する。`stress` profile、CI artifact、[capture 手順と checker](dk-provisioning.md#macos-で-p1-stress-log-を採る)は実装済み、DK 実行待ちです。二度目の BLE 接続と slow 広告180秒後の停止確認も、この試験に含めます。
+- [ ] `oom` profile で DK の OOM/abort 経路を確認する。開始行と `RBOS fatal: Ruby pool exhausted` を checker で照合します。build・ソース確認のみで、DK 実行待ちです。
 - [ ] idle と deferred event が常時 ready の task に妨げられないようにする。DK の idle wakeup は PASS、SCHED 構成で接続・切断処理と service の継続を確認。ただし busy worker と BLE の同時負荷・queue drain 上限は未試験で、一般的な進行保証は未確認です。
 - [x] SoftDevice priority 0/1 と GRTC channel0 を予約する。静的確認: 両 app の ZERO_LATENCY_IRQS=y / ZERO_LATENCY_LEVELS=1、3 priority bits、BASEPRI=0x40（NVIC 2以上を mask）。`firmware/src/hal/hal.c` は SDK の irq_lock と bm_timer のみを使い、直接 GRTC/channel を操作しません。bm_timer は `k_timer` を経由し、SDK の channel0 予約を維持（[根拠と確認の境界](retrospective-P1.md#達成と未達)）。
 - [ ] peripheral、DPPI、IRQ の完全な予約表を対象 SoftDevice の仕様と照合する。
 - [ ] SDH 配送 model と SD RAM usage、BM queue の容量と drain 時間を .config/map/実測で確認する。両 app の `.config` は SCHED、BM_SCHEDULER_BUF_SIZE=512。queue drain 時間と SD RAM の実測は未実施です。[SDK 調査](../nrf-bm/component-catalog.md)参照。
 
-実機で確認したのは `ff4c23e` の CI debug image による約130秒の記録です。abort/OOM、release image の実機起動、保存データの前後比較、ERASE_NONE 更新も未確認のままです。成功した通常更新は P0 と同じ ERASE_RANGES_TOUCHED_BY_FIRMWARE であり、全体 erase・鍵の再 provision は行っていません。
+実機で確認したのは `ff4c23e` の CI debug image による約130秒の記録です。P1 closeout は上記の Wasm Mutex 試験に加え、DK 30分 stress と DK OOM の証拠を要求します。release 実機・ERASE_NONE・保存データの検証は P5/P6 が担当します。成功した通常更新は P0 と同じ ERASE_RANGES_TOUCHED_BY_FIRMWARE であり、全体 erase・鍵の再 provision は行っていません。
 
 出典: [scheduler](../mrubyc/task-scheduler.md)、[設定とメモリ](../mrubyc/configuration-and-memory.md)、[IRQ](../nrf-bm/softdevice-and-interrupts.md)。
 
-## P2・P3: native API と信頼境界
+## P2: native API と資源
 
 - [ ] console を UARTE/RTT/BLE のどれにするか決め、pin の共有を確認する。
-- [ ] argc/type/range、return/raise、参照カウントの共通規約を決める。
-- [ ] ISR event をコピーする queue と overflow policy を決める。
-- [ ] user VM に許す Task 操作と peripheral の範囲を決める。
+- [ ] native API を追加するたびに、P1 と同じ map 分類と stack/pool 観測方法で増分を記録する。瞬間 peak の捕捉や paint margin の校正は別に検証し、標本値を厳密な上限と呼ばない。
+- [ ] 共有 C API の argc/type/range 検査を共通 helper に集約し、return/raise・参照カウントの規約を実装する。Wasm fake で正常・引数なし・nil・誤型・境界・driver failure を試す。
+- [ ] ISR event queue を固定長 ring とし、overflow 時は newest を drop して stats に overflow counter を出す。Button edge は pin ごとに coalesce し、count を保持する。承認済みの設計であり、実装・試験は未完了です。
+- [ ] application/shell UARTE30 の重複、NFC TIMER24、GRTC 予約、各 callback の実行 context を照合する。
+- [ ] bonding を採用する場合、初期 BLE でも BM_ZMS/SD backend と peer partition の予算を確保する。
+
+## P3: system task と信頼境界
+
+- [ ] user VM に許す peripheral の範囲を決める。
 - [ ] system Ruby の信頼元、権限付与、破棄、ID 再利用を定義する。
 - [ ] 特権 API の全 callback に認可検査を入れる。
 - [ ] debug API と system-only API を分離する。
 - [ ] retention 入口（boot mode）へ移る要求を書く API を特権操作に限る。
-- [ ] user task による他 task の停止・例外送信と拒否動作を試す。
-- [ ] application/shell UARTE30 の重複、NFC TIMER24、GRTC 予約、各 callback の実行 context を照合する。
-- [ ] bonding を採用する場合、初期 BLE でも BM_ZMS/SD backend と peer partition の予算を確保する。
+- [ ] user VM の priority=/suspend/terminate/raise は自己にだけ許可し、他 task・system task への操作を拒否する認可試験を作る。system task は user から変更不能にする。現行 Task API にはこの制限がなく、P3 で実装します。
+- [ ] system task が watchdog を kick する。fatal 時は debug は現在どおり halt、release は log flush 後に reboot する。承認済みの回復方針であり、watchdog と release reboot は未実装です。
 
 出典: [C API](../mrubyc/c-api.md)、[OpenBlink 参照と制限](../openblink/api-binding-patterns.md)。
 
@@ -70,6 +77,9 @@
 - [ ] firmware single-bank の GPIO/reset/retention 入口を確認する。
 - [ ] app/loader/installer の容量と署名済み成果物を確認する。
 - [ ] 固有 ED25519 key と KMU provisioning を用意する。
+- [ ] P5: release 鍵で準備した DK に release image を書き込み、起動と通常更新を確認する。
+- [ ] P5: ERASE_NONE 更新を実機で検証する。現在の成功例は ERASE_RANGES_TOUCHED_BY_FIRMWARE だけです。
+- [ ] P5: 広告の開始・停止・再開条件を実装し、DFU と復旧の入口を照合する。P1 の既存 timeout 観測とは分ける。
 - [x] release の鍵の検査で、SDK の既定鍵を名前でなく公開鍵の比較で拒否する。改名した既定鍵の拒否と、`root-*.pem` という名前の新しい鍵の受け入れを build で確認しました。
 - [ ] BOOTCONF lock 前に復旧手順と製造時の消去条件を確認する。
 - [ ] 切断、不正署名、容量超過、各 write 時の電源断を試す。
@@ -82,6 +92,7 @@
 - [ ] toolchain container の利用条件・digest を確定する。
 - [x] emscripten HAL の Ruby 検査 CI を実装する。[検査手順と実機試験の境界](../../tools/mrubyc-wasm/README.md)を明記する。
 - [ ] map/size、stack/pool 使用量、長時間試験ログを保存する。
+- [ ] P5 の更新・storage 設計に対し、保存データが更新前後で保持されることを P6 の実機試験で検証・保存する。通常更新の起動成功だけを保持の証拠にしない。
 - [x] firmware build の成果物と SHA256SUMS を CI artifact に残す。[P0 の証拠](#p0-環境と-target)と同じ7日間の保存を確認しました。正式 release の証拠の長期保管まで完了したという意味ではありません。
 - [ ] third-party notice、署名鍵を含まない成果物、再配布条件を確認する。
 - [ ] 日本語文書、英語のコードコメント、skill/link 検査を CI で維持する。

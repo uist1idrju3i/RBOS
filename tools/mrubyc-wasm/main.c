@@ -7,7 +7,10 @@
 #include "rbos/bindings.h"
 #include "backend.h"
 
-static unsigned char heap[1024 * 1024];
+#ifndef RBOS_WASM_POOL_SIZE
+#define RBOS_WASM_POOL_SIZE (1024 * 1024)
+#endif
+static unsigned char heap[RBOS_WASM_POOL_SIZE];
 static int uncaught_exceptions;
 
 void wasm_uncaught_exception(struct VM *vm)

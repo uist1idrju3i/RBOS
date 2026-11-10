@@ -25,7 +25,7 @@
 
 ## P1: mruby/c を OS の中核として動かす
 
-**状況**: 実装、debug/release build、selftest の Wasm 実行に続き、利用者が `ff4c23e` の CI debug image を DK で実行しました。全自己検査 PASS、完全 BLE 接続区間936..1049 µs、pool の最大標本11560/65536 B、main/ISR paint scan 688/560 B を記録。厳密な資源上限・常時 ready worker と BLE の同時負荷・release 実機等は未確認です。[P1 の振り返り](retrospective-P1.md)と[証拠付き checklist](checklist.md#p1-vm-と時間)を参照してください。以下の受け入れ条件は変更しません。
+**状況**: 実装、debug/release build、selftest の Wasm 実行に続き、利用者が `ff4c23e` の CI debug image を DK で実行しました。全自己検査 PASS、完全 BLE 接続区間936..1049 µs、pool の最大標本11560/65536 B、main/ISR paint scan 688/560 B を記録。厳密な資源上限と常時 ready worker＋BLE の同時負荷は未確認です。release 実機・ERASE_NONE は P5、保存データ保持は P5/P6 に移しました。[P1 の振り返り](retrospective-P1.md)と[証拠付き checklist](checklist.md#p1-vm-と時間)を参照してください。以下の受け入れ条件は変更しません。
 
 - vendor/mruby 4.0.0 の mrbc を build して固定し、RITE0400 の最小プログラムを作る。
 - mruby/c を `firmware/` へ結合したら、debug と release の両方を build し、P0 の map と比べた増分を記録する。
@@ -38,13 +38,16 @@
 
 **受け入れ条件**: 二つ以上の task の同時実行、同 priority の巡回、priority 変更、sleep、mutex、suspend/resume、idle wakeupを試験すること。BLE 接続中の tick jitter と stack/pool 最大使用量を計測すること。
 
+**承認済み closeout 条件**: 上の受け入れ条件を維持し、Wasm の Mutex owner 終了・例外・優先度差試験と規約、DK の二つの常時 ready task＋BLE による30分 stress、DK OOM/abort の証拠をそろえます。Wasm 試験は完了、DK 二試験は未実施です。stress では境界を除いた jitter、drain_us、二度目の接続、slow 広告180秒後の停止も記録します。
+
 根拠: `vendor/mrubyc/src/rrt0.c:146-181,339-425`、`vendor/mrubyc/hal/minimal.h:1-55`、`vendor/sdk-nrf-bm/include/bm/bm_timer.h:30-112`、[HAL](../mrubyc/hal-porting.md)、[割り込み](../nrf-bm/softdevice-and-interrupts.md)。
 
 ## P2: native class と値の規約
 
 - LED/Button/GPIO を最初の対象とし、board pin を C 側で管理する。
-- argc、type、範囲、所有権、エラー値/例外を共通規約にする。
-- ISR から Ruby へ直接入らず、queue を介して foreground で通知する。
+- argc、type、範囲の検査を共有 C helper に集約し、所有権・エラー値/例外を共通規約にする。Wasm fake で正常・引数なし・nil・誤型・境界・driver failure を検査する。
+- ISR から Ruby へ直接入らず、固定長 ring を介して foreground で通知する。overflow は newest を drop し、stats の overflow counter で観測する。Button edge は pin ごとに coalesce して count を残す。
+- native API を追加するたびに P1 の map 分類と stack/pool 観測方法で増分を記録する。標本 peak と厳密な上限は区別する。
 - ADC/PWM/I2C/UART は要件と pin/IRQ の一覧が揃ってから追加する。
 - [SDK component 表](../nrf-bm/component-catalog.md)の backend 候補から必要なものを選ぶ。共有 binding に Nordic header を入れず、製品動作は Ruby へ置く。UART/shell の instance 重複、NFC TIMER24、GRTC の所有を確認する。
 
@@ -58,6 +61,8 @@
 - VM ID だけの永続認証ではなく、生成時に付与し破棄時に消す権限情報を設計する。
 - 特権 method の全てで caller を検査し、class 名の秘匿に頼らない。
 - Task.create、他 task の terminate/raise、ID 再利用、debug API の公開範囲を定義する。
+- user VM の priority=/suspend/terminate/raise は自己だけに許し、system task と他 task への操作を拒否する。system task は user から変更不能にし、認可の拒否試験を加える。
+- watchdog の kick は system task が担当する。fatal は debug では現在どおり halt、release では log flush 後に reboot する。watchdog・release 回復経路の実装と試験は P3 が担当し、P6 で長時間・障害試験を行う。
 
 **受け入れ条件**: user VM が system LED、loader 遷移、storage 管理等の特権操作を実行できないこと。子 task 生成・破棄後にも権限が漏れないこと。native memory の完全 sandbox を達成したとは主張しないこと。
 
@@ -80,6 +85,7 @@
 - MCUboot + BLE MCUmgr firmware loader の single-bank を結合する。
 - app/loader の RAM は別 image として map を測定し、128 KiB upload buffer と VM stack/heap を単純合算しない。
 - 固有の ED25519 key、KMU provisioning、IRoT、installer 更新の製造・復旧手順を作る。
+- release 鍵で準備した DK の release image 起動と ERASE_NONE 更新を検証する。広告の開始・停止・再開条件は P5 が所有し、DFU・電力・復旧の要件と合わせて実装する。P1 は現行 timeout の観測に限る。
 - MCUmgr の characteristic/command の認証と署名検証を別に設計する。flat settings の retention name と汎用 settings DB を区別する。[管理機能](../nrf-bm/mcumgr.md)参照。
 
 **受け入れ条件**: signed app、誤署名、電源断、切断からの再 DFU、三つの入口、installer 更新を実機で試すこと。storage と peer data が意図せず消えないこと。dummy key の release を拒否すること。
@@ -93,6 +99,7 @@
 - host で mrbc format、native 引数、権限、queue overflow の試験を行う。
 - map/size、stack/pool high-water、warnings、署名対象、license notice を成果物に残す。
 - DK の HIL で BLE 長時間接続、timer jitter、watchdog、DFU の電源断 fault injection を行う。
+- P5 の更新・storage の設計に対し、保存データの更新前後の保持を実機で検証し、release DK・ERASE_NONE 試験の証拠とともに保存する。
 
 **受け入れ条件**: build/host test と実機試験の境界が分かる CI、再現可能な証拠、未検証事項が揃うこと。実装開始後に C の formatter、静的解析、unit-test framework を選定すること。
 

@@ -1,5 +1,20 @@
 menu "RBOS application"
 
+choice RBOS_TEST_PROFILE
+	prompt "Ruby test profile"
+	default RBOS_TEST_PROFILE_SELFTEST
+
+config RBOS_TEST_PROFILE_SELFTEST
+	bool "System task and selftests"
+
+config RBOS_TEST_PROFILE_STRESS
+	bool "Selftests followed by always-ready spinners"
+
+config RBOS_TEST_PROFILE_OOM
+	bool "Retained allocations until fatal pool exhaustion"
+
+endchoice
+
 config RBOS_MAX_VM_COUNT
 	int "Maximum number of Ruby VMs"
 	range 4 32

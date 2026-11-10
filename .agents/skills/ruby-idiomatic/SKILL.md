@@ -14,7 +14,7 @@ Ruby-first は、製品利用者が Ruby と board 設定を中心に書ける�
 3. **block と iterator**: 変換は map、選別は select/reject、副作用は each、存在確認は any?/all? と意図をそろえます。block を明示し、結果を捨てる map や不要な中間 Array を避けます。件数制御・割当て予算に理由があるなら bounded while も使えます。速度差は測定せずに断言しません。
 4. **例外**: 通常の失敗は具体的な StandardError 系で捕捉し、ensure で必要な解放を行います。未実装 opcode の根 Exception を `rescue Exception` で隠して処理を続けません。nil、false、0、空 String の意味を混ぜません。0 は真です。
 5. **task と時間**: 待ちは sleep/sleep_ms、役割の並行実行は rrt0 Task を使います。busy-wait で待ちません。単一の長い native call を tick が自動的に中断して他の Ruby task を動かすとは仮定しません。時間・再試行・queue に上限を設けます。
-6. **資源**: instance と buffer の owner、Mutex の範囲・取得順・例外時の解放を決めます。必要なら owner task に要求を集めます。hot loop の割当てと refcount cycle を避ける設計にし、共有状態の再利用には寿命・容量を定義します。ISR から Ruby、allocation/refcount、raise、task 操作を行いません。private は認可の境界になりません。
+6. **資源**: instance と buffer の owner、Mutex の範囲・取得順・例外時の解放を決めます。[採用済み Mutex 規約](../../../research/mrubyc/task-scheduler.md#rbos-の-mutex-利用規約採用)に従い、lock は begin/ensure で解放し、保持する可能性のある task を terminate せず、共有 task の priority をそろえ、非 owner unlock を禁止します。必要なら owner task に要求を集めます。hot loop の割当てと refcount cycle を避ける設計にし、共有状態の再利用には寿命・容量を定義します。ISR から Ruby、allocation/refcount、raise、task 操作を行いません。private は認可の境界になりません。
 7. **可否の照合**: [固定 mruby/c の対応表](../../../research/ruby-style/idiom-compatibility.md)と変更箇所を照合します。compiler の成功を実行の成功と同一視しません。pattern matching や closure の狭い成功例を全機能へ拡張せず、未確認なら小さい fixture で確かめます。RuboCop は未導入で、CRuby 向け autocorrect を無条件に適用しません。
 8. **Wasm 実行**: 正常・空・不正入力を `tests/mruby/` の fixture で検査します。追加 fixture は compile だけでなく [check.sh](../../../tools/mrubyc-wasm/check.sh)の timeout 付き runner 実行へ明示的に追加します。非対応構文を検証する fixture だけは、既存の expect_failure で終了値と診断を照合します。emsdk 環境で `tools/mrubyc-wasm/check.sh` を実行します。
 
