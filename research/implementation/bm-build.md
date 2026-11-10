@@ -2,7 +2,7 @@
 
 [段階計画](porting-plan.md)に沿って実装した firmware を、別の環境で同じ固定版から build するための手順です。P0 の初回は2026-11-09 に RBOS commit `6c4740c8145c0c5f7f86fae6a04433b51336cd36` と当時の PR の変更を Linux x86_64 で build しました。この build 作業では実機を試していません。別途、利用者から報告された 2026-11-09 JST の [DK の実機結果](dk-provisioning.md)を記録しました。
 
-現在は P1 の mruby/c、BM HAL、BLE、組込み Ruby task まで実装済みです。P1 は debug/release build と Wasm runner で検査し、実機は未確認です。[P1 の振り返り](retrospective-P1.md)に達成範囲と試験手順をまとめました。以下の P0 の結果・hash は履歴として残します。
+現在は P1 の mruby/c、BM HAL、BLE、組込み Ruby task まで実装済みです。debug/release build と Wasm runner で検査し、利用者が `ff4c23e` の CI debug image で DK 自己検査・BLE 接続中の統計を採取しました。[P1 の振り返り](retrospective-P1.md)に artifact の識別情報、観測値の限界と未確認項目をまとめています。以下の P0 の結果・hash は履歴として残します。
 
 ## 構成
 
@@ -167,6 +167,8 @@ sysbuild の Python と MCUboot 同梱の imgtool で公開鍵を取り出し、
 ## 書き込みと erase の区別
 
 通常の書き込みは `west flash -d <build>` です。NCS v3.3.0 の nrfutil runner は nRF54L で erase を既定にせず、`ERASE_NONE` を使います（workspace の `zephyr/scripts/west_commands/runners/nrf_common.py:367-374`）。KMU への公開鍵の書き込みは `--erase` か `--recover` を付けたときだけ行われます（同 `:404-409`）。
+
+これは runner の静的な説明で、ERASE_NONE の更新成功は未確認です。P0 と P1 の利用者による通常更新の成功例は `nrfutil device program` の `ERASE_RANGES_TOUCHED_BY_FIRMWARE` でした。実機で成功した方法は [DK の通常の書き込み](dk-provisioning.md#通常の書き込み)、P1 の image と log は [P1 の振り返り](retrospective-P1.md)を参照してください。全体 erase・鍵の再 provision は行っていませんが、保存データの維持は未試験です。
 
 | 操作 | コマンド | 保存データ | RBOS での扱い |
 |---|---|---|---|

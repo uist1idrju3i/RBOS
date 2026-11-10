@@ -162,4 +162,10 @@ I: Advertising as FL_12345
 
 console の pin は `vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/include/board-config.h:55-63` にあります。P0 の判定と P1 への提案は [振り返り](retrospective-P0.md)に記録します。
 
+## P1 の通常更新の実機報告
+
+利用者は [CI run 42714459863](https://github.com/uist1idrju3i/RBOS/actions/runs/42714459863) の main `ff4c23e` の debug artifact を SHA256SUMS 全件照合後に書き込みました。P0 と同じ `ERASE_RANGES_TOUCHED_BY_FIRMWARE` の program と reset が成功し、全体 erase・鍵の再 provision は行っていません。エージェントは実機を操作していません。
+
+全自己検査 PASS、BLE 接続・切断と再広告、接続中の区間統計を確認しました。artifact 名・production.hex の SHA-256・原文 log・統計の意味は [P1 の振り返り](retrospective-P1.md)に保存しています。ERASE_NONE 更新、保存データの維持、release image の実機起動、二度目の接続、slow 広告180秒後の停止は未確認です。
+
 [調査索引へ戻る](../README.md)
