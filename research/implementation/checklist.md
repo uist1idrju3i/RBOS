@@ -57,6 +57,9 @@
 - [ ] native API を追加するたびに、P1 と同じ map 分類と stack/pool 観測方法で増分を記録する。瞬間 peak の捕捉や paint margin の校正は別に検証し、標本値を厳密な上限と呼ばない。
 - [ ] 共有 C API の argc/type/range 検査を共通 helper に集約し、return/raise・参照カウントの規約を実装する。Wasm fake で正常・引数なし・nil・誤型・境界・driver failure を試す。
 - [ ] ISR event queue を固定長 ring とし、overflow 時は newest を drop して stats に overflow counter を出す。Button edge は pin ごとに coalesce し、count を保持する。承認済みの設計であり、実装・試験は未完了です。
+- [ ] 温度 API の契約を決める（class/method 名、返り値の型と単位、失敗時の例外、同期・非同期の扱い）。MPIG の六 class に温度は含まれないため、RBOS 独自の契約として決める。
+- [ ] TEMP ペリフェラルの backend を実装し、FICR 校正と 0.25°C 刻みの換算を確認する。BM board の dtsi が `&temp` node を削除しているため DT 駆動は使わず、nrfx_temp か register 直接の経路にする。TEMP の IRQ 215 は P1 から移管した予約表の照合対象に含める。
+- [ ] 温度 API を Wasm fake と DK 実機で試し、正常・driver failure・timeout の結果を記録する。
 - [ ] application/shell UARTE30 の重複、NFC TIMER24、GRTC 予約、各 callback の実行 context を照合する。
 - [ ] bonding を採用する場合、初期 BLE でも BM_ZMS/SD backend と peer partition の予算を確保する。
 
