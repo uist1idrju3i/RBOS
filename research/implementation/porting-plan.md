@@ -25,7 +25,7 @@
 
 ## P1: mruby/c を OS の中核として動かす
 
-**状況**: debug/release build と Wasm 検査に続き、利用者が `ff4c23e` の DK 自己検査、`3d1fd598c609` の OOM、`f85c2fbe5456` の二つの常時 ready task＋BLE の完全接続400秒 stress を確認しました。後者は tick 920..1064 µs、pool 最大標本15428/65536 B、main/ISR 696/560 B、drain 最大60 µsです。再接続・広告停止も確認済みですが、厳密な資源上限と公平性の扱いは未確定で、P1 は未完了です。release 実機・ERASE_NONE は P5、保存データ保持は P5/P6 が担当します。[P1 の振り返り](retrospective-P1.md)と[証拠付き checklist](checklist.md#p1-vm-と時間)を参照してください。
+**状況**: DK 自己検査・OOM・BLE 接続 stress・再接続・広告停止に続き、image `7217cb685dd2` の X/Y 比較で公平性改善を確認しました。利用者は X（quantum 1 tick、service sleep 10 ms）を既定に採用し、公平性判断を完了しました。追加した公平性自己検査を含む新既定 image の DK 実行と厳密な資源上限は未確認です。release 実機・ERASE_NONE は P5、保存データ保持は P5/P6 が担当します。[P1 の振り返り](retrospective-P1.md)と[証拠付き checklist](checklist.md#p1-vm-と時間)を参照してください。
 
 - vendor/mruby 4.0.0 の mrbc を build して固定し、RITE0400 の最小プログラムを作る。
 - mruby/c を `firmware/` へ結合したら、debug と release の両方を build し、P0 の map と比べた増分を記録する。
@@ -38,7 +38,7 @@
 
 **受け入れ条件**: 二つ以上の task の同時実行、同 priority の巡回、priority 変更、sleep、mutex、suspend/resume、idle wakeupを試験すること。BLE 接続中の tick jitter と stack/pool 最大使用量を計測すること。
 
-**承認済み closeout 条件**: Wasm の Mutex fault と規約、DK の二つの常時 ready task 負荷中の BLE 完全接続 stats 窓5分（300秒）、DK OOM/abort の証拠をそろえます。利用者の決定で stress 時間だけを30分から5分へ変更しました。Wasm と DK OOM に加え、image `f85c2fbe5456` の利用者 log で完全接続400.122214秒、jitter 920..1064 µs、drain 最大60 µs、再接続と slow 広告の約180秒後停止を確認しました（[証拠](retrospective-P1.md#ble-応答修正後の-dk-証拠)）。ただし spinner は約1:9.9の偏りを保ち、扱いは利用者の判断待ちです。checker は WARN にとどめますが、**P1 完了は宣言しません**。scheduler は未変更です。
+**承認済み closeout 条件**: Wasm Mutex fault と規約、DK の二つの常時 ready task 負荷中の BLE 完全接続 stats 窓5分、DK OOM/abort の証拠をそろえます。利用者の決定で stress 時間を30分から5分へ変更しました。旧400秒 log の公平性不合格も保存し、X/Y の400.142051 / 380.184999秒の完全接続窓と a/b=1.005919 / 1.005926を新たな証拠にします。2倍超は現在 FAIL です。[X 採用の根拠](retrospective-P1.md#xy-比較と1-tick-の採用)に追加自己検査と未確認範囲を記録しています。vendor scheduler は未変更です。
 
 根拠: `vendor/mrubyc/src/rrt0.c:146-181,339-425`、`vendor/mrubyc/hal/minimal.h:1-55`、`vendor/sdk-nrf-bm/include/bm/bm_timer.h:30-112`、[HAL](../mrubyc/hal-porting.md)、[割り込み](../nrf-bm/softdevice-and-interrupts.md)。
 

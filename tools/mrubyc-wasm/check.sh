@@ -138,6 +138,8 @@ expect_failure() {
   cat "$build/expected-failure.log"
   echo "PASS: expected failure detected (exit $status / $marker)"
 }
+expect_failure 1 'P1 selftest: same-priority fairness' "$build/p1-coordinator.mrb" \
+  "$build/fairness_unfair_worker.mrb" "$build/p1-worker_b.mrb"
 expect_failure 1 'expected smoke failure' "$build/expected_failure.mrb" "$build/empty.mrb"
 expect_failure 1 'Mutex unlock error. not owner or not locked.' \
   "$build/mutex_non_owner.mrb" "$build/mutex_fault_owner.mrb"

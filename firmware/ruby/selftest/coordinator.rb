@@ -19,8 +19,12 @@ b = Task.get("worker_b")
 check(a && b && $p1_counts[0] > 0 && $p1_counts[1] > 0, "concurrent workers")
 before_a = $p1_counts[0]
 before_b = $p1_counts[1]
-sleep_ms 100
+sleep_ms 1000
 check($p1_counts[0] != before_a && $p1_counts[1] != before_b, "same-priority round robin")
+delta_a = ($p1_counts[0] - before_a) % 1000000
+delta_b = ($p1_counts[1] - before_b) % 1000000
+check(delta_a > 0 && delta_b > 0 && delta_a <= 2 * delta_b && delta_b <= 2 * delta_a,
+      "same-priority fairness")
 
 a.priority = 100
 before_a = $p1_counts[0]

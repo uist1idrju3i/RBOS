@@ -104,6 +104,22 @@ west build -b bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot \
   -DEXTRA_CONF_FILE=<RBOS>/firmware/oom.conf
 ```
 
+### Spinner 公平性と quantum の既定
+
+`CONFIG_RBOS_TIMESLICE_TICK_COUNT` は1..255 tick（既定1）、既存の `CONFIG_RBOS_SERVICE_INTERVAL_MS` は service 後の sleep 値（既定10 ms）です。`RBOSSystem.service` が後者を返し、system.rb が `sleep_ms` に渡します。利用者は DK の X/Y 比較後、周期の組合せに依存しない案 X を debug/release/stress 共通の既定に採用しました。
+
+| overlay | profile | quantum | service sleep | 理想化した起床周期 |
+|---|---|---|---|---|
+| `stress.conf`（現在） | stress | 1 tick | 10 ms | 11 tick |
+| 旧 X | stress | 1 tick | 10 ms | 11 tick |
+| 旧 Y | stress | 10 tick | 9 ms | 10 tick |
+
+HAL の tick は1 msです。mruby/c は `wakeup_tick < tick` で起こすため、旧 Y は sleep を9にしました（`vendor/mrubyc/src/rrt0.c:163-183,509-524`）。service の処理時間や IRQ の遅れは表の起床周期に含めていません。[実機比較と採用理由](retrospective-P1.md#xy-比較と1-tick-の採用)を参照してください。
+
+比較専用の X/Y overlay と CI matrix は削除しました。特に旧 Y の sleep だけを新既定と組み合わせると、比較実験とは別の設定になるためです。通常の `stress.conf` を使い、各 app の `firmware/zephyr/.config` で quantum=1、service=10、STRESS=y を確認してください。自己検査は同 priority worker の1秒間の modulo 差分が互いに2倍以内かを判定します。BM は実 timer preemption、Wasm は別の擬似 tick 経路で実行します。
+
+`python3 tools/bm-build/simulate-spinner.py` は tick 減算・起床・末尾への再挿入・dispatch 時の slice リセットを模した host モデルです。先に走る spinner を入れ替え、旧既定（legacy）・新既定（default）・旧 Y の a/b 比を表示します。service の実行時間をゼロとし、tick 境界ですぐ preempt できる仮定です。VM・Wasm・実機の測定ではなく、実際の dispatch 位相や処理時間は再現しません。
+
 ### P0 の build 記録（履歴）
 
 比較用に、SDK の `nrf-bm/samples/boot/mcuboot_recovery_entry` も同じ board で build しました。

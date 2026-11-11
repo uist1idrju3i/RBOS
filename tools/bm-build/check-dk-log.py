@@ -269,7 +269,7 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
             spinner_ratio = a / b if b else None
             spinner_imbalance = max(a, b) / min(a, b) if min(a, b) else None
             if max(a, b) > 2 * min(a, b):
-                warnings.append("WARN: Spinner rate imbalance exceeds 2x (a/b=%s; max/min=%s)" % (
+                errors.append("Spinner rate imbalance exceeds 2x (a/b=%s; max/min=%s)" % (
                     "%.3f" % spinner_ratio if b else "unbounded",
                     "%.3f" % spinner_imbalance if min(a, b) else "unbounded"))
         if any(spinner_report[key]["mean_per_s"] is None for key in "ab"):

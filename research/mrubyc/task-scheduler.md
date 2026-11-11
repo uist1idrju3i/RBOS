@@ -12,6 +12,8 @@ rrt0 は ready queue の先頭の VM を実行し、実行可能なまま時間�
 
 ## 状態と待機理由
 
+RBOS の BM quantum は `CONFIG_RBOS_TIMESLICE_TICK_COUNT=1`（1 ms tick）を既定にします。system の service sleep は10 msのままです。高優先度 task に preempt されると末尾へ戻り、再 dispatch で予算をリセットする固定実装では、旧10 tick quantum と約11 tickの起床周期が偏りを作り得ます（`vendor/mrubyc/src/rrt0.c:352-374,421-433`）。DK の X/Y 比較で双方の公平性改善が確認され、利用者は周期の組合せに依存しない1 tickを採用しました。[証拠と限界](../implementation/retrospective-P1.md#xy-比較と1-tick-の採用)を参照してください。長い native call の中断を保証する方針ではありません。
+
 | 状態 | 値 | 意味 |
 |---|---:|---|
 | `TASKSTATE_DORMANT` | `0x00` | 停止・実行終了 |

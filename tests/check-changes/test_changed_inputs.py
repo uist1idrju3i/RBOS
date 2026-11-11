@@ -70,6 +70,7 @@ class ChangedInputsTests(unittest.TestCase):
                   'firmware/ruby/stress/spinner_a.rb', 'firmware/ruby/fault/oom.rb']
         paths = {
             'firmware': ['firmware/src/main.c', 'firmware/stress.conf', 'firmware/oom.conf',
+                         'tools/bm-build/simulate-spinner.py',
                          'tools/bm-build/modules.txt', 'tools/bm-build/check-dk-log.py',
                          '.github/actions/ncs-bm-setup/action.yml',
                          '.github/workflows/firmware.yml',

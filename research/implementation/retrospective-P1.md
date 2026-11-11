@@ -181,7 +181,7 @@ Wasm32 と ARM の pointer はともに4 Bであり、ホスト Node の64 bit p
 
 ### 利用者の stress/OOM 証拠と5分条件
 
-利用者の決定で、P1 stress の条件を30分から5分へ変更しました。条件は両 spinner の開始後、接続境界をまたがない stats 窓の合計300秒です。連続接続時間や capture 全体の長さとは区別します。checker の stress 既定値も300秒に変更し、spinner の速度差は当面 WARN にとどめます。
+利用者の決定で、P1 stress の条件を30分から5分へ変更しました。条件は両 spinner の開始後、接続境界をまたがない stats 窓の合計300秒です。連続接続時間や capture 全体の長さとは区別します。当初の checker は速度差を WARN としていましたが、X 採用後は2倍超を FAIL にします。以下の旧 checker 出力は当時の判定を保存したもので、旧偏り log は現在の checker では FAIL です。
 
 利用者が iPhone の nRF Connect を central として採取した `dk-stress-20261111-003711.log` を [stress fixture](../../tests/check-changes/stress-capture.txt)に保存しました。image は `3d1fd598c609`。旧 image の断片が boot marker と同じ行にありますが、checker は最後の boot だけを判定します。
 
@@ -277,7 +277,7 @@ WARN: Spinner rate imbalance exceeds 2x (a/b=0.101; max/min=9.928)
 NOTE: First stats excluded from jitter/rates; BLE boundary windows excluded from jitter.
 ```
 
-旧約40.1秒の切断周期は、S115 応答を追加した #29 の後には再観測されませんでした。前後比較から応答追加によって周期切断が止まったと推定します。ただし旧 log に reason がなく、どの未応答手順が原因だったかは確定できません。一方、BLE が安定しても spinner 比は約1:9.9のままで、偏りは解消していません。5分 stress・再接続・広告停止は checklist を完了にしますが、**P1 は公平性の利用者判断待ちで未完了**です。checker の WARN は判断を済ませたことを意味しません。
+旧約40.1秒の切断周期は、S115 応答を追加した #29 の後には再観測されませんでした。前後比較から応答追加によって周期切断が止まったと推定します。ただし旧 log に reason がなく、どの未応答手順が原因だったかは確定できません。この時点では BLE が安定しても約1:9.9の偏りが残り、P1 の公平性判断は保留でした。後述の X/Y 比較でこの判断を終えました。
 
 ### BLE 手順応答の欠落と修正範囲
 
@@ -295,17 +295,38 @@ SYS_ATTR_MISSING は library が処理しないため、保存した bond がな
 
 ### 同 priority spinner の偏りと Wasm 調査
 
-BM の到達経路は `firmware/src/main.c:27-35` の system priority=0、`runtime.c:78-80` の10 ms間隔、`hal/hal.c:19-34,46-54` の1 ms timer、`hal/hal.h:3-4` の1 ms tick / 10 tick timeslice です。`MRBC_NO_TIMER` は BM では未定義です。
+BM の到達経路は `firmware/src/main.c:27-35` の system priority=0、`runtime.c:78-80` の service sleep、`hal/hal.c:19-34,46-54` の1 ms timer です。旧設定は1 ms tick / 10 tick timeslice、新既定は1 tickです。`MRBC_NO_TIMER` は BM では未定義です。
 
-固定 `vendor/mrubyc/src/rrt0.c:61-90` は同 priority を末尾に挿入します。tick は実行中 task の残り timeslice を減らし、sleep の起床で preemption flag を立てます（同 `:145-185`）。起床条件は期限を超えた tick なので、`sleep_ms 10` は通常約11 ticks後の起床です（同 `:163-183,509-524`）。実行から戻った RUNNING task は同 priority の末尾へ移り（同 `:421-433`）、再 dispatch 時は残り時間を保存せず timeslice を10に戻します（同 `:352-374`）。system が sleep した後は ready queue 先頭の spinner が走ります。
+固定 `vendor/mrubyc/src/rrt0.c:61-90` は同 priority を末尾に挿入します。tick は実行中 task の残り timeslice を減らし、sleep の起床で preemption flag を立てます（同 `:145-185`）。起床条件は期限を超えた tick なので、`sleep_ms 10` は通常約11 ticks後の起床です（同 `:163-183,509-524`）。実行から戻った RUNNING task は同 priority の末尾へ移り（同 `:421-433`）、再 dispatch 時は残り時間を保存せず timeslice を設定値に戻します（同 `:352-374`）。system が sleep した後は ready queue 先頭の spinner が走ります。
 
-したがって、system の約11 ms周期と10 ms quantum が同じ位相を保つと、一方が約10 ms、他方が約1 msで system に preempt される並びを繰り返せます。service 約90.7回/秒と約10倍の差に整合する有力な候補ですが、DK の dispatch trace はなく、実際の位相と因果は未検証です。自己検査の same-priority round robin は両方の進行だけを確認し、work の均等性を保証しません。
+したがって、system の約11 ms周期と旧10 ms quantum が同じ位相を保つと、一方が約10 ms、他方が約1 msで preempt される並びを繰り返せます。当時は service 約90.7回/秒と約10倍の差に整合する候補とし、後述の X/Y 比較で裏付けました。dispatch trace 自体は未採取です。旧 round robin 自己検査は両方の進行だけを確認していましたが、今回は進捗比の検査も追加しました。
 
 実際の `firmware/ruby/stress/spinner_a.rb` / `spinner_b.rb` と、priority=0・`sleep_ms 10` の system 相当 task を Wasm runner で31000 ticks以上実行しました。標準の10 ms tick unit では各 spinner の10000 tickごとの count が1563 / 3125 / 4687、1 ms override でも2842 / 5683 / 8524と両者一致し、a/b=1.000でした。標準 runner の service は15500回、1 ms override は2819回です。偏りを再現しなかったので、依頼どおり Wasm repro test は追加しません。
 
 Wasm HAL は `vendor/mrubyc/hal/emscripten/hal.h:28-30,49-54` で MRBC_NO_TIMER を有効にします。rrt0 の同 `:375-385` は命令単位の擬似 slice を終えてから一度だけ tick するため、BM の「10 ms slice の途中で timer が高優先 task を起こす」経路を通りません。1 ms tick unit に変えてもこの差は残り、Wasm の均等性は BM 仮説の反証にはなりません。
 
-次の候補は、service 間隔と quantum の位相をずらす、spinner に Task.pass を入れる、または RBOS 側の scheduler 方針で未消費予算と preempt 後の再開順を扱うことです。まず DK で1 tick quantum を別実験し、service の10 ms設定は保ったまま rate 比・jitter・drain・CPU費用を比較することを推奨します。service 間隔延長は BLE queue drain を遅らせ、Task.pass は負荷の性質を変えるため、無測定では採用しません。今回 scheduler・quantum・service 間隔・製品 Ruby は未変更です。上流への連絡は別途承認を得ます。
+当初は1 tick quantum を DK で比較する方針としました。下記の実験を経て quantum だけを既定1へ変更し、service sleep 10 msと vendor 実装は維持します。上流への連絡は別途承認を得ます。
+
+### X/Y 比較と1 tick の採用
+
+利用者の DK log は image `7217cb685dd2`、firmware CI run `42869985805` の比較 artifact に対応します。X は quantum=1 / service sleep=10 ms、Y は10 / 9 msです。fixture は [X](../../tests/check-changes/stress-x-capture.txt) と [Y](../../tests/check-changes/stress-y-capture.txt) に保存しました。
+
+| 項目 | X | Y |
+|---|---|---|
+| production.hex SHA-256 | `09ee14be587d6cd1f7ecd8189218b1d5b8925bf6373e9ed8317ff4ef45f114fc` | `7a10b9a4af9996a95ef90d96a9134c7e63275b1b8d3ee4e7f6f74190b8b13d02` |
+| 現 checker `--profile stress` | PASS | PASS |
+| a/b | 1.005919 | 1.005926 |
+| a / b 平均毎秒 | 20624.873040 / 20503.513638 | 20687.565084 / 20565.697788 |
+| 合計毎秒 | 41128.386678 | 41253.262872 |
+| 完全接続 stats 窓 | 400.142051秒 | 380.184999秒 |
+| 接続中 tick_us / catchups | 920..1065 / 0 | 920..1065 / 0 |
+| drain 最大 / service 毎秒 | 60 µs / 約90.8 | 148 µs / 約99.7 |
+
+X に切断はなく、Y は28.358234秒に reason=0x13（remote user terminated）で切断し、32.182286秒に再接続しました。旧 `f85c2fbe5456` は a/b=0.100775、合計約41151/sです。X は合計約41128/sで、この観測では大きな throughput 低下を示しませんが、厳密な性能上限の保証ではありません。
+
+両案の公平性改善は、11 tick周期と10 tick quantum の位相固定仮説を実機で裏付けます。ただし dispatch trace 自体は未採取です。利用者は周期の組合せに依存しない X を採用しました。比較専用 overlay と CI matrix は除去し、debug/release/stress の quantum を既定1に統一します。host モデルは非実機の対照として維持します。
+
+追加した自己検査は、常時 ready な同 priority worker の1秒間の差分が互いに2倍以内かを判定します。BM では1 ms timer による preemption を通ります。Wasm は MRBC_NO_TIMER の別経路であり、その成功だけでは BM を保証しません。今回の追加自己検査を含む新既定 image の DK 実行はまだ報告されていません。
 
 ## 判明したリスクと blocker
 
@@ -336,7 +357,7 @@ priority inheritance もありません。lock 待ちで変更するのは待機
 
 以下の提案は利用者承認により採用しました。反映先と未実装・未検証を区別します。P1 の実機受け入れを済ませずに P2 完了とはしません。
 
-1. **採用**: P1 の stress/oom profile、drain_us、checker・capture を実装。利用者の決定で stress を30分から完全接続窓5分へ変更しました。[checklist P1](checklist.md#p1-vm-と時間)は OOM と修正後400秒 stress、再接続・広告停止を完了。spinner 公平性は利用者判断待ちです。
+1. **採用**: P1 の stress/oom profile、drain_us、checker・capture を実装。利用者の決定で stress を30分から完全接続窓5分へ変更しました。[checklist P1](checklist.md#p1-vm-と時間)は OOM、stress、再接続・広告停止に加え、X/Y 比較による公平性の採用判断も完了しました。
 2. **採用**: [checklist P2](checklist.md#p2-native-api-と資源) と [porting-plan P2](porting-plan.md#p2-native-class-と値の規約) に共通引数 helper、Wasm fake の正常・無引数・nil・誤型・境界・driver failure、固定長 ring / newest drop / overflow counter / pin ごとの Button coalescing と count を記録。実装は P2 です。
 3. **採用**: P2 checklist・計画に native API ごとの map と stack/pool 増分記録を追加。瞬間 peak 捕捉と paint margin 校正の検討も checklist に残しました。現在の標本統計を厳密な上限へ読み替えません。
 4. **採用**: `tests/mruby/mutex_*.rb` と check.sh で Wasm fault を実行済み。[scheduler 文書](../mrubyc/task-scheduler.md#rbos-の-mutex-利用規約採用)に ensure 解放・保持 task の terminate 禁止・同 priority・非 owner unlock 禁止を規定し、製品 Ruby の skill から参照。inversion が問題と実測された場合だけ RBOS Mutex / 上流提案を再検討し、上流への連絡は別途承認を得ます。
