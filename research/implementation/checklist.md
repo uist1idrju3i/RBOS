@@ -36,14 +36,15 @@
 - [x] mruby/c の結合後に debug/release を build し、P0 からの map の増分を記録する。[部品別表と集計方法](bm-build.md#p1-の-build-結果と-map-比較)に app の FLASH/RAM 差を記録。debug は +82,444 / +78,152 B、release は +71,444 / +77,920 B でした。
 - [x] Mutex owner 終了・例外・優先度差の fault test を Wasm で実行し、利用規約を文書化する。`6819755` の `tests/mruby/mutex_*.rb` と `tools/mrubyc-wasm/check.sh` が owner 終了後の保持、ensure 解放、inversion、非 owner unlock の assertion を確認しました。[採用済み規約](../mrubyc/task-scheduler.md#rbos-の-mutex-利用規約採用)参照。実機の fault 試験は未実施です。
 - [x] 二つの常時 ready task の負荷中に、BLE の完全接続 stats 窓の合計5分（300秒）を満たし、境界を除いた jitter と `drain_us` 最大値を保存する。利用者の決定で30分から5分へ変更しました。image `f85c2fbe5456` の [利用者 log](../../tests/check-changes/stress-connected-capture.txt) は当時の stress 条件で PASS（現在は公平性で FAIL）。完全接続400.122214秒、切断なし、tick 920..1064 µs、catchups=0、drain 最大60 µsです。旧 log の230.067537秒未達とは分けて記録します。
-- [x] 同 priority spinner の公平性を比較し方針を決める。image `7217cb685dd2` の X/Y は a/b=1.005919 / 1.005926で stress PASS。利用者は X（quantum 1 tick、service sleep 10 ms）を既定に採用しました。checker は2倍超を FAIL とし、自己検査にも同基準を追加しました。[証拠と採用理由](retrospective-P1.md#xy-比較と1-tick-の採用)参照。追加自己検査を含む新既定 image の DK 実行は未確認です。
+- [x] 同 priority spinner の公平性を比較し方針を決める。image `7217cb685dd2` の X/Y は a/b=1.005919 / 1.005926で stress PASS。利用者は X（quantum 1 tick、service sleep 10 ms）を既定に採用しました。checker は2倍超を FAIL とし、自己検査にも同基準を追加しました。[証拠と採用理由](retrospective-P1.md#xy-比較と1-tick-の採用)参照。
+- [x] 公平性自己検査を含む新既定 image を DK で確認する。`ef8514585aa2` は自己検査10項目が全 PASS、a/b=1.014307、完全接続400.140059秒で stress PASS。tick 920..1064 µs、catchups=0、drain 最大70 µs、pool 標本最大15452/65536 B、main/ISR 688/560 Bでした。[最終 log と checker 全文](retrospective-P1.md#新既定-image-の最終-dk-確認と-p1-完了判定)参照。
 - [x] `oom` profile で DK の OOM/abort 経路を確認する。利用者の image `3d1fd598c609` は `OOM: start` → `RBOS fatal: Ruby pool exhausted` を出し、[実 capture fixture](../../tests/check-changes/oom-capture.txt)を OOM checker で PASS と確認しました。fatal 前の stats はなく pool 上限は未計測です。
 - [ ] idle と deferred event が常時 ready の task に妨げられないようにする。DK の idle wakeup は PASS。stress の二 spinner と BLE の同時負荷でも service 約90.7回/秒と drain 最大144 µsを確認しました。queue の上限と一般的な進行保証は未確認です。
 - [x] SoftDevice priority 0/1 と GRTC channel0 を予約する。静的確認: 両 app の ZERO_LATENCY_IRQS=y / ZERO_LATENCY_LEVELS=1、3 priority bits、BASEPRI=0x40（NVIC 2以上を mask）。`firmware/src/hal/hal.c` は SDK の irq_lock と bm_timer のみを使い、直接 GRTC/channel を操作しません。bm_timer は `k_timer` を経由し、SDK の channel0 予約を維持（[根拠と確認の境界](retrospective-P1.md#達成と未達)）。
 - [ ] peripheral、DPPI、IRQ の完全な予約表を対象 SoftDevice の仕様と照合する。
 - [ ] SDH 配送 model と SD RAM usage、BM queue の容量と drain 時間を .config/map/実測で確認する。両 app の `.config` は SCHED、BM_SCHEDULER_BUF_SIZE=512。修正後の DK 接続 stress では drain 最大60 µs、再接続 log では148 µsを観測しましたが、一般的な上限と SD RAM の実測は未確認です。[SDK 調査](../nrf-bm/component-catalog.md)参照。
 
-実機の証拠は `ff4c23e` の自己検査、`3d1fd598c609` の OOM、`f85c2fbe5456` の BLE 検査、`7217cb685dd2` の X/Y 比較です。Wasm Mutex、DK の5分 stress、OOM、再接続・広告停止の証拠に加え、公平性の採用判断も完了しました。[追加結果と限界](retrospective-P1.md#xy-比較と1-tick-の採用)を参照してください。追加自己検査を含む新既定 image の DK 実行、厳密な資源上限は未確認です。release 実機・ERASE_NONE・保存データ検証は P5/P6 が担当します。通常更新は ERASE_RANGES_TOUCHED_BY_FIRMWARE です。
+実機の証拠は旧自己検査・OOM・BLE 検査・X/Y 比較に加え、新既定 `ef8514585aa2` の最終 log です。Wasm Mutex、DK OOM、再接続・広告停止、新既定での公平性自己検査と5分 stress がそろい、承認済み closeout 条件に対して **P1 完了**と判定します。[最終結果と限界](retrospective-P1.md#新既定-image-の最終-dk-確認と-p1-完了判定)を参照してください。未チェックの一般的な進行保証・厳密な資源上限・完全な予約表の課題は残します。release 実機・ERASE_NONE・保存データ検証は P5/P6 が担当します。通常更新は ERASE_RANGES_TOUCHED_BY_FIRMWARE です。
 
 出典: [scheduler](../mrubyc/task-scheduler.md)、[設定とメモリ](../mrubyc/configuration-and-memory.md)、[IRQ](../nrf-bm/softdevice-and-interrupts.md)。
 

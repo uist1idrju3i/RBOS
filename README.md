@@ -10,7 +10,7 @@ mruby/c の VM と rrt0 task scheduler を中核に、Nordic nRF54L15-DK 上で�
 ## 現状
 
 [firmware/](firmware/) に mruby/c・BM HAL・BLE の初期実装があります。P0 の build・実機確認に加え、P1 は利用者の DK log で自己検査、OOM、BLE 接続中の5分 stress、再接続と広告停止を確認しました。
-P1 の公平性は DK の X/Y 比較で改善し、利用者は quantum 1 tick を既定に採用しました。追加した公平性自己検査を含む新既定 image の DK 実行は未確認です。[P1 の実機証拠と限界](research/implementation/retrospective-P1.md#xy-比較と1-tick-の採用)と [checklist](research/implementation/checklist.md#p1-vm-と時間)に記録しています。
+**P1 は承認済み closeout 条件に対して完了です。** quantum 1 tick の新既定 image `ef8514585aa2` で、公平性を含む自己検査10項目と完全接続400.140059秒の stress が PASS しました。[最終実機証拠と判定の範囲](research/implementation/retrospective-P1.md#新既定-image-の最終-dk-確認と-p1-完了判定)と [checklist](research/implementation/checklist.md#p1-vm-と時間)に記録しています。
 周辺 API、権限分離、release 実機、消費電力等は今後の検証対象です。調査済みの仕様、設計案、未確認事項は [research/README.md](research/README.md) を参照してください。
 
 ## 目標/特徴

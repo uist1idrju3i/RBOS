@@ -25,7 +25,7 @@
 
 ## P1: mruby/c を OS の中核として動かす
 
-**状況**: DK 自己検査・OOM・BLE 接続 stress・再接続・広告停止に続き、image `7217cb685dd2` の X/Y 比較で公平性改善を確認しました。利用者は X（quantum 1 tick、service sleep 10 ms）を既定に採用し、公平性判断を完了しました。追加した公平性自己検査を含む新既定 image の DK 実行と厳密な資源上限は未確認です。release 実機・ERASE_NONE は P5、保存データ保持は P5/P6 が担当します。[P1 の振り返り](retrospective-P1.md)と[証拠付き checklist](checklist.md#p1-vm-と時間)を参照してください。
+**状況: P1 完了（承認済み closeout 条件）**。新既定 image `ef8514585aa2` の DK 自己検査10項目と完全接続400.140059秒の stress が PASS しました。公平性の a/b=1.014307、tick 920..1064 µs、catchups=0を確認し、既存の OOM、再接続・広告停止、Wasm Mutex fault と合わせて判定します。厳密な資源上限・一般的な進行保証・完全な IRQ 予約表は未確認の課題です。release 実機・ERASE_NONE は P5、保存データ保持は P5/P6 が担当します。[最終実機証拠](retrospective-P1.md#新既定-image-の最終-dk-確認と-p1-完了判定)と[証拠付き checklist](checklist.md#p1-vm-と時間)を参照してください。
 
 - vendor/mruby 4.0.0 の mrbc を build して固定し、RITE0400 の最小プログラムを作る。
 - mruby/c を `firmware/` へ結合したら、debug と release の両方を build し、P0 の map と比べた増分を記録する。
@@ -38,7 +38,7 @@
 
 **受け入れ条件**: 二つ以上の task の同時実行、同 priority の巡回、priority 変更、sleep、mutex、suspend/resume、idle wakeupを試験すること。BLE 接続中の tick jitter と stack/pool 最大使用量を計測すること。
 
-**承認済み closeout 条件**: Wasm Mutex fault と規約、DK の二つの常時 ready task 負荷中の BLE 完全接続 stats 窓5分、DK OOM/abort の証拠をそろえます。利用者の決定で stress 時間を30分から5分へ変更しました。旧400秒 log の公平性不合格も保存し、X/Y の400.142051 / 380.184999秒の完全接続窓と a/b=1.005919 / 1.005926を新たな証拠にします。2倍超は現在 FAIL です。[X 採用の根拠](retrospective-P1.md#xy-比較と1-tick-の採用)に追加自己検査と未確認範囲を記録しています。vendor scheduler は未変更です。
+**承認済み closeout 条件: 達成**。Wasm Mutex fault と規約、DK の二つの常時 ready task 負荷中の BLE 完全接続 stats 窓5分、DK OOM/abort の証拠がそろいました。利用者の決定で stress 時間を30分から5分へ変更しました。旧偏り log と X/Y 比較も保存し、新既定の最終 log で公平性自己検査と400.140059秒の完全接続窓を確認しました。2倍超は現在 FAIL です。[最終判定と未確認範囲](retrospective-P1.md#新既定-image-の最終-dk-確認と-p1-完了判定)を参照してください。vendor scheduler は未変更です。
 
 根拠: `vendor/mrubyc/src/rrt0.c:146-181,339-425`、`vendor/mrubyc/hal/minimal.h:1-55`、`vendor/sdk-nrf-bm/include/bm/bm_timer.h:30-112`、[HAL](../mrubyc/hal-porting.md)、[割り込み](../nrf-bm/softdevice-and-interrupts.md)。
 

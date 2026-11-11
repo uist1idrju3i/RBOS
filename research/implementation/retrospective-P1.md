@@ -326,7 +326,15 @@ X に切断はなく、Y は28.358234秒に reason=0x13（remote user terminated
 
 両案の公平性改善は、11 tick周期と10 tick quantum の位相固定仮説を実機で裏付けます。ただし dispatch trace 自体は未採取です。利用者は周期の組合せに依存しない X を採用しました。比較専用 overlay と CI matrix は除去し、debug/release/stress の quantum を既定1に統一します。host モデルは非実機の対照として維持します。
 
-追加した自己検査は、常時 ready な同 priority worker の1秒間の差分が互いに2倍以内かを判定します。BM では1 ms timer による preemption を通ります。Wasm は MRBC_NO_TIMER の別経路であり、その成功だけでは BM を保証しません。今回の追加自己検査を含む新既定 image の DK 実行はまだ報告されていません。
+追加した自己検査は、常時 ready な同 priority worker の1秒間の差分が互いに2倍以内かを判定します。BM では1 ms timer による preemption を通ります。Wasm は MRBC_NO_TIMER の別経路であり、その成功だけでは BM を保証しません。新既定 image の DK 実行は次節に記録します。
+
+### 新既定 image の最終 DK 確認と P1 完了判定
+
+利用者が image `ef8514585aa2` を DK に書き込み、`dk-stress-20261111-204332.log` を採取しました。[firmware CI run 43013287420](https://github.com/uist1idrju3i/RBOS/actions/runs/43013287420) の `firmware-evidence-stress-ef8514585aa2e8b1d17d4c5e11fe281e9f1f0d24` に対応し、`production.hex` の SHA-256 は `fe263a152d87ae2a589f4ecd179edf43eedcf55da2092fc6a7b2f3cc58cea67a`、更新方式は ERASE_RANGES_TOUCHED_BY_FIRMWARE です。書込みは利用者が実施し、エージェントは操作していません。
+
+[最終 log fixture](../../tests/check-changes/stress-final-capture.txt) と [checker 出力全文](../../tests/check-changes/stress-final-report.txt)を保存しました。`--profile stress` は PASS。自己検査10項目は `same-priority fairness` を含め全 PASS、切断なし、完全接続窓400.140059秒、tick 920..1064 µs、catchups=0、drain 最大70 µsでした。a/b=1.014307、a=20505.085196/s、b=20215.856468/s、service 約90.8/s。pool 標本最大15452/65536 B、main/ISR 688/560 Bです。PHY 2M の要求・完了 status=0x00、data length 251の要求・27への更新、ATT MTU rx=293の要求を記録し、応答修正版で接続が継続しました。MTU reply の成功結果そのものは log に出ないため、要求と接続継続の観測と区別します。
+
+新既定で追加自己検査と5分 stress の実機確認がそろったため、過去の OOM、再接続・広告停止、Wasm Mutex fault の証拠と合わせ、承認済み closeout 条件に対して **P1 完了**と判定します。厳密な資源上限・一般的な進行保証・完全な IRQ 予約表は引き続き未確認です。release 実機・ERASE_NONE は P5、保存データ保持は P5/P6 の担当であり、P2〜P6 の完了は主張しません。
 
 ## 判明したリスクと blocker
 
