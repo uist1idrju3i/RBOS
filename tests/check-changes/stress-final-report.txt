@@ -1,0 +1,26 @@
+PASS: stress; app 0.1.0 / ef8514585aa2; RBOS 0.1.0+0
+| Item | Result |
+|---|---|
+| Stats | 41 lines; 400.140059 s (first to last) |
+| Catchups max | 0 |
+| Ticks after first | 10002..10004 |
+| Fully disconnected tick_us | unmeasured (0 complete windows) |
+| Fully connected tick_us | 920..1064; 40 windows / 400.140059 s |
+| BLE connected | 405.319798 s event-to-event; 0 boundary windows excluded |
+| Pool sampled peak (B) | 15452 / 65536 (23.577881%) |
+| main max | 688 |
+| isr max | 560 |
+| drain_us max | 70 |
+| idle / s | 0.0..0.0 |
+| service / s | 90.760673..90.778885 |
+| Spinner a | 41 progress lines; estimated max gap 10.004333 s; delta 202742.567822..207293.867495 / stats interval; mean 20505.085196 / s |
+| Spinner b | 41 progress lines; estimated max gap 10.004333 s; delta 199730.389915..204327.040826 / stats interval; mean 20215.856468 / s |
+| Fully connected under spinner load | 400.140059 / 300 s required |
+| Spinner a/b; max/min | 1.014307; 1.014307 |
+
+| BLE event | Uptime (s) | Line |
+|---|---|---|
+| fast_advertising | 0.035346 | 12 |
+| connected | 4.824872 | 25 |
+NOTE: Spinner times use preceding timestamps (quantized); time after the final timestamp is unobservable
+NOTE: First stats excluded from jitter/rates; BLE boundary windows excluded from jitter.

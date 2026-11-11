@@ -228,6 +228,27 @@ class LogTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stdout)
                 self.assertIn("PASS: stress", result.stdout)
 
+    def test_final_default_stress_capture(self):
+        path = Path(__file__).with_name("stress-final-capture.txt")
+        data = path.read_bytes()
+        self.assertIsNone(re.search(rb"\d{9,12}", data))
+        passes = re.findall(rb"^PASS: (.+)$", data, re.M)
+        expected = dk_log.PASSES[:2] + ("same-priority fairness",) + dk_log.PASSES[2:]
+        self.assertEqual(passes, [item.encode() for item in expected])
+        report = dk_log.analyze(data, profile="stress")
+        self.assertEqual(report["errors"], [])
+        self.assertEqual(report["boot"]["sha"], "ef8514585aa2")
+        self.assertAlmostEqual(report["spinner_a_b_ratio"], 1.014307)
+        self.assertAlmostEqual(report["stress_connected_duration_s"], 400.140059)
+        self.assertEqual(report["peaks"], {"pool": 15452, "pool_total": 65536,
+                                         "pool_percent": 23.577881, "main": 688,
+                                         "isr": 560, "drain_us": 70})
+        self.assertFalse(any(event["kind"] == "disconnected" for event in report["events"]))
+        result = subprocess.run([sys.executable, str(CHECKER), str(path), "--profile", "stress"],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertEqual(result.stdout, path.with_name("stress-final-report.txt").read_text())
+
     def test_fairness_boundary(self):
         data = synthetic("stress")
         for multiplier, passed in [(2, True), (3, False)]:

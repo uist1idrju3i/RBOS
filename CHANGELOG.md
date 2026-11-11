@@ -6,8 +6,9 @@
 
 ### Added
 
+- 利用者の決定により、P1 の残る資源・進行・予約・SDH 項目は観測値で完了とし、厳密な上限と進行保証を P6、予約表と SD RAM/queue の照合を P2 へ移管しました。Mutex は Wasm 試験と採用規約で十分とし、DK fault 試験は行いません。公平性閾値は2倍を維持し、P5 の DLE/ATT MTU・DFU 速度の実機測定と、一時 overlay/CI image の比較手順を記録しました。
 - DK の X/Y 比較で a/b 約1.006を確認し、利用者は周期の組合せに依存しない案 X を採用しました。VM quantum の既定を1 tick、service sleep を従来の10 msとし、比較専用 overlay と CI matrix は削除しました。host モデルは維持します。自己検査に同 priority worker の1秒間の進捗比2倍以内を追加しました。
-- P1 closeout 向けに STRESS/OOM profile、常時 ready spinner、保持割当て fault task、四 variant の CI artifact、区間最大の `drain_us` を追加しました。利用者の決定で stress 条件を完全接続窓5分へ変更し、DK OOM/abort と X/Y 接続 stress を確認しました。公平性の採用判断は完了し、新既定 image の追加自己検査の DK 実行は未確認です。
+- P1 closeout 向けに STRESS/OOM profile、常時 ready spinner、保持割当て fault task、四 variant の CI artifact、区間最大の `drain_us` を追加しました。利用者の決定で stress 条件を完全接続窓5分へ変更し、DK OOM/abort と X/Y 接続 stress を確認しました。新既定 image `ef8514585aa2` の DK 自己検査10項目と完全接続400.140059秒の stress も PASS し、承認済み closeout 条件に対して P1 完了と判定しました。最終 log と checker 出力全文を回帰 fixture として保存しました。
 - BLE 応答修正後の DK log、checker 出力、CI image と production.hex の hash を記録しました。旧約40.1秒の切断周期は再観測されず、再接続と slow 広告の約180秒後停止も確認しました。前後比較から応答追加の効果と推定しますが、旧切断理由は未確定です。旧偏り log と X/Y log を fixture にし、現在は公平性2倍超を FAIL として検査します。
 - 固定 mruby/c の Mutex owner 終了・ensure 解放・priority inversion・非 owner unlock の Wasm fault test と、pool 最小値の任意実行探索を追加しました。自己検査は Wasm 10 KiB で成功、9 KiB で OOM でした。Mutex 利用規約と P2/P3/P5/P6 の担当・検証条件は承認済みの方針として記録し、未実装の項目を区別しました。
 - DK console log の自己検査・stress・OOM checker と、macOS の時間制限付き capture 手順を追加しました。BLE 境界を除いた統計、spinner、試験時間を判定します。capture は Linux PTY で検査し、macOS 実機では未確認です。

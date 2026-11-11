@@ -22,7 +22,7 @@ mrbc を vendor のコピーから作り、mruby/c、共有 binding、BM HAL、s
 | BLE 接続中の tick jitter | min/max、catchups、tick count の区間計装を実装 | 完全接続区間936..1049 µs、catchups=0 |
 | stack/pool 最大使用量 | main/ISR の paint scan、pool の観測最大値を実装 | main 688 B、ISR 560 B、pool 11560/65536 B。標本・paint の限界あり |
 
-P1 の受け入れ項目に対する自己検査・BLE 接続中の区間統計・stack/pool の観測値が実機でもそろいました。ただし、資源使用量の厳密な上限、常時 ready task と BLE の負荷試験、長時間安定性まで検証したものではありません。Wasm は firmware-only class、BM timer/IRQ、SoftDevice を動かさず、system.rb は compile だけです。
+初期 DK log の時点では、自己検査・BLE 接続中の区間統計・stack/pool の観測値がそろいましたが、常時 ready task と BLE の負荷試験は未実施でした。後述の新既定 stress で負荷試験を追加し、厳密な上限・長時間安定性は P6 に移管しました。Wasm は firmware-only class、BM timer/IRQ、SoftDevice を動かさず、system.rb は compile だけです。
 
 実行した検査は次のとおりです。コマンド中の `<...>` は再実行時の置換値です。
 
@@ -169,9 +169,9 @@ PASS: P1 selftest
 | 項目 | 実装・検証 | 未確認の境界 |
 |---|---|---|
 | drain_us | `firmware/src/runtime.c:41-44,62-65` で各 bm_scheduler_process の経過 µs を測り、区間最大を出力後 reset。追加 DK stress log の最大は144 µs | IRQ の中断を含む。drain の上限を制限する機構ではない |
-| stress/oom | Kconfig choice と `firmware/stress.conf` / `oom.conf`、CMake の task 選択。四 pristine build は warning/error 0。DK stress/OOM の利用者 log を追加 | 当初の230秒は未達。後述の BLE 修正後400秒は PASS、OOM の fatal も確認済み。fairness は未決 |
+| stress/oom | Kconfig choice と `firmware/stress.conf` / `oom.conf`、CMake の task 選択。四 pristine build は warning/error 0。DK stress/OOM の利用者 log を追加 | 当初は230秒未達で fairness 未決。その後の X 採用・新既定400秒 stress・OOM fatal の実機証拠で P1 完了 |
 | CI artifacts | `.github/workflows/firmware.yml` の四 variant が `firmware-evidence-<variant>-<sha>` に production.hex・SHA256SUMS 等を保存。鍵は含めない | PR #29 の14 checks と firmware run `42851188661` は成功。release 鍵検査と debug 限定 workspace 保存は維持 |
-| Mutex fault | Wasm で owner 終了後の locked/waiter 停止、Task#raise の ensure 解放、middle busy 中の inversion、非 owner unlock の assert exit 1 を確認 | BM debug/release の差は前処理・map 照合。DK の fault は未実施 |
+| Mutex fault | Wasm で owner 終了後の locked/waiter 停止、Task#raise の ensure 解放、middle busy 中の inversion、非 owner unlock の assert exit 1 を確認 | BM debug/release の差は前処理・map 照合。利用者は Wasm 試験と採用規約で十分と承認し、DK の Mutex fault 試験は行わない |
 | pool 最小値 | `tools/mrubyc-wasm/check.sh --pool-min` の1 KiB単位探索で10 KiB（10240 B）が自己検査 PASS、9 KiB は OOM。既存 toolchain/cache で31秒 | opt-in。system.rb は compile のみ。firmware の必要量ではない |
 | log checker | `tools/bm-build/check-dk-log.py`、実 log と合成失敗例、CLI、capture PTY を含む unittest 全27件成功 | macOS の port/zsh は未確認。spinner は直前 timestamp による推定 |
 
@@ -195,7 +195,7 @@ Wasm32 と ARM の pointer はともに4 Bであり、ホスト Node の64 bit p
 | spinner | a は約3.8万、b は約37.5万 iteration / 10秒。counter の modulo 差分でも約10倍の偏りが継続。a/b と速い側/遅い側を checker に追加 |
 | 受け入れ | 完全接続かつ負荷中の窓は230.067537秒で、300秒未達の FAIL。総 log が5分を超えたことだけでは完了にしない |
 
-DK OOM は利用者の [OOM fixture](../../tests/check-changes/oom-capture.txt)で、同じ image `3d1fd598c609` の `OOM: start` → `RBOS fatal: Ruby pool exhausted` を確認しました。OOM checker は PASS。旧 boot の先頭 stats 断片は除外し、新 boot の fatal 前には stats がないため pool は未計測です。この時点では [checklist](checklist.md#p1-vm-と時間)の OOM だけを完了にしました。stress 再試験と slow 広告停止の追加証拠は次節に記録します。DK Mutex fault は未実施です。
+DK OOM は利用者の [OOM fixture](../../tests/check-changes/oom-capture.txt)で、同じ image `3d1fd598c609` の `OOM: start` → `RBOS fatal: Ruby pool exhausted` を確認しました。OOM checker は PASS。旧 boot の先頭 stats 断片は除外し、新 boot の fatal 前には stats がないため pool は未計測です。この時点では [checklist](checklist.md#p1-vm-と時間)の OOM だけを完了にしました。stress 再試験と slow 広告停止の追加証拠は次節に記録します。当時 DK Mutex fault は未実施で、現在は利用者承認により行わない方針です。
 
 ### BLE 応答修正後の DK 証拠
 
@@ -326,11 +326,19 @@ X に切断はなく、Y は28.358234秒に reason=0x13（remote user terminated
 
 両案の公平性改善は、11 tick周期と10 tick quantum の位相固定仮説を実機で裏付けます。ただし dispatch trace 自体は未採取です。利用者は周期の組合せに依存しない X を採用しました。比較専用 overlay と CI matrix は除去し、debug/release/stress の quantum を既定1に統一します。host モデルは非実機の対照として維持します。
 
-追加した自己検査は、常時 ready な同 priority worker の1秒間の差分が互いに2倍以内かを判定します。BM では1 ms timer による preemption を通ります。Wasm は MRBC_NO_TIMER の別経路であり、その成功だけでは BM を保証しません。今回の追加自己検査を含む新既定 image の DK 実行はまだ報告されていません。
+追加した自己検査は、常時 ready な同 priority worker の1秒間の差分が互いに2倍以内かを判定します。BM では1 ms timer による preemption を通ります。Wasm は MRBC_NO_TIMER の別経路であり、その成功だけでは BM を保証しません。新既定 image の DK 実行は次節に記録します。
+
+### 新既定 image の最終 DK 確認と P1 完了判定
+
+利用者が image `ef8514585aa2` を DK に書き込み、`dk-stress-20261111-204332.log` を採取しました。[firmware CI run 43013287420](https://github.com/uist1idrju3i/RBOS/actions/runs/43013287420) の `firmware-evidence-stress-ef8514585aa2e8b1d17d4c5e11fe281e9f1f0d24` に対応し、`production.hex` の SHA-256 は `fe263a152d87ae2a589f4ecd179edf43eedcf55da2092fc6a7b2f3cc58cea67a`、更新方式は ERASE_RANGES_TOUCHED_BY_FIRMWARE です。書込みは利用者が実施し、エージェントは操作していません。
+
+[最終 log fixture](../../tests/check-changes/stress-final-capture.txt) と [checker 出力全文](../../tests/check-changes/stress-final-report.txt)を保存しました。`--profile stress` は PASS。自己検査10項目は `same-priority fairness` を含め全 PASS、切断なし、完全接続窓400.140059秒、tick 920..1064 µs、catchups=0、drain 最大70 µsでした。a/b=1.014307、a=20505.085196/s、b=20215.856468/s、service 約90.8/s。pool 標本最大15452/65536 B、main/ISR 688/560 Bです。PHY 2M の要求・完了 status=0x00、data length 251の要求・27への更新、ATT MTU rx=293の要求を記録し、応答修正版で接続が継続しました。MTU reply の成功結果そのものは log に出ないため、要求と接続継続の観測と区別します。
+
+新既定で追加自己検査と5分 stress の実機確認がそろったため、過去の OOM、再接続・広告停止、Wasm Mutex fault の証拠と合わせ、承認済み closeout 条件に対して **P1 完了**と判定します。厳密な資源上限・一般的な進行保証・完全な IRQ 予約表は引き続き未確認です。release 実機・ERASE_NONE は P5、保存データ保持は P5/P6 の担当であり、P2〜P6 の完了は主張しません。
 
 ## 判明したリスクと blocker
 
-実機の基本自己検査と短時間の接続試験は利用者報告で確認しました。残る制約は以下のとおりです。全項目が DK で障害として発生したという意味ではありません。
+実機の自己検査と新既定400秒 stress は利用者 log で確認しました。利用者の決定により、P1 の残る4項目は観測値で完了とし、厳密な上限・進行保証は P6、予約表と SD RAM/queue の照合は P2 へ移管します。残る制約は以下のとおりで、DK で障害として発生したという意味ではありません。
 
 | リスク・境界 | 現在の事実と根拠 |
 |---|---|
@@ -340,8 +348,8 @@ X に切断はなく、Y は28.358234秒に reason=0x13（remote user terminated
 | system task の優先度・停止を制限しない | priority 0 で生成するが、一般 Ruby task が Task.get で参照して priority= / suspend 等を呼ぶ API に caller 制限なし。自己検査では system task を変更していない。P3 の課題（`vendor/mrubyc/src/rrt0.c:914-943,1044-1069,1120-1135`） |
 | pool の観測漏れ | pool_max は保守時の alloc_statistics の標本最大値。保守間に確保・解放した peak は拾わない（`firmware/src/runtime.c:48-50`） |
 | stack scan の余裕 | main stack は現在 SP より256 B下まで paint。未塗布領域を使用済みとして数える保守的な値で、厳密な最大深さではない。ISR は INIT_STACKS を使用（`firmware/src/runtime.c:18-33`、`firmware/common.conf`） |
-| abort 後の復旧 | LOG_PANIC 後に k_fatal_halt。app の自動 reboot / watchdog 復旧は未実装。OOM/fatal 経路は実機未試験（`firmware/src/hal/hal.c:96-103`） |
-| RAM 予算 | debug 約83 KB（83,600 B、81.6 KiB）/ 237 KiB、34.45%。pool 64 KiB と main stack 8 KiB を静的予約済みだが、残量を将来 I/O/queue に無条件に使える保証ではない |
+| abort 後の復旧 | DK の image `3d1fd598c609` で `OOM: start` → `RBOS fatal: Ruby pool exhausted` を確認済み。LOG_PANIC 後に k_fatal_halt。自動 reboot / watchdog 復旧は未実装で、P3 の実装・P6 の長時間試験に残す（`firmware/src/hal/hal.c:96-103`） |
+| RAM 予算 | 初期 debug は83,600 B、新既定 debug/stress は83,624 B / 237 KiB。pool 64 KiB と main stack 8 KiB を静的予約済みだが、残量を将来 I/O/queue に無条件に使える保証ではない |
 | 広告を必ず開始する | 起動時に利用者の選択なしで広告し、切断後も再開する。電力・公開範囲の制御は未設計。ただし無期限の「常時広告」ではない。両 `.config` の timeout は fast 1000、slow 18000（10 ms単位、10秒→180秒→idle）。`firmware/src/ble.c`、`vendor/sdk-nrf-bm/lib/bluetooth/ble_adv/ble_adv.c:108-118,181-232,393-428` が根拠 |
 | release 鍵 | `firmware/sysbuild.cmake` の検査は変更なし。build に外部試験鍵を使用しただけで、量産鍵の管理・DK への移行・DFU を検証したものではない |
 
@@ -367,8 +375,8 @@ priority inheritance もありません。lock 待ちで変更するのは待機
 
 次の候補も採用して両文書に反映しました。完了印は証拠の範囲に限ります。stress の時間条件だけは、前述の利用者の決定で5分へ変更しました。
 
-- **採用 / checklist P1**: Mutex fault＋規約は Wasm の証拠で [x]。DK fault 完了とはしません。
-- **採用 / checklist P1**: 境界を除いた jitter・drain_us は修正後400秒 stress、abort は oom profile の利用者証拠で [x]。fairness 判断は [ ]。
+- **採用 / checklist P1**: Mutex fault＋規約は Wasm の証拠で [x]。利用者承認により DK の Mutex fault 試験は行いません。
+- **採用 / checklist P1**: 境界を除いた jitter・drain_us は新既定400秒 stress、abort は oom profile の利用者証拠で [x]。fairness 判断も X 採用で [x]。実測 a/b は約1.01ですが、利用者の決定で自己検査の閾値は2倍以内を維持します。
 - **採用 / checklist P2**: native API ごとの map と stack/pool 差を [ ] で追加。
 - **採用 / checklist P3**: system task・他 task の priority=/suspend/terminate/raise 拒否試験を [ ] で明示。
 - **採用 / porting-plan P3/P5/P6**: watchdog・fatal 回復は P3、広告条件は P5、長時間実機試験は P6。release image / ERASE_NONE は P5、保存データ保持は P5/P6 に移しました。
