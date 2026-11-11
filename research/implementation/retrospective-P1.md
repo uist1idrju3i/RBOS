@@ -169,8 +169,8 @@ PASS: P1 selftest
 | 項目 | 実装・検証 | 未確認の境界 |
 |---|---|---|
 | drain_us | `firmware/src/runtime.c:41-44,62-65` で各 bm_scheduler_process の経過 µs を測り、区間最大を出力後 reset。追加 DK stress log の最大は144 µs | IRQ の中断を含む。drain の上限を制限する機構ではない |
-| stress/oom | Kconfig choice と `firmware/stress.conf` / `oom.conf`、CMake の task 選択。四 pristine build は warning/error 0。DK stress/OOM の利用者 log を追加 | stress の完全接続窓300秒は未達、OOM の fatal は確認済み |
-| CI artifacts | `.github/workflows/firmware.yml` の四 variant が `firmware-evidence-<variant>-<sha>` に production.hex・SHA256SUMS 等を保存。鍵は含めない | PR #28 の firmware run `42846062359` まで成功を確認。release 鍵検査と debug 限定 workspace 保存は維持 |
+| stress/oom | Kconfig choice と `firmware/stress.conf` / `oom.conf`、CMake の task 選択。四 pristine build は warning/error 0。DK stress/OOM の利用者 log を追加 | 当初の230秒は未達。後述の BLE 修正後400秒は PASS、OOM の fatal も確認済み。fairness は未決 |
+| CI artifacts | `.github/workflows/firmware.yml` の四 variant が `firmware-evidence-<variant>-<sha>` に production.hex・SHA256SUMS 等を保存。鍵は含めない | PR #29 の14 checks と firmware run `42851188661` は成功。release 鍵検査と debug 限定 workspace 保存は維持 |
 | Mutex fault | Wasm で owner 終了後の locked/waiter 停止、Task#raise の ensure 解放、middle busy 中の inversion、非 owner unlock の assert exit 1 を確認 | BM debug/release の差は前処理・map 照合。DK の fault は未実施 |
 | pool 最小値 | `tools/mrubyc-wasm/check.sh --pool-min` の1 KiB単位探索で10 KiB（10240 B）が自己検査 PASS、9 KiB は OOM。既存 toolchain/cache で31秒 | opt-in。system.rb は compile のみ。firmware の必要量ではない |
 | log checker | `tools/bm-build/check-dk-log.py`、実 log と合成失敗例、CLI、capture PTY を含む unittest 全27件成功 | macOS の port/zsh は未確認。spinner は直前 timestamp による推定 |
@@ -195,7 +195,89 @@ Wasm32 と ARM の pointer はともに4 Bであり、ホスト Node の64 bit p
 | spinner | a は約3.8万、b は約37.5万 iteration / 10秒。counter の modulo 差分でも約10倍の偏りが継続。a/b と速い側/遅い側を checker に追加 |
 | 受け入れ | 完全接続かつ負荷中の窓は230.067537秒で、300秒未達の FAIL。総 log が5分を超えたことだけでは完了にしない |
 
-DK OOM は利用者の [OOM fixture](../../tests/check-changes/oom-capture.txt)で、同じ image `3d1fd598c609` の `OOM: start` → `RBOS fatal: Ruby pool exhausted` を確認しました。OOM checker は PASS。旧 boot の先頭 stats 断片は除外し、新 boot の fatal 前には stats がないため pool は未計測です。[checklist](checklist.md#p1-vm-と時間)の OOM だけを完了にしました。stress の再試験、slow 広告180秒後の停止、DK Mutex fault は未確認です。
+DK OOM は利用者の [OOM fixture](../../tests/check-changes/oom-capture.txt)で、同じ image `3d1fd598c609` の `OOM: start` → `RBOS fatal: Ruby pool exhausted` を確認しました。OOM checker は PASS。旧 boot の先頭 stats 断片は除外し、新 boot の fatal 前には stats がないため pool は未計測です。この時点では [checklist](checklist.md#p1-vm-と時間)の OOM だけを完了にしました。stress 再試験と slow 広告停止の追加証拠は次節に記録します。DK Mutex fault は未実施です。
+
+### BLE 応答修正後の DK 証拠
+
+利用者は PR #29 の [firmware run 42851188661](https://github.com/uist1idrju3i/RBOS/actions/runs/42851188661) の `firmware-evidence-stress-f85c2fbe54567f9b6d05dfab5c83825488781c50` を DK に書き込み、二つの log を採取しました。banner は両方 `f85c2fbe5456` です。利用者報告の `production.hex` SHA-256 は `8c0e162ab28375cfb46c6487515c5c49a3253361f8049c71ca2eed66fbfb5867`、更新方式は ERASE_RANGES_TOUCHED_BY_FIRMWARE。今回は binary の再取得・hash 再計算や実機操作をせず、保存 log を checker で解析しました。識別番号がないことを検査し、改行を LF に統一した fixture を保存しました。
+
+`dk-stress-20261111-022419.log` は [連続接続 fixture](../../tests/check-changes/stress-connected-capture.txt)です。PHY は2M要求（tx/rx=0x02）と完了 status=0x00、DLE は251要求→有効27、ATT MTU は rx=293要求を記録しました。有効 MTU の結果値はこの log にはありません。stress の既定条件で exit 0、切断なし。最初の stats を除いた40窓が全て完全接続かつ spinner 負荷中です。
+
+```text
+PASS: stress; app 0.1.0 / f85c2fbe5456; RBOS 0.1.0+0
+| Item | Result |
+|---|---|
+| Stats | 41 lines; 400.122214 s (first to last) |
+| Catchups max | 0 |
+| Ticks after first | 10002..10004 |
+| Fully disconnected tick_us | unmeasured (0 complete windows) |
+| Fully connected tick_us | 920..1064; 40 windows / 400.122214 s |
+| BLE connected | 407.480376 s event-to-event; 0 boundary windows excluded |
+| Pool sampled peak (B) | 15428 / 65536 (23.54126%) |
+| main max | 696 |
+| isr max | 560 |
+| drain_us max | 60 |
+| idle / s | 0.0..0.0 |
+| service / s | 90.760782..90.787789 |
+| Spinner a | 41 progress lines; estimated max gap 10.004321 s; delta 37597.232325..37748.459962 / stats interval; mean 3767.416422 / s |
+| Spinner b | 41 progress lines; estimated max gap 10.004321 s; delta 373596.853765..374110.496027 / stats interval; mean 37384.477734 / s |
+| Fully connected under spinner load | 400.122214 / 300 s required |
+| Spinner a/b; max/min | 0.100775; 9.923107 |
+
+| BLE event | Uptime (s) | Line |
+|---|---|---|
+| fast_advertising | 0.035376 | 12 |
+| connected | 2.646475 | 24 |
+NOTE: Ignored 1 pre-boot line(s), counting any residue before the selected marker; original line numbers retained
+NOTE: Spinner times use preceding timestamps (quantized); time after the final timestamp is unobservable
+WARN: Spinner rate imbalance exceeds 2x (a/b=0.101; max/min=9.923)
+NOTE: First stats excluded from jitter/rates; BLE boundary windows excluded from jitter.
+```
+
+`dk-stress-20261111-023156.log` は [再接続・広告停止 fixture](../../tests/check-changes/stress-reconnect-capture.txt)です。二度目の接続に成功し、両切断は reason=0x13でした。これは remote user terminated、ここでは iPhone 側による終了です（`vendor/sdk-nrf-bm/components/softdevice/nrf54l/s115/s115_API/include/ble_hci.h:74`）。最後の切断102.890137秒→fast→slow 112.880452秒→`ble_adv: Idle` 292.847109秒で、slow から179.966657秒、約180秒の停止を確認しました。checker は Idle を event 表に列挙しないため、fixture の129行目も照合しています。
+
+この二本目は接続 stress の300秒条件を試す log ではなく、既定の stress checker は exit 1です。条件を下げた PASS で置き換えず、実際の出力を保存します。
+
+```text
+FAIL: stress; app 0.1.0 / f85c2fbe5456; RBOS 0.1.0+0
+| Item | Result |
+|---|---|
+| Stats | 29 lines; 280.088142 s (first to last) |
+| Catchups max | 0 |
+| Ticks after first | 10002..10007 |
+| Fully disconnected tick_us | 942..1040; 18 windows / 180.054945 s |
+| Fully connected tick_us | 920..1064; 7 windows / 70.024438 s |
+| BLE connected | 86.838918 s event-to-event; 3 boundary windows excluded |
+| Pool sampled peak (B) | 15436 / 65536 (23.553467%) |
+| main max | 688 |
+| isr max | 560 |
+| drain_us max | 148 |
+| idle / s | 0.0..0.0 |
+| service / s | 90.442994..90.778812 |
+| Spinner a | 29 progress lines; estimated max gap 10.007292 s; delta 37408.421472..37786.176928 / stats interval; mean 3768.156668 / s |
+| Spinner b | 29 progress lines; estimated max gap 10.007292 s; delta 372091.470746..374689.360159 / stats interval; mean 37410.487731 / s |
+| Fully connected under spinner load | 70.024438 / 300 s required |
+| Spinner a/b; max/min | 0.100725; 9.928061 |
+
+| BLE event | Uptime (s) | Line |
+|---|---|---|
+| fast_advertising | 0.035345 | 12 |
+| connected | 5.891271 | 24 |
+| fast_advertising | 13.011859 | 33 |
+| disconnected | 13.011963 | 34 |
+| slow_advertising | 23.013189 | 38 |
+| connected | 23.171911 | 39 |
+| fast_advertising | 102.890033 | 69 |
+| disconnected | 102.890137 | 70 |
+| slow_advertising | 112.880452 | 74 |
+ERROR: Fully-connected stats coverage too short under spinner load: 70.024 s < 300.000 s
+NOTE: Ignored 1 pre-boot line(s), counting any residue before the selected marker; original line numbers retained
+NOTE: Spinner times use preceding timestamps (quantized); time after the final timestamp is unobservable
+WARN: Spinner rate imbalance exceeds 2x (a/b=0.101; max/min=9.928)
+NOTE: First stats excluded from jitter/rates; BLE boundary windows excluded from jitter.
+```
+
+旧約40.1秒の切断周期は、S115 応答を追加した #29 の後には再観測されませんでした。前後比較から応答追加によって周期切断が止まったと推定します。ただし旧 log に reason がなく、どの未応答手順が原因だったかは確定できません。一方、BLE が安定しても spinner 比は約1:9.9のままで、偏りは解消していません。5分 stress・再接続・広告停止は checklist を完了にしますが、**P1 は公平性の利用者判断待ちで未完了**です。checker の WARN は判断を済ませたことを意味しません。
 
 ### BLE 手順応答の欠落と修正範囲
 
@@ -232,7 +314,7 @@ Wasm HAL は `vendor/mrubyc/hal/emscripten/hal.h:28-30,49-54` で MRBC_NO_TIMER 
 | リスク・境界 | 現在の事実と根拠 |
 |---|---|
 | timer 周期と ms の差 | SYS_CLOCK_TICKS_PER_SEC=31250、BM_TIMER_MS_TO_TICKS(1)=31、名目992 µs。HAL は絶対 uptime の whole ms に追従して mrbc_tick を0回以上呼ぶ。遅れを切り捨てる上限はなく、catch-up が長くなる可能性は未計測（`firmware/src/hal/hal.c:19-53`） |
-| 保守の drain は無制限 | log_process は最大4回だが、bm_scheduler_process は queue が空になるまで callback を実行。新規 event や長い callback を含む実行時間に上限なし（`firmware/src/runtime.c:37-46`、`vendor/sdk-nrf-bm/lib/bm_scheduler/bm_scheduler.c:53-72`）。SCHED と512 Bの queue は確認済み。drain_us 計装を追加したが DK 実測は未実施 |
+| 保守の drain は無制限 | log_process は最大4回だが、bm_scheduler_process は queue が空になるまで callback を実行。新規 event や長い callback を含む実行時間に上限なし（`firmware/src/runtime.c:37-46`、`vendor/sdk-nrf-bm/lib/bm_scheduler/bm_scheduler.c:53-72`）。SCHED と512 Bの queue は確認済み。修正後の DK 接続 stress は最大60 µs、再接続 log は148 µsを観測したが、実行時間の上限保証ではない |
 | service の認可は VM pointer のみ | `firmware/src/runtime.c:68-79` は保存した system task の VM pointer と比較。生成・破棄の lifecycle に結び付いた権限管理ではなく、拒否例も実機未試験。P3 で扱う |
 | system task の優先度・停止を制限しない | priority 0 で生成するが、一般 Ruby task が Task.get で参照して priority= / suspend 等を呼ぶ API に caller 制限なし。自己検査では system task を変更していない。P3 の課題（`vendor/mrubyc/src/rrt0.c:914-943,1044-1069,1120-1135`） |
 | pool の観測漏れ | pool_max は保守時の alloc_statistics の標本最大値。保守間に確保・解放した peak は拾わない（`firmware/src/runtime.c:48-50`） |
@@ -254,7 +336,7 @@ priority inheritance もありません。lock 待ちで変更するのは待機
 
 以下の提案は利用者承認により採用しました。反映先と未実装・未検証を区別します。P1 の実機受け入れを済ませずに P2 完了とはしません。
 
-1. **採用**: P1 の stress/oom profile、drain_us、checker・capture を実装。利用者の決定で stress を30分から完全接続窓5分へ変更しました。[checklist P1](checklist.md#p1-vm-と時間)は OOM 完了、stress は未達です。再接続は確認済み、slow 広告180秒後の停止は未確認です。
+1. **採用**: P1 の stress/oom profile、drain_us、checker・capture を実装。利用者の決定で stress を30分から完全接続窓5分へ変更しました。[checklist P1](checklist.md#p1-vm-と時間)は OOM と修正後400秒 stress、再接続・広告停止を完了。spinner 公平性は利用者判断待ちです。
 2. **採用**: [checklist P2](checklist.md#p2-native-api-と資源) と [porting-plan P2](porting-plan.md#p2-native-class-と値の規約) に共通引数 helper、Wasm fake の正常・無引数・nil・誤型・境界・driver failure、固定長 ring / newest drop / overflow counter / pin ごとの Button coalescing と count を記録。実装は P2 です。
 3. **採用**: P2 checklist・計画に native API ごとの map と stack/pool 増分記録を追加。瞬間 peak 捕捉と paint margin 校正の検討も checklist に残しました。現在の標本統計を厳密な上限へ読み替えません。
 4. **採用**: `tests/mruby/mutex_*.rb` と check.sh で Wasm fault を実行済み。[scheduler 文書](../mrubyc/task-scheduler.md#rbos-の-mutex-利用規約採用)に ensure 解放・保持 task の terminate 禁止・同 priority・非 owner unlock 禁止を規定し、製品 Ruby の skill から参照。inversion が問題と実測された場合だけ RBOS Mutex / 上流提案を再検討し、上流への連絡は別途承認を得ます。
@@ -265,7 +347,7 @@ priority inheritance もありません。lock 待ちで変更するのは待機
 次の候補も採用して両文書に反映しました。完了印は証拠の範囲に限ります。stress の時間条件だけは、前述の利用者の決定で5分へ変更しました。
 
 - **採用 / checklist P1**: Mutex fault＋規約は Wasm の証拠で [x]。DK fault 完了とはしません。
-- **採用 / checklist P1**: 境界を除いた jitter・drain_us は完全接続窓5分 stress で [ ]、abort は oom profile の利用者証拠で [x]。
+- **採用 / checklist P1**: 境界を除いた jitter・drain_us は修正後400秒 stress、abort は oom profile の利用者証拠で [x]。fairness 判断は [ ]。
 - **採用 / checklist P2**: native API ごとの map と stack/pool 差を [ ] で追加。
 - **採用 / checklist P3**: system task・他 task の priority=/suspend/terminate/raise 拒否試験を [ ] で明示。
 - **採用 / porting-plan P3/P5/P6**: watchdog・fatal 回復は P3、広告条件は P5、長時間実機試験は P6。release image / ERASE_NONE は P5、保存データ保持は P5/P6 に移しました。
