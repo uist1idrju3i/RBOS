@@ -25,7 +25,7 @@
 
 ## P1: mruby/c を OS の中核として動かす
 
-**状況: P1 完了（承認済み closeout 条件）**。新既定 image `ef8514585aa2` の DK 自己検査10項目と完全接続400.140059秒の stress が PASS しました。公平性の a/b=1.014307、tick 920..1064 µs、catchups=0を確認し、既存の OOM、再接続・広告停止、Wasm Mutex fault と合わせて判定します。厳密な資源上限・一般的な進行保証・完全な IRQ 予約表は未確認の課題です。release 実機・ERASE_NONE は P5、保存データ保持は P5/P6 が担当します。[最終実機証拠](retrospective-P1.md#新既定-image-の最終-dk-確認と-p1-完了判定)と[証拠付き checklist](checklist.md#p1-vm-と時間)を参照してください。
+**状況: P1 完了（承認済み closeout 条件）**。新既定 image `ef8514585aa2` の DK 自己検査10項目と完全接続400.140059秒の stress が PASS しました。公平性の a/b=1.014307、tick 920..1064 µs、catchups=0を確認し、既存の OOM、再接続・広告停止、Wasm Mutex fault と合わせて判定します。利用者の決定で P1 の残る4項目は観測値で完了とし、厳密な上限・進行保証は P6、予約表と SD RAM/queue の照合は P2 へ移管します。release 実機・ERASE_NONE は P5、保存データ保持は P5/P6 が担当します。[最終実機証拠](retrospective-P1.md#新既定-image-の最終-dk-確認と-p1-完了判定)と[証拠付き checklist](checklist.md#p1-vm-と時間)を参照してください。
 
 - vendor/mruby 4.0.0 の mrbc を build して固定し、RITE0400 の最小プログラムを作る。
 - mruby/c を `firmware/` へ結合したら、debug と release の両方を build し、P0 の map と比べた増分を記録する。
@@ -38,11 +38,13 @@
 
 **受け入れ条件**: 二つ以上の task の同時実行、同 priority の巡回、priority 変更、sleep、mutex、suspend/resume、idle wakeupを試験すること。BLE 接続中の tick jitter と stack/pool 最大使用量を計測すること。
 
-**承認済み closeout 条件: 達成**。Wasm Mutex fault と規約、DK の二つの常時 ready task 負荷中の BLE 完全接続 stats 窓5分、DK OOM/abort の証拠がそろいました。利用者の決定で stress 時間を30分から5分へ変更しました。旧偏り log と X/Y 比較も保存し、新既定の最終 log で公平性自己検査と400.140059秒の完全接続窓を確認しました。2倍超は現在 FAIL です。[最終判定と未確認範囲](retrospective-P1.md#新既定-image-の最終-dk-確認と-p1-完了判定)を参照してください。vendor scheduler は未変更です。
+**承認済み closeout 条件: 達成**。Wasm Mutex fault と規約、DK の二つの常時 ready task 負荷中の BLE 完全接続 stats 窓5分、DK OOM/abort の証拠がそろいました。利用者の決定で stress 時間を30分から5分へ変更しました。旧偏り log と X/Y 比較も保存し、新既定の最終 log で公平性自己検査と400.140059秒の完全接続窓を確認しました。2倍超は現在 FAIL です。[最終判定と未確認範囲](retrospective-P1.md#新既定-image-の最終-dk-確認と-p1-完了判定)を参照してください。vendor scheduler は未変更です。 利用者は DK の Mutex fault 試験を行わず、Wasm 試験と採用規約で十分と承認しました。公平性の閾値は実測約1.01に狭めず、2倍を維持します。
 
 根拠: `vendor/mrubyc/src/rrt0.c:146-181,339-425`、`vendor/mrubyc/hal/minimal.h:1-55`、`vendor/sdk-nrf-bm/include/bm/bm_timer.h:30-112`、[HAL](../mrubyc/hal-porting.md)、[割り込み](../nrf-bm/softdevice-and-interrupts.md)。
 
 ## P2: native class と値の規約
+
+- 利用者の決定により P1 から移管: peripheral を使い始める前に peripheral/DPPI/IRQ の完全な予約表を照合し、SDH 配送 model・SD RAM usage・BM queue 容量を SDK 仕様・設定・map・実測で確認する。
 
 - LED/Button/GPIO を最初の対象とし、board pin を C 側で管理する。
 - argc、type、範囲の検査を共有 C helper に集約し、所有権・エラー値/例外を共通規約にする。Wasm fake で正常・引数なし・nil・誤型・境界・driver failure を検査する。
@@ -81,6 +83,8 @@
 
 ## P5: firmware DFU
 
+- BLE DFU の転送速度のため、DLE と ATT MTU の値を決定して実機測定する。現行 app の data length は iPhone の251要求に27で応答するが、DFU loader の設定・交渉結果は別に確認する。
+
 - bytecode 更新を含めて firmware 再build・single-bank DFU に一本化する。
 - MCUboot + BLE MCUmgr firmware loader の single-bank を結合する。
 - app/loader の RAM は別 image として map を測定し、128 KiB upload buffer と VM stack/heap を単純合算しない。
@@ -93,6 +97,8 @@
 根拠: `vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/ug_dfu.rst:24-104`、`vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/bootloader_keys.rst:6-106`、[single-bank](../dfu/single-bank-dfu.md)。
 
 ## P6: CI と長時間試験
+
+- 利用者の決定により P1 から移管: 長時間負荷で pool/IREP 等の追加確保・瞬間 peak・C/ISR stack・queue/drain の厳密な上限と idle/deferred の一般的な進行保証を評価する。P1 は観測値で完了とし、標本値を保証値へ読み替えない。
 
 - SDK build の CI は P0 の改善として `.github/workflows/firmware.yml` に置き、nRF Util の toolchain bundle を固定して使う。版固定した container へ移すかは、配布元・digest・利用条件を確かめてから判断する。
 - mruby/c の emscripten HAL による Ruby compile・smoke CI は実装済みです。[共通手順](../../tools/mrubyc-wasm/README.md)と `.github/workflows/mruby-wasm.yml` を使用します。ASYNCIFY と timeout を用い、実機 IRQ/BLE の代替にはしません。native API の mock は今後の課題です。根拠: `vendor/mrubyc/hal/emscripten/hal.h:1-7,27-74`。

@@ -120,6 +120,16 @@ HAL の tick は1 msです。mruby/c は `wakeup_tick < tick` で起こすため
 
 `python3 tools/bm-build/simulate-spinner.py` は tick 減算・起床・末尾への再挿入・dispatch 時の slice リセットを模した host モデルです。先に走る spinner を入れ替え、旧既定（legacy）・新既定（default）・旧 Y の a/b 比を表示します。service の実行時間をゼロとし、tick 境界ですぐ preempt できる仮定です。VM・Wasm・実機の測定ではなく、実際の dispatch 位相や処理時間は再現しません。
 
+### 比較用 image の作り方
+
+1. RBOS 側で対象の値を Kconfig から設定可能にします。vendor は変更せず、比較前の既定値と仮説を記録します。
+2. stress profile をベースに一時 overlay と CI matrix の X/Y を用意します。既定に依存せず、比較する Kconfig 値を明示します。各 `.config` と artifact の image/hash を照合します。
+3. 各 image を DK で約7分（420秒）実行し、`python3 tools/bm-build/check-dk-log.py <capture.log> --profile stress` で判定します。capture 長と完全接続 stats 窓300秒は別条件です。自己検査・公平性・jitter・drain・資源値も比較します。
+4. log・checker 出力・hash と観測の限界を残して結果を判定し、利用者が採用案を決めます。
+5. 採用値を通常の既定へ反映し、採用しなかった overlay と比較専用 CI matrix を削除します。採用側も既定と重複する一時 overlay は削除し、モデル・試験・証拠は維持します。
+
+新既定の実測 a/b は約1.01ですが、利用者の決定により自己検査の公平性閾値は2倍以内を維持します。
+
 ### P0 の build 記録（履歴）
 
 比較用に、SDK の `nrf-bm/samples/boot/mcuboot_recovery_entry` も同じ board で build しました。
