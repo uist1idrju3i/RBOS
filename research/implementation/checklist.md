@@ -89,6 +89,8 @@
 - [ ] P5: ERASE_NONE 更新を実機で検証する。現在の成功例は ERASE_RANGES_TOUCHED_BY_FIRMWARE だけです。
 - [ ] P5: BLE DFU の転送速度のため DLE と ATT MTU の値を決め、実機で測る。現在の app は iPhone の data length 251要求に27で応答。DFU loader の設定・交渉結果は別に確認する。
 - [ ] P5: 広告の開始・停止・再開条件を実装し、DFU と復旧の入口を照合する。P1 の既存 timeout 観測とは分ける。
+- [ ] P5: BLE のデバイス名にシリアル番号由来の識別子を含める。FICR の DEVICEID（64-bit）をもとにした生成規則（ハッシュの多項式・seed・表記）を決め、`RBOS_XXXX` の形で広告する。OpenBlink の方式を参考に新規実装する。
+- [ ] P5: デバイス名を DK で確認する。nRF Connect で `RBOS_XXXX` の形の広告名が出ること、複数台の識別に使えることを記録する。
 - [x] release の鍵の検査で、SDK の既定鍵を名前でなく公開鍵の比較で拒否する。改名した既定鍵の拒否と、`root-*.pem` という名前の新しい鍵の受け入れを build で確認しました。
 - [ ] BOOTCONF lock 前に復旧手順と製造時の消去条件を確認する。
 - [ ] 切断、不正署名、容量超過、各 write 時の電源断を試す。

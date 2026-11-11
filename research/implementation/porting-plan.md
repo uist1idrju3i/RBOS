@@ -92,11 +92,12 @@
 - app/loader の RAM は別 image として map を測定し、128 KiB upload buffer と VM stack/heap を単純合算しない。
 - 固有の ED25519 key、KMU provisioning、IRoT、installer 更新の製造・復旧手順を作る。
 - release 鍵で準備した DK の release image 起動と ERASE_NONE 更新を検証する。広告の開始・停止・再開条件は P5 が所有し、DFU・電力・復旧の要件と合わせて実装する。P1 は現行 timeout の観測に限る。
+- BLE のデバイス名にシリアル番号由来の識別子を含める。FICR の DEVICEID（64-bit）をもとに 4 桁の 16 進を生成し、`RBOS_XXXX` の形にする。OpenBlink の [blink_get_name](https://github.com/OpenBlink/openblink-demo-nrf/blob/6d22b676d2cf4bc599a7709ecebaa1b890af9e3a/src/app/blink.c)を参考にし、BM bare-metal 向けに新規実装する。ハッシュの多項式・seed・表記と広告名の長さの上限は P5 で決める。
 - MCUmgr の characteristic/command の認証と署名検証を別に設計する。flat settings の retention name と汎用 settings DB を区別する。[管理機能](../nrf-bm/mcumgr.md)参照。
 
 **受け入れ条件**: signed app、誤署名、電源断、切断からの再 DFU、三つの入口、installer 更新を実機で試すこと。storage と peer data が意図せず消えないこと。dummy key の release を拒否すること。
 
-根拠: `vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/ug_dfu.rst:24-104`、`vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/bootloader_keys.rst:6-106`、[single-bank](../dfu/single-bank-dfu.md)。
+根拠: `vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/ug_dfu.rst:24-104`、`vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/bootloader_keys.rst:6-106`、[single-bank](../dfu/single-bank-dfu.md)、[OpenBlink の blink_get_name](https://github.com/OpenBlink/openblink-demo-nrf/blob/6d22b676d2cf4bc599a7709ecebaa1b890af9e3a/src/app/blink.c)、[nRF54L15 の FICR DEVICEID](https://github.com/zephyrproject-rtos/hal_nordic/blob/1acb428a205bad58f3dfd4e38f2d1663bb784ba1/nrfx/bsp/stable/mdk/nrf54l15_types.h#L9583)。
 
 ## P6: CI と長時間試験
 

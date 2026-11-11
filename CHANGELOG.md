@@ -6,6 +6,7 @@
 
 ### Added
 
+- 実装計画の P5 に、BLE のデバイス名へシリアル番号由来の識別子を含める項目を追加しました。FICR の DEVICEID をもとに生成する方式で、OpenBlink の実装を参考に新規実装します。実装は未着手です。
 - 実装計画の P2 にダイ温度読み出しを追加しました。nRF54L15 の TEMP ペリフェラルを backend にする新規実装で、OpenBlink の Zephyr sensor API 実装は流用しません。API の契約と実装は未着手です。
 - 利用者の決定により、P1 の残る資源・進行・予約・SDH 項目は観測値で完了とし、厳密な上限と進行保証を P6、予約表と SD RAM/queue の照合を P2 へ移管しました。Mutex は Wasm 試験と採用規約で十分とし、DK fault 試験は行いません。公平性閾値は2倍を維持し、P5 の DLE/ATT MTU・DFU 速度の実機測定と、一時 overlay/CI image の比較手順を記録しました。
 - DK の X/Y 比較で a/b 約1.006を確認し、利用者は周期の組合せに依存しない案 X を採用しました。VM quantum の既定を1 tick、service sleep を従来の10 msとし、比較専用 overlay と CI matrix は削除しました。host モデルは維持します。自己検査に同 priority worker の1秒間の進捗比2倍以内を追加しました。
