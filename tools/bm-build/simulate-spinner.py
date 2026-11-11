@@ -56,7 +56,7 @@ def main():
         parser.error("ticks must be nonnegative")
     print("MODEL ONLY: zero service cost; 1 ms ticks; not hardware evidence")
     for first in ("a", "b"):
-        for name, quantum, service in (("current", 10, 10), ("X", 1, 10), ("Y", 10, 9)):
+        for name, quantum, service in (("legacy", 10, 10), ("default", 1, 10), ("Y", 10, 9)):
             result = simulate(quantum, service, args.ticks, first)
             print(f"{name} first={first} quantum={quantum} sleep_ms={service}: {result}")
 

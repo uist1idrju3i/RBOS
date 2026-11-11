@@ -1,0 +1,160 @@
+[00:07:00.150,980] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10004 pool=15436/65536 main=688 isr=560 idle=121*** Booting MCUboot v2.3.0-dev-fce4dac2e629 ***
+*** Using nRF Connect SDK Bare Metal v2.0.1-51484143c091 ***
+I: Starting bootloader
+I: Booting main application
+I: Bootloader chainload address offset: 0xa000
+I: Image version: v0.1.0
+I: Jumping to the first image slot
+*** Booting My Application v0.1.0-7217cb685dd2 ***
+*** Using nRF Connect SDK Bare Metal v2.0.1-51484143c091 ***
+[00:00:00.008,945] <inf> nrf_sdh: SoftDevice forward address: 0x163800
+[00:00:00.025,725] <inf> rbos: RBOS 0.1.0+0
+[00:00:00.035,378] <inf> ble_adv: Fast advertising
+[00:00:00.057,375] <inf> rbos_ble: BLE connected
+PASS: concurrent workers
+[00:00:00.183,355] <inf> rbos_ble: BLE PHY request tx=0x02 rx=0x02
+PASS: same-priority round robin
+PASS: priority change
+PASS: suspend
+[00:00:00.485,903] <inf> rbos_ble: BLE PHY update status=0x00
+[00:00:00.510,718] <inf> rbos_ble: BLE data length request tx=251 rx=251
+[00:00:00.546,415] <inf> rbos_ble: BLE data length updated tx=27 rx=27
+PASS: resume
+PASS: mutex with sleeping owner
+PASS: workers joined
+[00:00:00.627,082] <inf> rbos_ble: BLE ATT MTU request rx=293
+PASS: idle wakeup
+PASS: P1 selftest
+STRESS: spinner a started
+STRESS: spinner b started
+[00:00:10.008,609] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=9972 pool=15436/65536 main=688 isr=560 idle=110 service=993 drain_us=58
+stress a=207351
+stress b=205507
+[00:00:20.012,934] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=1992 drain_us=1
+stress a=414085
+stress b=411748
+[00:00:28.358,130] <inf> ble_adv: Fast advertising
+[00:00:28.358,234] <inf> rbos_ble: BLE disconnected reason=0x13
+[00:00:30.018,239] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=2990 drain_us=148
+stress a=620450
+stress b=617351
+[00:00:32.182,286] <inf> rbos_ble: BLE connected
+[00:00:32.316,211] <inf> rbos_ble: BLE PHY request tx=0x02 rx=0x02
+[00:00:32.612,812] <inf> rbos_ble: BLE PHY update status=0x00
+[00:00:32.647,548] <inf> rbos_ble: BLE data length request tx=251 rx=251
+[00:00:32.673,328] <inf> rbos_ble: BLE data length updated tx=27 rx=27
+[00:00:32.759,658] <inf> rbos_ble: BLE ATT MTU request rx=293
+[00:00:40.025,540] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10007 pool=15436/65536 main=688 isr=560 idle=110 service=3986 drain_us=61
+stress a=826281
+stress b=822583
+[00:00:50.029,855] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=4985 drain_us=1
+stress a=32937
+stress b=28636
+[00:01:00.035,172] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=5984 drain_us=1
+stress a=240321
+stress b=234181
+[00:01:10.040,483] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=6983 drain_us=1
+stress a=447786
+stress b=439645
+[00:01:20.044,803] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=7982 drain_us=1
+stress a=654449
+stress b=645734
+[00:01:30.049,120] <inf> rbos_runtime: stats tick_us=920..1065 catchups=0 ticks=10004 pool=15436/65536 main=688 isr=560 idle=110 service=8981 drain_us=45
+stress a=861736
+stress b=851135
+[00:01:40.054,436] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=9980 drain_us=1
+stress a=69157
+stress b=56565
+[00:01:50.058,750] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=10979 drain_us=1
+stress a=275933
+stress b=262709
+[00:02:00.063,076] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10004 pool=15436/65536 main=688 isr=560 idle=110 service=11978 drain_us=1
+stress a=483249
+stress b=468198
+[00:02:10.068,385] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=12977 drain_us=1
+stress a=690578
+stress b=673600
+[00:02:20.072,711] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=13976 drain_us=1
+stress a=897229
+stress b=879604
+[00:02:30.078,018] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=14975 drain_us=1
+stress a=103921
+stress b=85646
+[00:02:40.083,332] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=15974 drain_us=1
+stress a=311281
+stress b=291171
+[00:02:50.087,647] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=16973 drain_us=1
+stress a=518735
+stress b=496606
+[00:03:00.092,974] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=17972 drain_us=1
+stress a=725408
+stress b=702650
+[00:03:10.098,272] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=18971 drain_us=1
+stress a=932047
+stress b=908634
+[00:03:20.103,595] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=19970 drain_us=1
+stress a=139407
+stress b=114163
+[00:03:30.107,909] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=20969 drain_us=1
+stress a=346870
+stress b=319616
+[00:03:40.113,296] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=21968 drain_us=45
+stress a=553613
+stress b=525685
+[00:03:50.118,528] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=22967 drain_us=1
+stress a=760313
+stress b=731694
+[00:04:00.122,897] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=23966 drain_us=41
+stress a=967578
+stress b=937093
+[00:04:10.128,161] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=24965 drain_us=1
+stress a=174995
+stress b=142515
+[00:04:20.133,520] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=25964 drain_us=1
+stress a=381798
+stress b=348697
+[00:04:30.137,792] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=26963 drain_us=1
+stress a=588581
+stress b=554846
+[00:04:40.142,111] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10004 pool=15436/65536 main=688 isr=560 idle=110 service=27962 drain_us=1
+stress a=795812
+stress b=760175
+[00:04:50.147,423] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=28961 drain_us=1
+stress a=2461
+stress b=966129
+[00:05:00.151,743] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=29960 drain_us=1
+stress a=209175
+stress b=172218
+[00:05:10.156,063] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10004 pool=15436/65536 main=688 isr=560 idle=110 service=30959 drain_us=1
+stress a=416523
+stress b=377583
+[00:05:20.161,375] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=31958 drain_us=1
+stress a=623197
+stress b=583637
+[00:05:30.165,703] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=32957 drain_us=1
+stress a=829846
+stress b=789570
+[00:05:40.171,008] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=33956 drain_us=1
+stress a=37151
+stress b=994996
+[00:05:50.176,324] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=34955 drain_us=1
+stress a=244603
+stress b=200477
+[00:06:00.180,642] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=35954 drain_us=1
+stress a=451448
+stress b=406699
+[00:06:10.185,957] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=36953 drain_us=42
+stress a=658149
+stress b=612745
+[00:06:20.191,263] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=37952 drain_us=1
+stress a=865470
+stress b=818193
+[00:06:30.196,587] <inf> rbos_runtime: stats tick_us=920..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=38951 drain_us=1
+stress a=72837
+stress b=23573
+[00:06:40.200,895] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=39950 drain_us=1
+stress a=279699
+stress b=229728
+[00:06:50.206,214] <inf> rbos_runtime: stats tick_us=921..1064 catchups=0 ticks=10005 pool=15436/65536 main=688 isr=560 idle=110 service=40949 drain_us=10
+stress a=486465
+stress b=435850

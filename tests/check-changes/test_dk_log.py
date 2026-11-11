@@ -81,7 +81,8 @@ class LogTests(unittest.TestCase):
             strings = re.findall(r'"([^"]+)"', call)
             if strings:
                 items.append(strings[-1])
-        self.assertEqual(tuple(items) + ("P1 selftest",), dk_log.PASSES)
+        self.assertEqual(tuple(items) + ("P1 selftest",),
+                         dk_log.PASSES[:2] + ("same-priority fairness",) + dk_log.PASSES[2:])
 
     def test_missing_each_pass(self):
         for item in dk_log.PASSES:
@@ -147,9 +148,8 @@ class LogTests(unittest.TestCase):
         for stopped in (b"a", b"b"):
             zeroed = re.sub(rb"stress " + stopped + rb"=\d+", b"stress " + stopped + b"=0", data)
             report = dk_log.analyze(zeroed, profile="stress", require_connected=0)
-            self.assertEqual(report["errors"], [])
+            self.assertTrue(any("Spinner rate imbalance" in error for error in report["errors"]))
             self.assertEqual(report["spinner_a_b_ratio"], 0 if stopped == b"a" else None)
-            self.assertTrue(any(note.startswith("WARN: Spinner rate imbalance") for note in report["warnings"]))
         self.assert_fails(data.replace(b"stress a=999990", b"stress a=1000000", 1), "Invalid spinner", profile="stress")
         report = dk_log.analyze(synthetic("stress", end=20).replace(b"stress b=20\n", b""),
                                 profile="stress", require_connected=0)
@@ -170,17 +170,18 @@ class LogTests(unittest.TestCase):
         result = subprocess.run([sys.executable, str(CHECKER), str(path), "--profile", "stress"],
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 1)
-        self.assertIn("WARN: Spinner rate imbalance", result.stdout)
+        self.assertIn("ERROR: Spinner rate imbalance", result.stdout)
         self.assertIn("230.067537 / 300 s required", result.stdout)
         report = dk_log.analyze(path.read_bytes(), profile="stress", require_connected=230)
-        self.assertEqual(report["errors"], [])
-        self.assertTrue(any(note.startswith("WARN:") for note in report["warnings"]))
+        self.assertEqual(len(report["errors"]), 1)
+        self.assertIn("Spinner rate imbalance", report["errors"][0])
 
     def test_ble_reply_stress_capture(self):
         path = Path(__file__).with_name("stress-connected-capture.txt")
         data = path.read_bytes()
         report = dk_log.analyze(data, profile="stress")
-        self.assertEqual(report["errors"], [])
+        self.assertEqual(len(report["errors"]), 1)
+        self.assertIn("Spinner rate imbalance", report["errors"][0])
         self.assertEqual(report["boot"]["sha"], "f85c2fbe5456")
         self.assertAlmostEqual(report["stress_connected_duration_s"], 400.122214)
         self.assertFalse(any(event["kind"] == "disconnected" for event in report["events"]))
@@ -189,17 +190,16 @@ class LogTests(unittest.TestCase):
         self.assertEqual(report["peaks"], {"pool": 15428, "main": 696, "isr": 560, "drain_us": 60,
                                            "pool_total": 65536, "pool_percent": 23.54126})
         self.assertAlmostEqual(report["spinner_a_b_ratio"], 0.100775)
-        self.assertTrue(any(note.startswith("WARN:") for note in report["warnings"]))
         result = subprocess.run([sys.executable, str(CHECKER), str(path), "--profile", "stress"],
                                 capture_output=True, text=True)
-        self.assertEqual(result.returncode, 0)
-        self.assertIn("PASS: stress", result.stdout)
-        self.assertIn("WARN: Spinner rate imbalance", result.stdout)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("FAIL: stress", result.stdout)
+        self.assertIn("ERROR: Spinner rate imbalance", result.stdout)
 
     def test_ble_reconnect_capture(self):
         data = Path(__file__).with_name("stress-reconnect-capture.txt").read_bytes()
         report = self.assert_fails(data, "under spinner load", profile="stress")
-        self.assertEqual(len(report["errors"]), 1)
+        self.assertEqual(len(report["errors"]), 2)
         self.assertAlmostEqual(report["stress_connected_duration_s"], 70.024438)
         self.assertEqual(sum(event["kind"] == "connected" for event in report["events"]), 2)
         self.assertEqual(sum(event["kind"] == "disconnected" for event in report["events"]), 2)
@@ -207,7 +207,34 @@ class LogTests(unittest.TestCase):
         self.assertIn(b"[00:01:52.880,452] <inf> ble_adv: Slow advertising", data)
         self.assertIn(b"[00:04:52.847,109] <inf> ble_adv: Idle", data)
         diagnostic = dk_log.analyze(data, profile="stress", require_connected=0)
-        self.assertEqual(diagnostic["errors"], [])
+        self.assertEqual(len(diagnostic["errors"]), 1)
+        self.assertIn("Spinner rate imbalance", diagnostic["errors"][0])
+
+    def test_fair_spinner_captures(self):
+        for variant, ratio, duration, drain in [("x", 1.005919, 400.142051, 60),
+                                                ("y", 1.005926, 380.184999, 148)]:
+            with self.subTest(variant=variant):
+                path = Path(__file__).with_name(f"stress-{variant}-capture.txt")
+                data = path.read_bytes()
+                report = dk_log.analyze(data, profile="stress")
+                self.assertEqual(report["errors"], [])
+                self.assertEqual(report["boot"]["sha"], "7217cb685dd2")
+                self.assertAlmostEqual(report["spinner_a_b_ratio"], ratio)
+                self.assertAlmostEqual(report["stress_connected_duration_s"], duration)
+                self.assertEqual(report["peaks"]["drain_us"], drain)
+                self.assertEqual(data.count(b"BLE disconnected reason=0x13"), variant == "y")
+                result = subprocess.run([sys.executable, str(CHECKER), str(path), "--profile", "stress"],
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stdout)
+                self.assertIn("PASS: stress", result.stdout)
+
+    def test_fairness_boundary(self):
+        data = synthetic("stress")
+        for multiplier, passed in [(2, True), (3, False)]:
+            scaled = re.sub(rb"stress a=(\d+)",
+                            lambda match: b"stress a=%d" % (int(match[1]) * multiplier), data)
+            report = dk_log.analyze(scaled, profile="stress", require_connected=0)
+            self.assertEqual(not report["errors"], passed)
 
     def test_oom(self):
         report = dk_log.analyze(synthetic("oom"), profile="oom")

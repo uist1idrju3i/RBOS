@@ -104,21 +104,21 @@ west build -b bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot \
   -DEXTRA_CONF_FILE=<RBOS>/firmware/oom.conf
 ```
 
-### Spinner 公平性の比較 image
+### Spinner 公平性と quantum の既定
 
-`CONFIG_RBOS_TIMESLICE_TICK_COUNT` は1..255 tick（既定10）、既存の `CONFIG_RBOS_SERVICE_INTERVAL_MS` は service 後の sleep 値（既定10 ms）です。`RBOSSystem.service` が後者を返し、system.rb が `sleep_ms` に渡します。debug/release と通常 stress の既定値は変えません。
+`CONFIG_RBOS_TIMESLICE_TICK_COUNT` は1..255 tick（既定1）、既存の `CONFIG_RBOS_SERVICE_INTERVAL_MS` は service 後の sleep 値（既定10 ms）です。`RBOSSystem.service` が後者を返し、system.rb が `sleep_ms` に渡します。利用者は DK の X/Y 比較後、周期の組合せに依存しない案 X を debug/release/stress 共通の既定に採用しました。
 
 | overlay | profile | quantum | service sleep | 理想化した起床周期 |
 |---|---|---|---|---|
-| `stress.conf` | stress | 10 tick | 10 ms | 11 tick |
-| `stress-x.conf` | stress | 1 tick | 10 ms | 11 tick |
-| `stress-y.conf` | stress | 10 tick | 9 ms | 10 tick |
+| `stress.conf`（現在） | stress | 1 tick | 10 ms | 11 tick |
+| 旧 X | stress | 1 tick | 10 ms | 11 tick |
+| 旧 Y | stress | 10 tick | 9 ms | 10 tick |
 
-HAL の tick は1 msです。mruby/c は `wakeup_tick < tick` で起こすため、Y は sleep を9にします（`vendor/mrubyc/src/rrt0.c:163-183,509-524`）。service の処理時間や IRQ の遅れは起床周期に含めていません。実機で公平性が改善するかは未確認です。
+HAL の tick は1 msです。mruby/c は `wakeup_tick < tick` で起こすため、旧 Y は sleep を9にしました（`vendor/mrubyc/src/rrt0.c:163-183,509-524`）。service の処理時間や IRQ の遅れは表の起床周期に含めていません。[実機比較と採用理由](retrospective-P1.md#xy-比較と1-tick-の採用)を参照してください。
 
-上の stress build の `EXTRA_CONF_FILE` を `stress-x.conf` または `stress-y.conf` にし、出力先も `<build-stress-x>` / `<build-stress-y>` に分けます。各 app の `firmware/zephyr/.config` で `CONFIG_RBOS_TIMESLICE_TICK_COUNT`、`CONFIG_RBOS_SERVICE_INTERVAL_MS`、`CONFIG_RBOS_TEST_PROFILE_STRESS` を確認してください。CI も両 variant を build し、`firmware-evidence-stress-x-<SHA>` / `firmware-evidence-stress-y-<SHA>` に分けて保存します。
+比較専用の X/Y overlay と CI matrix は削除しました。特に旧 Y の sleep だけを新既定と組み合わせると、比較実験とは別の設定になるためです。通常の `stress.conf` を使い、各 app の `firmware/zephyr/.config` で quantum=1、service=10、STRESS=y を確認してください。自己検査は同 priority worker の1秒間の modulo 差分が互いに2倍以内かを判定します。BM は実 timer preemption、Wasm は別の擬似 tick 経路で実行します。
 
-`python3 tools/bm-build/simulate-spinner.py` は tick 減算・起床・末尾への再挿入・dispatch 時の slice リセットを模した host モデルです。先に走る spinner を入れ替え、現行・X・Y の a/b 比を表示します。service の実行時間をゼロとし、tick 境界ですぐ preempt できる仮定です。VM・Wasm・実機の測定ではなく、実際の dispatch 位相や処理時間は再現しません。
+`python3 tools/bm-build/simulate-spinner.py` は tick 減算・起床・末尾への再挿入・dispatch 時の slice リセットを模した host モデルです。先に走る spinner を入れ替え、旧既定（legacy）・新既定（default）・旧 Y の a/b 比を表示します。service の実行時間をゼロとし、tick 境界ですぐ preempt できる仮定です。VM・Wasm・実機の測定ではなく、実際の dispatch 位相や処理時間は再現しません。
 
 ### P0 の build 記録（履歴）
 
@@ -273,7 +273,7 @@ hash は SDK の開発用鍵で署名した debug のものです。release の 
 
 ## CI
 
-`firmware.yml` は debug / release / stress / stress-x / stress-y / oom の matrix を並列に動かします。一つが失敗しても他は止めません。stress 系と oom は debug に overlay を追加します。release 側だけで試験用 ED25519 鍵を作り、成功・失敗にかかわらず削除します。成果物名は `firmware-evidence-<variant>-<sha>` です。`production.hex`、`.config`、map、SHA256SUMS を含む証拠を保存し、保存前に PEM と `keyfile.json` がないことを検査します。workspace 保存は従来どおり debug だけです。
+`firmware.yml` は debug / release / stress / oom の matrix を並列に動かします。一つが失敗しても他は止めません。stress/oom は debug に overlay を追加します。release 側だけで試験用 ED25519 鍵を作り、成功・失敗にかかわらず削除します。成果物名は `firmware-evidence-<variant>-<sha>` です。`production.hex`、`.config`、map、SHA256SUMS を含む証拠を保存し、保存前に PEM と `keyfile.json` がないことを検査します。workspace 保存は従来どおり debug だけです。
 
 toolchain は bundle ID、workspace は BM v2.0.1 と `modules.txt` の hash で cache を分けます。workspace cache の保存は main の debug job だけです。復元時は init を省きますが、west update と全 module の SHA・clean tree 検査は毎回行います。log に restore / init / update / check の秒数を残します。GitHub 上の warm cache と fresh 取得の比較は未実施です。復元が遅ければ workspace cache を外します。
 
@@ -296,7 +296,7 @@ compiler cache は variant、bundle ID、module hash、run ID・attempt ごと�
 
 `.github/scripts/changed-inputs.sh` が入力の directory と submodule pointer を判定します。変更判定 script とそのテストを変えた場合は両方の検査を実行します。before が空・全ゼロ、commit が取得できない、force push、履歴が連続しない場合も入力変更ありとして扱います。関係のない変更なら重い build / test だけを省きます。
 
-最後の同名 job は `if: always()` で結果をまとめます。変更判定が成功し、必要な build / test が成功した場合、または入力変更なしで省略した場合だけ成功します。判定や build / test の失敗・取消は成功にしません。matrix の check 名は `build (debug)` / `build (release)` / `build (stress)` / `build (stress-x)` / `build (stress-y)` / `build (oom)` で、必須にするのは集約した `firmware` だけです。workflow 全体を paths で省略すると必須 check が pending のまま残るため、この形にしています。
+最後の同名 job は `if: always()` で結果をまとめます。変更判定が成功し、必要な build / test が成功した場合、または入力変更なしで省略した場合だけ成功します。判定や build / test の失敗・取消は成功にしません。matrix の check 名は `build (debug)` / `build (release)` / `build (stress)` / `build (oom)` で、必須にするのは集約した `firmware` だけです。workflow 全体を paths で省略すると必須 check が pending のまま残るため、この形にしています。
 
 マージ後に管理者が Settings → Rules → Rulesets → main → Require status checks で、source が GitHub Actions の `agent-docs`、`mruby-wasm`、`firmware` を追加します。Require branches to be up to date は off のままにします。必要なら Require code scanning results も追加し、CodeQL の threshold を High 以上に設定してください。今回の変更では ruleset を操作しません。
 

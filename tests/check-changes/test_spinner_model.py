@@ -48,6 +48,7 @@ class SpinnerModelTests(unittest.TestCase):
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("MODEL ONLY", result.stdout)
+        self.assertIn("default first=b quantum=1 sleep_ms=10", result.stdout)
         self.assertIn("Y first=b", result.stdout)
         result = subprocess.run([sys.executable, str(SCRIPT), "--ticks", "-1"],
                                 capture_output=True, text=True)
