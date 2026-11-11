@@ -47,6 +47,8 @@
 - 利用者の決定により P1 から移管: peripheral を使い始める前に peripheral/DPPI/IRQ の完全な予約表を照合し、SDH 配送 model・SD RAM usage・BM queue 容量を SDK 仕様・設定・map・実測で確認する。
 
 - LED/Button/GPIO を最初の対象とし、board pin を C 側で管理する。
+- ダイ温度の読み出しを native API として追加する。backend は nRF54L15 の TEMP ペリフェラルを使う。BM board の dtsi が `&temp` node を削除しているため DT 駆動は使えず、nrfx_temp か register 直接の経路にする。OpenBlink の [温度 HAL](https://github.com/OpenBlink/openblink-demo-mdbt50q-db-40/blob/d6efc07877ebac6bd55519b8458be4629bef80c3/src/drv/hal/die_temperature.c)は Zephyr の sensor API を使うため流用せず、BM bare-metal 向けに新規実装する。
+- 温度 API の契約（class/method 名、返り値の型と単位、失敗時の例外、同期・非同期の扱い）は本段階の値の規約に合わせて決める。
 - argc、type、範囲の検査を共有 C helper に集約し、所有権・エラー値/例外を共通規約にする。Wasm fake で正常・引数なし・nil・誤型・境界・driver failure を検査する。
 - ISR から Ruby へ直接入らず、固定長 ring を介して foreground で通知する。overflow は newest を drop し、stats の overflow counter で観測する。Button edge は pin ごとに coalesce して count を残す。
 - native API を追加するたびに P1 の map 分類と stack/pool 観測方法で増分を記録する。標本 peak と厳密な上限は区別する。
@@ -55,7 +57,7 @@
 
 **受け入れ条件**: 正常、引数なし、nil、誤型、境界、driver failure、OOM をP6 で整える host test 基盤へ追加する。ハードウェア依存は mock と実機を分けて確認する。
 
-根拠: `vendor/mrubyc/src/class.h:234-246`、`vendor/mrubyc/src/value.h:221-263,546-572`、[OpenBlink API](../openblink/api-binding-patterns.md)。
+根拠: `vendor/mrubyc/src/class.h:234-246`、`vendor/mrubyc/src/value.h:221-263,546-572`、[OpenBlink API](../openblink/api-binding-patterns.md)、[OpenBlink の温度 HAL](https://github.com/OpenBlink/openblink-demo-mdbt50q-db-40/blob/d6efc07877ebac6bd55519b8458be4629bef80c3/src/drv/hal/die_temperature.c)、[nrfx TEMP ドライバ](https://github.com/zephyrproject-rtos/hal_nordic/blob/1acb428a205bad58f3dfd4e38f2d1663bb784ba1/nrfx/drivers/include/nrfx_temp.h)、[nRF54L15 の TEMP 定義](https://github.com/zephyrproject-rtos/hal_nordic/blob/1acb428a205bad58f3dfd4e38f2d1663bb784ba1/nrfx/bsp/stable/mdk/nrf54l15_application_peripherals.h#L1039-L1040)、`vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/bm_nrf54l15dk_nrf54l051015_peripherals.dtsi:58`。
 
 ## P3: system-task と権限
 
