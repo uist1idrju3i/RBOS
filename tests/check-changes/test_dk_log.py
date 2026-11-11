@@ -176,6 +176,39 @@ class LogTests(unittest.TestCase):
         self.assertEqual(report["errors"], [])
         self.assertTrue(any(note.startswith("WARN:") for note in report["warnings"]))
 
+    def test_ble_reply_stress_capture(self):
+        path = Path(__file__).with_name("stress-connected-capture.txt")
+        data = path.read_bytes()
+        report = dk_log.analyze(data, profile="stress")
+        self.assertEqual(report["errors"], [])
+        self.assertEqual(report["boot"]["sha"], "f85c2fbe5456")
+        self.assertAlmostEqual(report["stress_connected_duration_s"], 400.122214)
+        self.assertFalse(any(event["kind"] == "disconnected" for event in report["events"]))
+        self.assertEqual(report["jitter"]["connected"]["tick_us_min"], 920)
+        self.assertEqual(report["jitter"]["connected"]["tick_us_max"], 1064)
+        self.assertEqual(report["peaks"], {"pool": 15428, "main": 696, "isr": 560, "drain_us": 60,
+                                           "pool_total": 65536, "pool_percent": 23.54126})
+        self.assertAlmostEqual(report["spinner_a_b_ratio"], 0.100775)
+        self.assertTrue(any(note.startswith("WARN:") for note in report["warnings"]))
+        result = subprocess.run([sys.executable, str(CHECKER), str(path), "--profile", "stress"],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("PASS: stress", result.stdout)
+        self.assertIn("WARN: Spinner rate imbalance", result.stdout)
+
+    def test_ble_reconnect_capture(self):
+        data = Path(__file__).with_name("stress-reconnect-capture.txt").read_bytes()
+        report = self.assert_fails(data, "under spinner load", profile="stress")
+        self.assertEqual(len(report["errors"]), 1)
+        self.assertAlmostEqual(report["stress_connected_duration_s"], 70.024438)
+        self.assertEqual(sum(event["kind"] == "connected" for event in report["events"]), 2)
+        self.assertEqual(sum(event["kind"] == "disconnected" for event in report["events"]), 2)
+        self.assertEqual(data.count(b"BLE disconnected reason=0x13"), 2)
+        self.assertIn(b"[00:01:52.880,452] <inf> ble_adv: Slow advertising", data)
+        self.assertIn(b"[00:04:52.847,109] <inf> ble_adv: Idle", data)
+        diagnostic = dk_log.analyze(data, profile="stress", require_connected=0)
+        self.assertEqual(diagnostic["errors"], [])
+
     def test_oom(self):
         report = dk_log.analyze(synthetic("oom"), profile="oom")
         self.assertEqual(report["errors"], [])
