@@ -8,7 +8,7 @@ P2 の最初の実装です。GPIO・温度 API、peripheral 予約表、実機 
 
 | 操作 | 契約 |
 |---|---|
-| `rbos_require_argc` | 最小・最大を含む個数を検査。範囲外は ArgumentError。引数へ触れる前に呼ぶ |
+| `rbos_require_argc` | 位置引数の最小・最大を含む個数を検査。範囲外は ArgumentError。引数へ触れる前に呼ぶ |
 | `rbos_require_type` | 型の一致を検査。不一致は TypeError。暗黙変換はしない |
 | `rbos_require_integer` | Integer 型を検査し、最小・最大を含む範囲外は RangeError。失敗時は出力先を変えない |
 | `rbos_require_status` | OK 以外を RuntimeError に変換。IO・未知の値は `Driver failure`、busy は `Device busy`、timeout は `Device timeout` |
@@ -16,6 +16,8 @@ P2 の最初の実装です。GPIO・温度 API、peripheral 予約表、実機 
 | `rbos_return_owned` | 生成した一参照を返却 slot へ移す。移譲後に呼出し元が decref しない |
 
 require helper が false を返したら callback を直ちに終了します。例外設定後に backend を呼ばず、返却 slot も上書きしません。型の helper には、argc 検査を通過した有効な値の pointer を渡します。範囲の上下限と出力先は binding 実装側の責任です。`rbos_return_owned` へ借用値を渡してはいけません。
+
+native callback の `argc` は位置引数だけで、keyword は `v[argc+1]` の Hash にあります。新しい binding では、keyword を使う API は MRBC_KW_ARG 等で取り出してから MRBC_KW_END で残りを検査し、使わない API も MRBC_KW_END で未知 keyword を拒否します。[温度 API](temperature-api.md)は引数0の検査とこの検査を組み合わせ、拒否時の backend 副作用も Wasm で確認します。根拠: `vendor/mrubyc/src/value.h:405-456`。
 
 これは内部 C 規約です。Ruby の error hierarchy や peripheral API の標準契約を決めたものではなく、各 API の追加時に MPIG と照合します。既存の `RBOSSystem.service` は権限検査を先に行い、その後の argc 検査だけを共有 helper に置き換えます。成功時の戻り値、無権限時の拒否、引数不正のメッセージは変えません。
 

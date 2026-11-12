@@ -100,7 +100,7 @@ int main(void) {
 #include <stddef.h>
 typedef int32_t mrbc_int_t;
 typedef int mrbc_vtype;
-enum { MRBC_TT_CLASS, MRBC_TT_INTEGER };
+enum { MRBC_TT_CLASS, MRBC_TT_INTEGER, MRBC_TT_HASH };
 typedef struct { int tt; mrbc_int_t i; } mrbc_value;
 typedef struct { const char *error; const char *message; } mrbc_vm;
 typedef struct { int unused; } mrbc_class;
@@ -108,6 +108,8 @@ typedef void (*callback)(mrbc_vm *, mrbc_value *, int);
 #define MRBC_CLASS(name) #name
 #define mrbc_type(value) ((value).tt)
 #define mrbc_integer(value) ((value).i)
+#define MRBC_KW_END() ((mrbc_type(v[argc+1]) == MRBC_TT_HASH && v[argc+1].i) ? \
+  (mrbc_raise(vm, "ArgumentError", "unknown keyword"), 0) : 1)
 static inline void mrbc_incref(mrbc_value *value) {}
 static inline void mrbc_decref(mrbc_value *value) {}
 void mrbc_raise(mrbc_vm *vm, const char *error, const char *message);
@@ -149,6 +151,14 @@ int main(void) {
   assert(strcmp(vm.message, "Temperature requires Float") == 0);
   read_method(&vm, values, 1);
   assert(strcmp(vm.error, "ArgumentError") == 0);
+  values[1].tt = MRBC_TT_HASH;
+  values[1].i = 1;
+  read_method(&vm, values, 0);
+  assert(strcmp(vm.error, "ArgumentError") == 0);
+  assert(strcmp(vm.message, "unknown keyword") == 0);
+  values[1].i = 0;
+  read_method(&vm, values, 0);
+  assert(strcmp(vm.error, "NotImplementedError") == 0);
   new_method(&vm, values, 0);
   assert(strcmp(vm.error, "TypeError") == 0);
   assert(calls == 0);

@@ -6,6 +6,8 @@
 
 2026-11-12 に利用者が S115 公式 API と class method 形式を承認しました。0.1.1 の互換追加で、MPIG の六 class には含まれない RBOS 拡張です。気温や外部センサを表す API ではありません。
 
+keyword 引数の拒否漏れは宣言済みの契約に合わせる互換 bug fix として 0.1.2 で修正します。署名 image の目標は `0.1.2+0` です。tag 作成・公開や実機の更新経路は検証に含めません。
+
 ```ruby
 celsius = Temperature.read
 puts celsius
@@ -23,6 +25,8 @@ puts celsius
 | Float 無効 | binding は NotImplementedError を設定して backend を呼ばない。ただし固定 VM 全体の Float 無効 build は下記の理由で未対応 |
 
 既定の mruby/c は `MRBC_USE_FLOAT=2`（double）です。Integer の raw 値は公開せず、nil・0・false を失敗値に使いません。精度、対応温度範囲、異常温度の判定を fake の入力範囲から推定しないでください。
+
+mruby/c の native `argc` は位置引数の数だけです。keyword は別 slot の Hash なので、`MRBC_KW_END()` で未知 keyword も拒否し、取得前に ArgumentError とします。空の `**{}` は引数なしと同じです。位置引数だけの検査で keyword を許可したとは判断しません。
 
 RBS は [`sig/temperature.rbs`](../../sig/temperature.rbs) に置き、同名の class method と Float、生成の常時例外を記述します。例外・待機・資源条件は RBS だけでは表せないため、この本文と併用します。構文は Ruby/RBS 導入環境で次のように検査でき、host test は signature の宣言内容と binding/実行経路を照合します。全 Ruby program の静的型検査ではありません。
 
