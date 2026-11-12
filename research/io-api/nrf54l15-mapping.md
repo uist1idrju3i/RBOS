@@ -1,6 +1,6 @@
 # nRF54L15-DK の backend と pin の対応
 
-MPIG class と native 機構の対応候補です。**Ruby の実装・実機試験・最終 pinmux の確認は未実施**です。SDK 固定版は [研究索引](../README.md)、board 全体は [既存の board 調査](../nrf-bm/board-integration.md)を参照してください。
+MPIG class と native 機構の初回の対応候補です。現在は [GPIO/Button](../implementation/gpio-button-api.md)と [内部三電源 ADC](../implementation/adc-api.md)を実装済みです。外部 pin ADC・PWM・UART・I2C・SPI と、実機の電気特性・IRQ の受け入れは未完了です。SDK 固定版は [研究索引](../README.md)、board 全体は [既存の board 調査](../nrf-bm/board-integration.md)を参照してください。
 
 ## SDK から利用する経路
 
@@ -13,13 +13,13 @@ MPIG class と native 機構の対応候補です。**Ruby の実装・実機試
 | I2C | i2c_open/transaction → nrfx_twim | repeated-start TX-RX、NAK / short read、DMA、clock stretch、bus 復旧、serial box の排他 |
 | SPI | spi_open/transfer → nrfx_spim、CS は GPIO | zero dummy byte、mode/first_bit/周波数、TX/RX length、CS を含む transaction の排他 |
 
-上表の backend 関数はまだありません。現在は [shared registration](../../src/rbos/bindings.c)と [backend 型](../../include/rbos/backend.h)の最小入口のみです。NRFX_PWM / SAADC / SPIM / TWIM / UARTE は `vendor/sdk-nrf-bm/modules/hal_nordic/nrfx/Kconfig:169-170,207-209,229-230,258-259,272-273` に宣言されています。Kconfig があることは全 pin・全 mode の適合保証ではありません。
+上表の関数名は設計例です。現在の [shared registration](../../src/rbos/bindings.c)と [backend 型](../../include/rbos/backend.h)は GPIO/Button・温度・ADC の operation を持ちます。GPIO は nrf_gpio と port の PIN_CNF、Button は nrfx_gpiote、内部 ADC は nrfx_saadc を採用しました。他の行は未実装の候補です。NRFX_PWM / SAADC / SPIM / TWIM / UARTE は `vendor/sdk-nrf-bm/modules/hal_nordic/nrfx/Kconfig:169-170,207-209,229-230,258-259,272-273` に宣言されています。Kconfig があることは全 pin・全 mode の適合保証ではありません。
 
 BM の独自 driver が六 class 分そろっているわけではありません。[driver 調査](../nrf-bm/drivers.md)と `vendor/sdk-nrf-bm/doc/nrf-bm/drivers/bm_nrfx.rst:1-25` は、nrfx を直接使用する場合の IRQ 接続を説明します。S115 が許す IRQ priority・予約資源は [割込み調査](../nrf-bm/softdevice-and-interrupts.md)に従い、ISR から Ruby を呼びません。
 
 ## console・shell と serial box
 
-`vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/include/board-config.h:55-99` は既定で console を **UARTE20**、application と shell を **UARTE30** にします。UART の二重 init だけでなく、同じ box を別 protocol で使う競合にも注意が必要です。既定 macro は利用者が上書きでき、最終構成は未確認です。
+`vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/include/board-config.h:55-99` は既定で console を **UARTE20**、application と shell を **UARTE30** にします。UART の二重 init だけでなく、同じ box を別 protocol で使う競合にも注意が必要です。RBOS は UARTE20 のログを維持し、application/shell の UARTE30 は初期化しません。[現在の予約表と設定検査](../implementation/resource-reservations.md)を参照してください。将来の serial box 変更は、この固定構成の build 成功では確認できません。
 
 NCS v3.3.0 の manifest に対応する参照 checkout は nRF `ba167d9f3db4abbdc9b67887ca3ea66c64f2d956`、Zephyr `fd9204a02d52630660ce8d729945a4dd743feabf`、hal_nordic `1acb428a205bad58f3dfd4e38f2d1663bb784ba1` です。BM 側の入口は `vendor/sdk-nrf-bm/west.yml:15-31`。以下は [固定 DTS](https://github.com/nrfconnect/sdk-zephyr/blob/fd9204a02d52630660ce8d729945a4dd743feabf/dts/vendor/nordic/nrf54l_05_10_15.dtsi) の register / IRQ の照合です。
 
@@ -32,15 +32,15 @@ NCS v3.3.0 の manifest に対応する参照 checkout は nRF `ba167d9f3db4abbd
 
 この一致を根拠に排他資源として設計します。runtime での安全な protocol 切替・pin routing・最大周波数の全条件は検証していません。DT node の存在だけで nrfx instance が使用中・未使用と判定することもできません。
 
-BM は `vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/bm_nrf54l15dk_nrf54l051015_peripherals.dtsi:14-70` で GPIO / ADC / PWM / I2C / SPI / UART 等の node を削除します。Zephyr の普通の DT driver 初期化がそのまま動く、と説明してはいけません。board-config と nrfx に加え、Ruby 用にどの DT 情報を残し・生成するかが実装課題です。
+BM は `vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/bm_nrf54l15dk_nrf54l051015_peripherals.dtsi:14-70` で GPIO / ADC / PWM / I2C / SPI / UART 等の node を削除します。Zephyr の普通の DT driver 初期化がそのまま動く、と説明してはいけません。GPIO は Zephyr driver を復活させず RBOS 専用 DT pin メタデータを追加しました。他の I/O の生成情報は、採用時に別途決めます。
 
-## pin の承認済み方針と未実装部分
+## pin の承認済み方針と実装範囲
 
 [設計判断](../architecture/decisions.md)で、Integer の `port*32+pin`（P1.13 は 45）、String `"P1.13"`、DeviceTree-label Symbol `:led0` / `:sw0` を受け付ける方針を採用しました。同一の物理 pin に解決できるようにするための方針で、全 board が同じ Integer 番号を持つという主張ではありません。
 
 - Integer は Nordic の物理識別、String は可読な port 名、Symbol は board の意味を表す役割です。portable application は board label を利用する設計にできます。
-- DT の node label、alias、`label` property を同一視しません。`:led0` の lookup 元・生成物・存在しない名前のエラーは未実装です。GPIO label の active-low 情報を「raw 電位」と「論理 LED 点灯」のどちらへ適用するかも契約が必要です。
-- 存在しない port、範囲外 pin、SAADC 非対応 pin、予約 pin、競合資源を検査します。具体的な exception class と発生時点はまだ決まっていません。
+- DT の node label、明示した sw alias、`label` property を同一視しません。GPIO は全表記で物理電気レベルを返し、Symbol だけを active-low で反転しません。現在の許可対象は監査した DK の LED/Button 8 pinです。
+- GPIO の存在・範囲・予約・競合は hardware 操作前に検査します。例外と再設定・解放の時点は [公開契約](../implementation/gpio-button-api.md)に確定済みです。外部 pin ADC の解決は未実装で、内部 rail の factory と混ぜません。
 - unit の id と pin の三形式は別の契約です。`:uart30` 等の unit Symbol まで承認済みと拡張解釈しません。
 
 PicoRuby の nrf52 port を nRF54L15 の完成 backend として再利用できるとは確認していません。[community の差異](community-comparison.md)と [rrt0 待機案](rrt0-integration.md)を踏まえ、実機で DMA・IRQ・latency・RAM・競合を試験する必要があります。

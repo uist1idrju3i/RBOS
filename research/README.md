@@ -15,6 +15,8 @@ SDK の build は [BM の再現手順と P1 map 比較](implementation/bm-build.
 
 ## Ruby らしさと共通 I/O API
 
+P2 の [調査判断・検証結果と振り返り](implementation/retrospective-P2.md)に、採用・不採用の理由、四構成の証拠、改善4項目と文書への反映確認をまとめました。P2 のコード実装と CLI 検査は実施済みですが、実機受け入れは未完了です。
+
 実装済みの RBOS 拡張: [ダイ温度 API の契約・検査・未確認条件](implementation/temperature-api.md)。MPIG 六 class の実装完了や P2 全体の完了を意味しません。
 
 三電源 ADC: [内部入力・協調待機・busy・DMA 寿命と検査の境界](implementation/adc-api.md)。外部 pin ADC と DK での検証は未完了です。

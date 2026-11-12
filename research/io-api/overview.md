@@ -1,6 +1,6 @@
 # Common I/O API 調査の範囲と版
 
-MPIG（mruby, mruby/c Common I/O API Guidelines）は MCU を越えた Ruby program と sensor library の再利用を目指す共通 interface です。RBOS の Ruby-first 方針では、利用者が native driver の C 呼出しを書くのではなく、この共通語彙を Ruby から使えることを目指します。**今回の成果物は調査のみで、六 class の binding・backend は未実装です。**
+MPIG（mruby, mruby/c Common I/O API Guidelines）は MCU を越えた Ruby program と sensor library の再利用を目指す共通 interface です。RBOS の Ruby-first 方針では、利用者が native driver の C 呼出しを書くのではなく、この共通語彙を Ruby から使えることを目指します。この文書は初回の比較調査です。後続の P2 で [GPIO/Button](../implementation/gpio-button-api.md)、[内部三電源 ADC](../implementation/adc-api.md)、[温度](../implementation/temperature-api.md)の binding と backend を実装しました。外部 pin ADC・PWM・UART・I2C・SPI は未実装で、実機の受け入れも未完了です。
 
 ## 読み分け
 
@@ -10,7 +10,7 @@ MPIG（mruby, mruby/c Common I/O API Guidelines）は MCU を越えた Ruby prog
 | RBS | community の型記述。本文との照合資料であり、runtime 実装や全意味の保証ではない |
 | community implementation | 採用例・差異・制約。`scan` / `timeout:` / `ALT` 等を MPIG 標準へ混ぜない |
 | sdk-nrf-bm / nrfx / DTS | nRF backend の候補と予約資源。Ruby class が既にあることを意味しない |
-| RBOS の決定 | pin の三形式、共有 binding と実/fake backend。具体的な resolver・error 契約は未実装 |
+| RBOS の決定 | GPIO の三形式 resolver・error 契約と実/fake backend は実装済み。具体的な現在の範囲は上記の P2 契約を参照 |
 | 提案・未確認 | rrt0 待機の分解、cancel、bus 所有、実機 timing・電気的適合。確定事項から分離 |
 
 ## 固定した参照先

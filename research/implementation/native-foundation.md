@@ -34,7 +34,7 @@ native callback の `argc` は位置引数だけで、keyword は `v[argc+1]` �
 
 core 自体は lock を持ちません。firmware の `rbos_event_post` / `rbos_event_take` と stats snapshot が `irq_lock` を使って直列化します。現在の BASEPRI では SoftDevice priority 0/1 は止まらないため、この経路の producer は NVIC priority 2以上のアプリ側 IRQ に限定します。SoftDevice IRQ から直接 post してはいけません。SDH 配送と callback context は peripheral 実装時にも照合が必要です。
 
-consumer の取り出し口だけを追加し、未処理 event を保守処理で捨てるような仮 dispatcher は入れません。Button の producer、資源所有、Ruby callback の寿命・通知処理は未実装です。
+初回は consumer の取り出し口だけを追加し、未処理 event を捨てる仮 dispatcher は入れませんでした。後続の [GPIO/Button 実装](gpio-button-api.md)で producer、資源所有、generation/lease と呼出し task 内の配送を追加済みです。native に Ruby callback を保持する方式は採用していません。
 
 ## stats と検査
 
@@ -56,13 +56,13 @@ Wasm は argc/type/range、nil・空 String/Array、境界値、IO/busy/timeout/
 
 host C は FIFO、ring の周回、満杯時の破棄、複数 pin と completion の分離、pop 後の再受付、count と統計の飽和を試します。実際の IRQ 競合・tick jitter は host C だけでは確認できません。
 
-## 残る受け入れ条件
+## 初回の対象外と現在の確認先
 
-- peripheral/DPPI/IRQ の完全な予約表と SDH・SD RAM・BM queue の照合。
-- GPIO/Button と温度 API の契約、実機 backend、foreground から Ruby への通知。
-- 追加する各 API の map 増分と stack/pool 観測、DK の正常・失敗・timeout 試験。
+- [予約表と起動診断](resource-reservations.md)、GPIO/Button・温度・三電源 ADC の契約と backend、呼出し task への通知は実装済みです。
+- [P2 の記録](retrospective-P2.md)に CLI/四構成の検証結果と map 増分をまとめます。
+- SD RAM/BM queue の実機照合、stack/pool 観測、DK の正常・失敗・timeout は [実機受け入れ](p2-acceptance.md)に残します。
 
-この変更は公開 Ruby API を追加・変更しないため VERSION を増分しません。firmware の stats は診断出力で、旧形式の checker では新 log を読めないため、同じ revision の checker を使用してください。
+共通基盤の初回変更は公開 Ruby API を追加・変更しないため VERSION を増分しませんでした。firmware の stats は診断出力で、旧形式の checker では新 log を読めないため、同じ revision の checker を使用してください。
 
 [実装計画へ戻る](porting-plan.md)
 

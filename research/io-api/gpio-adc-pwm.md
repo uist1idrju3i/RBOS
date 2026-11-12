@@ -34,7 +34,7 @@ RBOS は nrf_gpio による物理値・mode 操作を実装しました。Button
 | `#read` | read_voltage の alias。同じ単位・型を維持 |
 | `#read_raw` | 電圧変換前の Integer。bit 数・signedness・gain・reference 等は別途 platform を確認 |
 
-変換開始から完了までの待機、校正、DMA、buffer 長、失敗時の追加例外、電圧精度は本文では一律に定義されません。RBOS では SAADC を backend 候補にし、gain/reference と V 換算を確認します。整数 ADC 値だけを返す実装へ `read` を黙って変更してはいけません。固定 VM の Float と、backend が対応する機能は別の確認項目です。
+変換開始から完了までの待機、校正、DMA、buffer 長、失敗時の追加例外、電圧精度は本文では一律に定義されません。RBOS は内部三電源に SAADC を採用し、[gain/reference・V 換算・待機・停止](../implementation/adc-api.md)を実装しました。外部 pin ADC と実機の精度は未確認です。整数 ADC 値だけを返す実装へ `read` を黙って変更してはいけません。固定 VM の Float と、backend が対応する機能は別の確認項目です。
 
 ## PWM
 
