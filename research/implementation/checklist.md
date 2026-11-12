@@ -56,7 +56,9 @@
 - [ ] console を UARTE/RTT/BLE のどれにするか決め、pin の共有を確認する。
 - [ ] native API を追加するたびに、P1 と同じ map 分類と stack/pool 観測方法で増分を記録する。瞬間 peak の捕捉や paint margin の校正は別に検証し、標本値を厳密な上限と呼ばない。
 - [ ] 共有 C API の argc/type/range 検査を共通 helper に集約し、return/raise・参照カウントの規約を実装する。Wasm fake で正常・引数なし・nil・誤型・境界・driver failure を試す。
+  - 共通 helper と試験専用 fake を追加しました。検査の対象と限界は [native 共通基盤](native-foundation.md)を参照してください。P2 の peripheral API は未実装です。
 - [ ] ISR event queue を固定長 ring とし、overflow 時は newest を drop して stats に overflow counter を出す。Button edge は pin ごとに coalesce し、count を保持する。承認済みの設計であり、実装・試験は未完了です。
+  - ring core、IRQ 保護付きの入口、stats と host C 検査を追加しました。Button の実機 producer と Ruby への通知、実際の IRQ 競合は未確認のため、この項目は空欄のままです。
 - [ ] 温度 API の契約を決める（class/method 名、返り値の型と単位、失敗時の例外、同期・非同期の扱い）。MPIG の六 class に温度は含まれないため、RBOS 独自の契約として決める。
 - [ ] TEMP ペリフェラルの backend を実装し、FICR 校正と 0.25°C 刻みの換算を確認する。BM board の dtsi が `&temp` node を削除しているため DT 駆動は使わず、nrfx_temp か register 直接の経路にする。TEMP の IRQ 215 は P1 から移管した予約表の照合対象に含める。
 - [ ] 温度 API を Wasm fake と DK 実機で試し、正常・driver failure・timeout の結果を記録する。

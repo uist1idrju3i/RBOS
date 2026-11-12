@@ -28,6 +28,7 @@ host build のキャッシュは mruby の submodule SHA ごとに分けます�
 
 ## 検査範囲
 
+- host C の event queue 検査で FIFO・wrap・newest drop・Button の coalesce・counter 飽和を確かめます。Wasm の `native_helpers.rb` は、試験専用 `NativeFixture` から共有 helper を呼び、引数・fake backend の失敗・参照寿命を検査します。`NativeFixture` は firmware へ結合しない試験用 API です。
 - `tests/mruby/` では複数 task、sleep_ms、priority、pass、Mutex、join/value、rescue、空プログラムを実行します。
 - 未捕捉例外の fixture は exit 1 と例外メッセージを照合します。引数なし・存在しない file・空 file・不一致 RITE version・magic・宣言サイズは exit 2 と診断を照合します。timeout は失敗です。
 - 将来の `src/**/*.rb` はすべて個別に compile します。まだ存在しなければ 0 件として成功します。これらは無限 loop や native API を含み得るため、自動実行しません。

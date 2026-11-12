@@ -13,6 +13,8 @@
 static unsigned char heap[RBOS_WASM_POOL_SIZE];
 static int uncaught_exceptions;
 
+void rbos_wasm_native_fixture_define(void);
+
 void wasm_uncaught_exception(struct VM *vm)
 {
   ++uncaught_exceptions;
@@ -28,6 +30,7 @@ int main(int argc, char **argv)
   }
   mrbc_init(heap, sizeof(heap));
   rbos_define_classes(rbos_wasm_backend());
+  rbos_wasm_native_fixture_define();
 
   for (int i = 1; i < argc; ++i) {
     FILE *file = fopen(argv[i], "rb");

@@ -54,6 +54,35 @@ def synthetic(profile="selftest", end=60, progress_end=None, connected=False):
 
 
 class LogTests(unittest.TestCase):
+    def event_log(self, suffix=" event_pending=2 event_overflow=0 event_coalesced=3"):
+        return re.sub(rb"(drain_us=42)", lambda match: match[0] + suffix.encode(), synthetic())
+
+    def test_native_event_stats_and_legacy(self):
+        for data, expected in [(synthetic(), None), (self.event_log(), 2)]:
+            report = dk_log.analyze(data)
+            self.assertEqual(report["status"], "PASS", report["errors"])
+            self.assertEqual(report["peaks"]["event_pending"], expected)
+            self.assertIn("event_pending max", dk_log.human(report))
+        report = dk_log.analyze(self.event_log())
+        self.assertEqual(report["peaks"]["event_coalesced"], 3)
+        self.assertEqual(report["peaks"]["event_overflow"], 0)
+
+    def test_native_event_overflow_and_bounds(self):
+        self.assert_fails(self.event_log().replace(b"event_overflow=0", b"event_overflow=1"),
+                          "Native event overflow")
+        for old, new in [(b"event_pending=2", b"event_pending=17"),
+                         (b"event_coalesced=3", b"event_coalesced=4294967296")]:
+            self.assert_fails(self.event_log().replace(old, new), "Invalid native event stats")
+        report = dk_log.analyze(self.event_log().replace(b"event_coalesced=3", b"event_coalesced=4294967295"))
+        self.assertEqual(report["status"], "PASS", report["errors"])
+
+    def test_native_event_malformed_and_counter_reset(self):
+        for suffix in [" event_pending=0", " event_pending=-1 event_overflow=0 event_coalesced=0",
+                       " event_pending=0 event_overflow=0 event_coalesced=0 unknown=1"]:
+            self.assert_fails(self.event_log(suffix), "Malformed or untimed stats")
+        data = self.event_log().replace(b"event_coalesced=3", b"event_coalesced=4", 1)
+        self.assert_fails(data, "event_coalesced counter decreased")
+
     def assert_fails(self, data, marker, **kwargs):
         report = dk_log.analyze(data, **kwargs)
         self.assertEqual(report["status"], "FAIL")
