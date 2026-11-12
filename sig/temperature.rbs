@@ -1,0 +1,4 @@
+class Temperature
+  def self.read: () -> Float
+  def self.new: (*untyped) -> bot
+end

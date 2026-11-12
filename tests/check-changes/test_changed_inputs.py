@@ -65,7 +65,8 @@ class ChangedInputsTests(unittest.TestCase):
         common = ['.gitmodules', '.github/scripts/changed-inputs.sh', 'tests/check-changes/test.py',
                   'tests/check-changes/test_dk_log.py',
                   'vendor/mruby', 'vendor/mrubyc', 'src/new\nfile.rb', 'include/space name.h',
-                  'src/rbos/new.c', 'include/rbos/new.h',
+                  'src/rbos/new.c', 'src/platform/nrf/backend.c', 'include/rbos/new.h',
+                  'sig/temperature.rbs',
                   'firmware/ruby/system.rb', 'firmware/ruby/selftest/coordinator.rb',
                   'firmware/ruby/stress/spinner_a.rb', 'firmware/ruby/fault/oom.rb']
         paths = {

@@ -25,7 +25,7 @@
 
 ## ダイ温度の取得経路
 
-2026-11-12 の利用者承認により、温度 backend は S115 公式の `sd_temp_get` を利用します。MPSL が TEMP を予約するため、nrfx_temp/register の直接操作と app 独自の IRQ 接続は採用しません。0.25°C単位の値を約50 µsの同期 API で得る仕様で、公開 API の名前・型・失敗・待機契約と実機評価は別途確定します。[資源予約と出典](../implementation/resource-reservations.md)を参照してください。
+2026-11-12 の利用者承認により、温度 backend は S115 公式の `sd_temp_get` を利用します。MPSL が TEMP を予約するため、nrfx_temp/register の直接操作と app 独自の IRQ 接続は採用しません。公開形は A の `Temperature.read`（引数なし、Float °C、取得失敗は RuntimeError）を選択しました。0.25°C単位の値を約50 µsの同期 API で得る仕様で、呼出し中は他 Ruby task が進みません。これは温度の承認済み例外で、実機評価は未完了です。[公開契約](../implementation/temperature-api.md)と [資源予約・出典](../implementation/resource-reservations.md)を参照してください。
 
 ## SemVer と公開権限
 

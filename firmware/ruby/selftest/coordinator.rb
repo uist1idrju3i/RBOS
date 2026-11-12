@@ -51,4 +51,5 @@ started = VM.tick
 sleep_ms 30
 check(VM.tick > started, "idle wakeup")
 puts "PASS: P1 selftest"
+puts "temperature c=#{Temperature.read}"
 $p1_done = true

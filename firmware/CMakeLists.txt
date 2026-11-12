@@ -16,4 +16,6 @@ if(NOT CONFIG_MCUBOOT_BOOTLOADER_MODE_FIRMWARE_UPDATER)
 endif()
 
 include(cmake/mrubyc.cmake)
+target_include_directories(app PRIVATE ../src/platform/nrf)
+target_sources(app PRIVATE ../src/platform/nrf/backend.c)
 target_sources(app PRIVATE src/main.c src/runtime.c src/ble.c src/resources.c src/hal/hal.c)

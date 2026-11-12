@@ -3,13 +3,7 @@
 
 #include <stdbool.h>
 #include "mrubyc.h"
-
-enum rbos_status {
-  RBOS_OK,
-  RBOS_IO_ERROR,
-  RBOS_BUSY,
-  RBOS_TIMEOUT,
-};
+#include "rbos/backend.h"
 
 /* A false result leaves an exception; the callback must return immediately. */
 bool rbos_require_argc(mrbc_vm *vm, int argc, int minimum, int maximum);

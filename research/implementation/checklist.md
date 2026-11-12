@@ -58,12 +58,14 @@
 - [ ] console を UARTE/RTT/BLE のどれにするか決め、pin の共有を確認する。
 - [ ] native API を追加するたびに、P1 と同じ map 分類と stack/pool 観測方法で増分を記録する。瞬間 peak の捕捉や paint margin の校正は別に検証し、標本値を厳密な上限と呼ばない。
 - [ ] 共有 C API の argc/type/range 検査を共通 helper に集約し、return/raise・参照カウントの規約を実装する。Wasm fake で正常・引数なし・nil・誤型・境界・driver failure を試す。
-  - 共通 helper と試験専用 fake を追加しました。検査の対象と限界は [native 共通基盤](native-foundation.md)を参照してください。P2 の peripheral API は未実装です。
+  - 共通 helper と試験専用 fake を追加しました。検査の対象と限界は [native 共通基盤](native-foundation.md)を参照してください。温度 API でも helper を使用し、残る peripheral API と実機の受け入れは未完了です。
 - [ ] ISR event queue を固定長 ring とし、overflow 時は newest を drop して stats に overflow counter を出す。Button edge は pin ごとに coalesce し、count を保持する。承認済みの設計であり、実装・試験は未完了です。
   - ring core、IRQ 保護付きの入口、stats と host C 検査を追加しました。Button の実機 producer と Ruby への通知、実際の IRQ 競合は未確認のため、この項目は空欄のままです。
-- [ ] 温度 API の契約を決める（class/method 名、返り値の型と単位、失敗時の例外、同期・非同期の扱い）。MPIG の六 class に温度は含まれないため、RBOS 独自の契約として決める。
+- [x] 温度 API の契約を決める（class/method 名、返り値の型と単位、失敗時の例外、同期・非同期の扱い）。MPIG の六 class に温度は含まれないため、RBOS 独自の契約として決める。
+  - 利用者承認済みの `Temperature.read`、Float °C、RuntimeError と同期経路を実装しました。[契約と RBS・検査の境界](temperature-api.md)を参照してください。
 - [ ] S115 公式の `sd_temp_get` で温度 backend を実装し、0.25°C 単位の換算と校正・精度条件を確認する。利用者承認により、MPSL が予約する TEMP を nrfx_temp/register から直接操作する旧案は置換する。TEMP IRQ215 は app で接続しない。約50 µsの同期処理が他 Ruby task・BLE/tick に与える影響を実機で確認する。
 - [ ] 温度 API を Wasm fake と DK 実機で試し、正常・driver failure・timeout の結果を記録する。
+  - 共有 binding と S115 backend、Wasm の正常・引数・失敗・復帰・反復検査を追加しました。SDK はソフトウェア timeout/cancel を提供せず、校正・精度条件と実時間の DK 検証は未完了です。backend とこの項目は空欄のまま残します。
 - [ ] DVDD・AVDD・VDD の電源 ADC の公開契約を決める。内部入力の選択方法は RBOS 拡張とし、物理 pin・DT label と区別する。MPIG の `read_voltage` / `read`（Float、V）と `read_raw`（換算前の Integer）を維持し、raw 値の範囲・符号、Float 無効時、busy・timeout・driver failure、待機・所有・解放と RBS を定義する。
 - [ ] SAADC backend で三電源の内部入力を実装する。DVDD/AVDD は内部 0.9 V 電源、VDD は主電源として区別する。BM の `&adc` 削除を踏まえ、nrfx_saadc、IRQ 213、EasyDMA buffer、将来の外部 pin ADC との排他を予約表と照合する。reference・gain・分解能・校正・入力切替と換算を確認し、VDD の固定分圧比を他 SoC から流用しない。
 - [ ] 電源 ADC の完了を IRQ から bounded event で foreground へ渡し、待機中も他 Ruby task と BM の保守処理が進むことを確認する。IRQ で Ruby を呼ばず、C の spin 待機だけで実装しない。
