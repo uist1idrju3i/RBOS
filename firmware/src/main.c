@@ -6,12 +6,12 @@
 #include <zephyr/logging/log_ctrl.h>
 #include "mrubyc.h"
 #include "rbos/bindings.h"
+#include "backend.h"
 #include "embedded.h"
 #include "runtime.h"
 
 LOG_MODULE_REGISTER(rbos, CONFIG_RBOS_LOG_LEVEL);
 static uint8_t vm_pool[CONFIG_RBOS_VM_POOL_SIZE] __aligned(8);
-static const struct rbos_backend backend;
 
 int main(void)
 {
@@ -23,7 +23,7 @@ int main(void)
 	if (rbos_ble_init()) mrbc_hal_abort("BLE initialization failed\n");
 	rbos_resources_log();
 	mrbc_init(vm_pool, sizeof(vm_pool));
-	rbos_define_classes(&backend);
+	rbos_define_classes(rbos_nrf_backend());
 	rbos_system_define();
 	for (unsigned int i = 0; i < rbos_task_count; ++i) {
 		mrbc_tcb *task = mrbc_create_task(rbos_tasks[i].bytecode, NULL);

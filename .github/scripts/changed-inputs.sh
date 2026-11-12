@@ -21,7 +21,7 @@ if [ "${PUSH_FORCED:-false}" != true ] &&
   changed=false
   while IFS= read -r -d '' path; do
     case "$kind:$path" in
-      *:.github/scripts/changed-inputs.sh|*:tests/check-changes/*|*:.gitmodules|\
+      *:.github/scripts/changed-inputs.sh|*:tests/check-changes/*|*:sig/*|*:.gitmodules|\
       firmware:firmware/*|firmware:tools/bm-build/*|firmware:.github/actions/ncs-bm-setup/*|\
       firmware:.github/workflows/firmware.yml|firmware:.github/workflows/firmware-release.yml|firmware:vendor/sdk-nrf-bm|\
       firmware:vendor/mruby|firmware:vendor/mrubyc|firmware:src/*|firmware:include/*|\

@@ -1,4 +1,38 @@
 #include "rbos/native.h"
+#include "backend.h"
+
+static void temperature_configure(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  mrbc_int_t value, status;
+  if (!rbos_require_argc(vm, argc, 2, 2) ||
+      !rbos_require_integer(vm, &v[1], INT32_MIN, INT32_MAX, &value) ||
+      !rbos_require_integer(vm, &v[2], RBOS_OK, RBOS_TIMEOUT + 1, &status)) return;
+  rbos_wasm_temperature_configure(value, (enum rbos_status)status);
+  SET_NIL_RETURN();
+}
+
+static void temperature_available(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  mrbc_int_t available;
+  if (!rbos_require_argc(vm, argc, 1, 1) ||
+      !rbos_require_integer(vm, &v[1], 0, 1, &available)) return;
+  rbos_wasm_temperature_available(available);
+  SET_NIL_RETURN();
+}
+
+static void temperature_calls(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  if (!rbos_require_argc(vm, argc, 0, 0)) return;
+  SET_INT_RETURN(rbos_wasm_temperature_calls());
+}
+
+static void memory_used(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  if (!rbos_require_argc(vm, argc, 0, 0)) return;
+  struct MRBC_ALLOC_STATISTICS stats;
+  mrbc_alloc_statistics(&stats);
+  SET_INT_RETURN(stats.used);
+}
 
 static enum rbos_status status;
 static unsigned int calls;
@@ -87,6 +121,10 @@ static void ownership(mrbc_vm *vm, mrbc_value v[], int argc)
 void rbos_wasm_native_fixture_define(void)
 {
   mrbc_class *cls = mrbc_define_class(NULL, "NativeFixture", NULL);
+  mrbc_define_method(NULL, cls, "temperature_configure", temperature_configure);
+  mrbc_define_method(NULL, cls, "temperature_available=", temperature_available);
+  mrbc_define_method(NULL, cls, "temperature_calls", temperature_calls);
+  mrbc_define_method(NULL, cls, "memory_used", memory_used);
   mrbc_define_method(NULL, cls, "sample", sample);
   mrbc_define_method(NULL, cls, "failure=", set_failure);
   mrbc_define_method(NULL, cls, "calls", call_count);

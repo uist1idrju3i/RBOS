@@ -6,10 +6,10 @@
 
 ### Added
 
+- 0.1.1 向けに `Temperature.read` を追加しました。S115 公式の `sd_temp_get` からダイ温度を Float の °C で返します。引数ありは ArgumentError、取得失敗は RuntimeError、インスタンス生成は TypeError です。共有 binding・RBS・Wasm fake と自己検査後の温度診断を追加しました。SDK の約50 µsは同期処理の目安で、精度・実時間・BLE/tick・stack/pool の実機確認は未完了です。固定 mruby/c の Float 無効 build は未対応で、binding の拒否処理のみ host で検査します。P2 全体の完了を意味しません。
 - S115 の DPPI/PPIB 予約を nrfx allocator へ反映し、SCHED・NVIC/GRTC の前提を build 時に検査します。SD RAM と BM scheduler の起動診断、生成 DTS と image 別の設定抜粋を CI 成果物へ追加しました。実機での資源競合と容量の照合は未完了で、周辺機器 API の追加や P2 完了を意味しません。
 - P2 の共通基盤として、native callback の引数・型・Integer 範囲・backend 失敗の helper と、借用値・生成値の返却処理を追加しました。16件の固定長 event ring は newest drop と pin ごとの Button coalesce を行い、stats に pending・overflow・coalesced を出します。実機の Button producer と Ruby への通知は未接続で、GPIO・温度 API の追加や P2 完了を意味しません。
 - 実装計画の P5 に、BLE のデバイス名へシリアル番号由来の識別子を含める項目を追加しました。FICR の DEVICEID をもとに生成する方式で、OpenBlink の実装を参考に新規実装します。実装は未着手です。
-- 実装計画の P2 にダイ温度読み出しを追加しました。nRF54L15 の TEMP ペリフェラルを backend にする新規実装で、OpenBlink の Zephyr sensor API 実装は流用しません。API の契約と実装は未着手です。
 - 利用者の決定により、P1 の残る資源・進行・予約・SDH 項目は観測値で完了とし、厳密な上限と進行保証を P6、予約表と SD RAM/queue の照合を P2 へ移管しました。Mutex は Wasm 試験と採用規約で十分とし、DK fault 試験は行いません。公平性閾値は2倍を維持し、P5 の DLE/ATT MTU・DFU 速度の実機測定と、一時 overlay/CI image の比較手順を記録しました。
 - DK の X/Y 比較で a/b 約1.006を確認し、利用者は周期の組合せに依存しない案 X を採用しました。VM quantum の既定を1 tick、service sleep を従来の10 msとし、比較専用 overlay と CI matrix は削除しました。host モデルは維持します。自己検査に同 priority worker の1秒間の進捗比2倍以内を追加しました。
 - P1 closeout 向けに STRESS/OOM profile、常時 ready spinner、保持割当て fault task、四 variant の CI artifact、区間最大の `drain_us` を追加しました。利用者の決定で stress 条件を完全接続窓5分へ変更し、DK OOM/abort と X/Y 接続 stress を確認しました。新既定 image `ef8514585aa2` の DK 自己検査10項目と完全接続400.140059秒の stress も PASS し、承認済み closeout 条件に対して P1 完了と判定しました。最終 log と checker 出力全文を回帰 fixture として保存しました。

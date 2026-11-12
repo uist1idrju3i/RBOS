@@ -3,6 +3,8 @@
 host の mrbc と emscripten HAL を使い、Ruby の compile と smoke test を実行します。
 firmware の build や Nordic の IRQ・BLE・タイミング試験を代替するものではありません。
 
+`temperature.rb` は共有 `Temperature.read` を fake backend で実行し、正負・0.25°C刻み、引数と constructor の拒否、driver failure/busy/timeout、backend 不在からの復帰、反復読出しと参照寿命を検査します。[温度の契約と Float 無効 build の制限](../../research/implementation/temperature-api.md)も参照してください。SDK の実時間・校正精度は検査しません。
+
 ## ローカル実行
 
 Ruby、C compiler、Make、Python 3、Git、Node.js、GNU timeout が必要です。

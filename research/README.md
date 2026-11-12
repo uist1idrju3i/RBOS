@@ -15,6 +15,8 @@ SDK の build は [BM の再現手順と P1 map 比較](implementation/bm-build.
 
 ## Ruby らしさと共通 I/O API
 
+実装済みの RBOS 拡張: [ダイ温度 API の契約・検査・未確認条件](implementation/temperature-api.md)。MPIG 六 class の実装完了や P2 全体の完了を意味しません。
+
 後続の `ruby-idiomatic` / `io-api-guideline` skill に先立つ調査です。skill 本体・RuboCop・六 class の実装は今回追加していません。
 
 - Ruby: [原則と一次資料](ruby-style/principles.md)、[guide と VM の対応](ruby-style/idiom-compatibility.md)、[組込み idiom](ruby-style/embedded-idioms.md)、[外部の主張の照合](ruby-style/attachment-review.md)。

@@ -2,6 +2,8 @@
 
 対象と build 手順は [BM build 手順](../research/implementation/bm-build.md)を参照してください。flash / erase は build に含めません。
 
+P2 の `Temperature.read` は共有 binding と `src/platform/nrf/backend.c` で実装し、S115 の `sd_temp_get` を利用します。既定／stress profile の coordinator は P1 自己検査の後に `temperature c=<Floatの°C>` を一回出します。P1 の PASS/stats 形式は変えません。OOM profile では coordinator を実行しません。[API 契約・同期処理・未確認条件](../research/implementation/temperature-api.md)を参照してください。
+
 ## build 時の生成
 
 `cmake/mrubyc.cmake` は `vendor/mruby` を app の build directory の `mruby-host/` にコピーし、host の Ruby と C compiler で mrbc 4.0.0 を作ります。compiler binary は配布しません。既存の host compiler を使う場合は、west build の `--` の後で `-DRBOS_MRBC=/absolute/path/to/mrbc` を指定します。版が異なる compiler は拒否します。

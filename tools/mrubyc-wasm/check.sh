@@ -127,7 +127,7 @@ mutex_case 'mutex ensure release' "$build/mutex_ensure.mrb" \
 mutex_case 'mutex priority inversion' "$build/mutex_inversion.mrb" \
   "$build/mutex_fault_owner.mrb" "$build/mutex_fault_middle.mrb" "$build/mutex_fault_waiter.mrb"
 
-for fixture in native_helpers idiom_collections idiom_objects idiom_values idiom_resources; do
+for fixture in native_helpers temperature idiom_collections idiom_objects idiom_values idiom_resources; do
   timeout 30s node "$build/runner.js" "$build/$fixture.mrb"
 done
 

@@ -48,7 +48,7 @@
 
 - LED/Button/GPIO を最初の対象とし、board pin を C 側で管理する。
 - ダイ温度の読み出しを native API として追加する。利用者承認により backend は S115 公式の `sd_temp_get` を使う。MPSL が TEMP を予約するため、旧案の nrfx_temp/register 直接操作は採用せず、TEMP IRQ215も app で接続しない。0.25°C単位の値を約50 µsの同期 API で取得する仕様で、換算・校正と精度条件、他 Ruby task・BLE/tick への影響を確認する。BM board は `&temp` を削除しており、DT 駆動や OpenBlink の [Zephyr sensor API による温度 HAL](https://github.com/OpenBlink/openblink-demo-mdbt50q-db-40/blob/d6efc07877ebac6bd55519b8458be4629bef80c3/src/drv/hal/die_temperature.c)は流用しない。
-- 温度 API の契約（class/method 名、返り値の型と単位、失敗時の例外、同期・非同期の扱い）は本段階の値の規約に合わせて決める。
+- 温度 API の契約は、利用者承認済みの `Temperature.read`、Float °C、取得失敗時の RuntimeError と同期経路にする。[契約と実装・検査の境界](temperature-api.md)を参照する。実機の受け入れは未完了。
 - DVDD・AVDD・VDD の ADC 読み出しを追加する。nRF54L15 の SAADC 内部入力 `NRF_SAADC_INPUT_DVDD` / `NRF_SAADC_INPUT_AVDD` / `NRF_SAADC_INPUT_VDD` を使う。DVDD と AVDD は内部 0.9 V のデジタル／アナログ電源、VDD は主電源であり、外部 analog pin 三本の測定とは区別する。
 - 電源 ADC の公開契約は実装前に決める。MPIG の `ADC#read_voltage` と alias の `#read` は Float の V、`#read_raw` は換算前の Integer とし、内部電源の選択方法は RBOS 拡張として定義する。内部電源の識別子と物理 pin・DT label の識別子を区別する。型・単位・raw 値の範囲と符号、Float 無効時、busy・timeout・driver failure、資源所有と解放、RBS も同じ API の実装 PR で定義する。
 - backend は nrfx_saadc を候補とする。BM board は `&adc` node を削除するため、Zephyr の DT ADC driver を前提にしない。SAADC と IRQ 213、EasyDMA buffer、将来の外部 pin ADC との排他を予約表に含める。reference・gain・分解能・校正・入力切替時の条件と電圧換算を照合し、VDD に他 SoC の固定分圧比を流用しない。完了 IRQ は bounded event を渡し、Ruby 処理は foreground で行う。待機中は呼出し task だけを待たせ、他 task の実行を止める C の spin 待機にしない。

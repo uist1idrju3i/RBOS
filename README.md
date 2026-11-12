@@ -13,6 +13,8 @@ mruby/c の VM と rrt0 task scheduler を中核に、Nordic nRF54L15-DK 上で�
 **P1 は承認済み closeout 条件に対して完了です。** quantum 1 tick の新既定 image `ef8514585aa2` で、公平性を含む自己検査10項目と完全接続400.140059秒の stress が PASS しました。[最終実機証拠と判定の範囲](research/implementation/retrospective-P1.md#新既定-image-の最終-dk-確認と-p1-完了判定)と [checklist](research/implementation/checklist.md#p1-vm-と時間)に記録しています。
 周辺 API、権限分離、release 実機、消費電力等は今後の検証対象です。調査済みの仕様、設計案、未確認事項は [research/README.md](research/README.md) を参照してください。
 
+P2 の最初の読み取り API として `Temperature.read` を追加しました。ダイ温度を Float の °C で返す RBOS 拡張です。[契約と同期処理の制約](research/implementation/temperature-api.md)を確認してください。S115 backend の実機精度・latency、GPIO/Button と三電源 ADC は引き続き未確認／未実装です。
+
 ## 目標/特徴
 
 - mruby/c の task 機能を使った Ruby プログラムのマルチタスク実行。
@@ -47,6 +49,7 @@ slot1 は firmware loader 用で、旧 main application を保持する A/B slot
 | `research/` | 実装準備の調査・判断・未確認事項 |
 | `tools/mrubyc-wasm/` | host mrbc と emscripten HAL の共通検査スクリプト |
 | `tests/mruby/` | task・Mutex・例外の Ruby smoke test |
+| `sig/` | Ruby API の RBS。例外・待機の契約は各 API 文書を参照 |
 | `vendor/` | shallow submodule で固定した外部資材 |
 | `.agents/skills/` | 開発支援スキル |
 | `.github/`、`tests/check-skills/` | skill の一覧とリンクを検査する CI・テスト |
