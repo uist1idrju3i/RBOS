@@ -249,8 +249,8 @@
       "methods": [
         "ADC.new"
       ],
-      "arguments": "外部 pin ADC は未対応で常に拒否する。",
-      "returns": "NotImplementedError",
+      "arguments": "外部 pin ADC は未対応で常に拒否する。引数なしは ArgumentError、pin 指定は NotImplementedError。",
+      "returns": "成功する呼出しはない。引数検査に応じて ArgumentError / NotImplementedError。",
       "suites": [
         "adc"
       ]
