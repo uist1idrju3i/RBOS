@@ -69,7 +69,7 @@ def fixture(root, profile="debug"):
     if profile in ("stress", "oom"):
         config += "CONFIG_RBOS_TEST_PROFILE_" + profile.upper() + "=y\n"
     if profile == "oom":
-        config = config.replace("CONFIG_RBOS_PERIPHERAL_EXERCISE=y", "# CONFIG_RBOS_PERIPHERAL_EXERCISE is not set")
+        config = config.replace("CONFIG_RBOS_PERIPHERAL_EXERCISE=y\n", "")
     (app / ".config").write_text(config)
     image = bytearray(4096)
     struct.pack_into("<IIHHII", image, 0, 0x96F3B83D, 0, 512, 0, 3584, 0)
@@ -104,6 +104,23 @@ class VerifyEvidenceTests(unittest.TestCase):
     def test_wrapped_output_section(self):
         sizes = verifier.map_sizes(MAP.replace("noinit 0x20004a00", "noinit\n  0x20004a00"))
         self.assertEqual(sizes["ram"], 2048)
+
+    def test_disabled_booleans_may_be_omitted_but_required_values_may_not(self):
+        exercise = "CONFIG_RBOS_PERIPHERAL_EXERCISE"
+        base = CONFIG.replace(exercise + "=y\n", "")
+        for key in ("CONFIG_GPIO", "CONFIG_SHELL", "CONFIG_BM_ZMS"):
+            base = base.replace("# " + key + " is not set\n", "")
+        base += "CONFIG_RBOS_TEST_PROFILE_OOM=y\n"
+        for disabled in ("", "# " + exercise + " is not set\n", exercise + "=n\n"):
+            with self.subTest(disabled=disabled):
+                verifier.configuration(base + disabled, "oom")
+        for wrong in (base + exercise + "=y\n", base + "CONFIG_GPIO=y\n",
+                      base.replace("CONFIG_NRFX_SAADC=y\n", ""),
+                      base.replace("CONFIG_NRFX_GPIOTE_NUM_OF_EVT_HANDLERS=4\n", "")):
+            with self.subTest(wrong=wrong), self.assertRaisesRegex(ValueError, "configuration"):
+                verifier.configuration(wrong, "oom")
+        with self.assertRaisesRegex(ValueError, "configuration"):
+            verifier.configuration(CONFIG.replace(exercise + "=y\n", ""), "debug")
 
     def test_version_magic_and_lengths(self):
         image = bytearray((self.root / "firmware/zephyr/zephyr.signed.bin").read_bytes())

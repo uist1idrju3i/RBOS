@@ -122,7 +122,7 @@ def configuration(text, profile):
                 "CONFIG_NRFX_RESERVED_RESOURCES_HEADER": '"rbos_reserved_resources.h"',
                 "CONFIG_RBOS_PERIPHERAL_EXERCISE": "n" if profile == "oom" else "y"}
     for setting, expected in required.items():
-        require(values.get(setting) == expected, "Unexpected configuration: " + setting)
+        require(values.get(setting, "n") == expected, "Unexpected configuration: " + setting)
     for key, expected_profile in (("CONFIG_RBOS_TEST_PROFILE_STRESS", "stress"),
                                   ("CONFIG_RBOS_TEST_PROFILE_OOM", "oom"),
                                   ("CONFIG_RBOS_VM_NDEBUG", "release")):
