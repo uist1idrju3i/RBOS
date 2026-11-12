@@ -62,6 +62,10 @@
 - [ ] 温度 API の契約を決める（class/method 名、返り値の型と単位、失敗時の例外、同期・非同期の扱い）。MPIG の六 class に温度は含まれないため、RBOS 独自の契約として決める。
 - [ ] TEMP ペリフェラルの backend を実装し、FICR 校正と 0.25°C 刻みの換算を確認する。BM board の dtsi が `&temp` node を削除しているため DT 駆動は使わず、nrfx_temp か register 直接の経路にする。TEMP の IRQ 215 は P1 から移管した予約表の照合対象に含める。
 - [ ] 温度 API を Wasm fake と DK 実機で試し、正常・driver failure・timeout の結果を記録する。
+- [ ] DVDD・AVDD・VDD の電源 ADC の公開契約を決める。内部入力の選択方法は RBOS 拡張とし、物理 pin・DT label と区別する。MPIG の `read_voltage` / `read`（Float、V）と `read_raw`（換算前の Integer）を維持し、raw 値の範囲・符号、Float 無効時、busy・timeout・driver failure、待機・所有・解放と RBS を定義する。
+- [ ] SAADC backend で三電源の内部入力を実装する。DVDD/AVDD は内部 0.9 V 電源、VDD は主電源として区別する。BM の `&adc` 削除を踏まえ、nrfx_saadc、IRQ 213、EasyDMA buffer、将来の外部 pin ADC との排他を予約表と照合する。reference・gain・分解能・校正・入力切替と換算を確認し、VDD の固定分圧比を他 SoC から流用しない。
+- [ ] 電源 ADC の完了を IRQ から bounded event で foreground へ渡し、待機中も他 Ruby task と BM の保守処理が進むことを確認する。IRQ で Ruby を呼ばず、C の spin 待機だけで実装しない。
+- [ ] 三電源 ADC を Wasm fake と DK で検査する。fake は入力選択・換算境界・不正入力・busy・timeout・driver failure、DK は VDD と実測電源値の比較・DVDD/AVDD の妥当性・入力切替・反復測定を対象とする。許容誤差を仕様と校正条件から事前に決め、BLE 接続中の tick・stack/pool、map 増分を保存する。[計画と根拠](porting-plan.md#p2-native-class-と値の規約)参照。実装・実機試験は未完了のため、空欄のままにする。
 - [ ] application/shell UARTE30 の重複、NFC TIMER24、GRTC 予約、各 callback の実行 context を照合する。
 - [ ] bonding を採用する場合、初期 BLE でも BM_ZMS/SD backend と peer partition の予算を確保する。
 
