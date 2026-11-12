@@ -1,3 +1,6 @@
+config NRFX_RESERVED_RESOURCES_HEADER
+	default "rbos_reserved_resources.h"
+
 menu "RBOS application"
 
 choice RBOS_TEST_PROFILE

@@ -51,7 +51,9 @@
 ## P2: native API と資源
 
 - [ ] P1 から利用者承認で移管: peripheral を使う前に peripheral/DPPI/IRQ の完全な予約表を対象 SoftDevice の仕様と照合する。
+  - [資源予約表](resource-reservations.md)で固定 S115/MPSL/Controller の予約を照合し、nrfx の DPPI/PPIB 予約と GRTC/IRQ の build-time guard を追加しました。各 backend の具体的な owner・channel・pin と実機の競合検査は未完了です。
 - [ ] P1 から利用者承認で移管: SDH 配送 model、SD RAM usage、BM queue 容量を SDK 仕様・`.config`・map・実測で照合する。P1 の SCHED/512 B設定と drain 観測値を照合完了や上限保証の代わりにしない。
+  - SCHED を build 時に検査し、SD RAM と scheduler の起動診断、生成 DTS と設定抜粋の保存を追加しました。512 Bは件数ではありません。実機での必要 RAM・heap 容量・producer ごとの枯渇時動作の照合は未完了です。
 
 - [ ] console を UARTE/RTT/BLE のどれにするか決め、pin の共有を確認する。
 - [ ] native API を追加するたびに、P1 と同じ map 分類と stack/pool 観測方法で増分を記録する。瞬間 peak の捕捉や paint margin の校正は別に検証し、標本値を厳密な上限と呼ばない。
