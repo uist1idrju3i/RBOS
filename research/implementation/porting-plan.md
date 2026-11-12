@@ -49,15 +49,21 @@
 - LED/Button/GPIO を最初の対象とし、board pin を C 側で管理する。
 - ダイ温度の読み出しを native API として追加する。backend は nRF54L15 の TEMP ペリフェラルを使う。BM board の dtsi が `&temp` node を削除しているため DT 駆動は使えず、nrfx_temp か register 直接の経路にする。OpenBlink の [温度 HAL](https://github.com/OpenBlink/openblink-demo-mdbt50q-db-40/blob/d6efc07877ebac6bd55519b8458be4629bef80c3/src/drv/hal/die_temperature.c)は Zephyr の sensor API を使うため流用せず、BM bare-metal 向けに新規実装する。
 - 温度 API の契約（class/method 名、返り値の型と単位、失敗時の例外、同期・非同期の扱い）は本段階の値の規約に合わせて決める。
+- DVDD・AVDD・VDD の ADC 読み出しを追加する。nRF54L15 の SAADC 内部入力 `NRF_SAADC_INPUT_DVDD` / `NRF_SAADC_INPUT_AVDD` / `NRF_SAADC_INPUT_VDD` を使う。DVDD と AVDD は内部 0.9 V のデジタル／アナログ電源、VDD は主電源であり、外部 analog pin 三本の測定とは区別する。
+- 電源 ADC の公開契約は実装前に決める。MPIG の `ADC#read_voltage` と alias の `#read` は Float の V、`#read_raw` は換算前の Integer とし、内部電源の選択方法は RBOS 拡張として定義する。内部電源の識別子と物理 pin・DT label の識別子を区別する。型・単位・raw 値の範囲と符号、Float 無効時、busy・timeout・driver failure、資源所有と解放、RBS も同じ API の実装 PR で定義する。
+- backend は nrfx_saadc を候補とする。BM board は `&adc` node を削除するため、Zephyr の DT ADC driver を前提にしない。SAADC と IRQ 213、EasyDMA buffer、将来の外部 pin ADC との排他を予約表に含める。reference・gain・分解能・校正・入力切替時の条件と電圧換算を照合し、VDD に他 SoC の固定分圧比を流用しない。完了 IRQ は bounded event を渡し、Ruby 処理は foreground で行う。待機中は呼出し task だけを待たせ、他 task の実行を止める C の spin 待機にしない。
+- 電源 ADC は Wasm fake で三入力の選択、換算の境界、不正入力、busy・timeout・driver failure を検査する。DK では VDD と実測電源値の比較、DVDD/AVDD の内部電源としての妥当性、入力切替と反復測定を確認する。許容誤差は仕様・校正条件から事前に定め、BLE 接続中の tick・stack/pool と map の増分も記録する。fake の値を実機の精度の証拠とは扱わない。
 - argc、type、範囲の検査を共有 C helper に集約し、所有権・エラー値/例外を共通規約にする。Wasm fake で正常・引数なし・nil・誤型・境界・driver failure を検査する。
 - ISR から Ruby へ直接入らず、固定長 ring を介して foreground で通知する。overflow は newest を drop し、stats の overflow counter で観測する。Button edge は pin ごとに coalesce して count を残す。
 - native API を追加するたびに P1 の map 分類と stack/pool 観測方法で増分を記録する。標本 peak と厳密な上限は区別する。
-- ADC/PWM/I2C/UART は要件と pin/IRQ の一覧が揃ってから追加する。
+- 外部 pin 用 ADC と PWM/I2C/UART は要件と pin/IRQ の一覧が揃ってから追加する。上の三電源 ADC は P2 の対象に含めるが、公開契約・資源予約の照合前に実装しない。
 - [SDK component 表](../nrf-bm/component-catalog.md)の backend 候補から必要なものを選ぶ。共有 binding に Nordic header を入れず、製品動作は Ruby へ置く。UART/shell の instance 重複、NFC TIMER24、GRTC の所有を確認する。
 
 **受け入れ条件**: 正常、引数なし、nil、誤型、境界、driver failure、OOM をP6 で整える host test 基盤へ追加する。ハードウェア依存は mock と実機を分けて確認する。
 
 根拠: `vendor/mrubyc/src/class.h:234-246`、`vendor/mrubyc/src/value.h:221-263,546-572`、[OpenBlink API](../openblink/api-binding-patterns.md)、[OpenBlink の温度 HAL](https://github.com/OpenBlink/openblink-demo-mdbt50q-db-40/blob/d6efc07877ebac6bd55519b8458be4629bef80c3/src/drv/hal/die_temperature.c)、[nrfx TEMP ドライバ](https://github.com/zephyrproject-rtos/hal_nordic/blob/1acb428a205bad58f3dfd4e38f2d1663bb784ba1/nrfx/drivers/include/nrfx_temp.h)、[nRF54L15 の TEMP 定義](https://github.com/zephyrproject-rtos/hal_nordic/blob/1acb428a205bad58f3dfd4e38f2d1663bb784ba1/nrfx/bsp/stable/mdk/nrf54l15_application_peripherals.h#L1039-L1040)、`vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/bm_nrf54l15dk_nrf54l051015_peripherals.dtsi:58`。
+
+電源 ADC の根拠: [固定 HAL の内部入力](https://github.com/zephyrproject-rtos/hal_nordic/blob/1acb428a205bad58f3dfd4e38f2d1663bb784ba1/nrfx/hal/nrf_saadc.h#L298-L315)、[nRF54L15 の入力定義](https://github.com/zephyrproject-rtos/hal_nordic/blob/1acb428a205bad58f3dfd4e38f2d1663bb784ba1/nrfx/bsp/stable/mdk/nrf54l15_types.h#L29265-L29273)、[SAADC と IRQ 213](https://github.com/nrfconnect/sdk-zephyr/blob/fd9204a02d52630660ce8d729945a4dd743feabf/dts/vendor/nordic/nrf54l_05_10_15.dtsi#L527-L534)、[公式 SAADC 仕様](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/saadc.html)、[MPIG の ADC 契約](../io-api/gpio-adc-pwm.md#adc)、`vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/bm_nrf54l15dk_nrf54l051015_peripherals.dtsi:14`。資料との照合であり、本リポジトリではまだ電源 ADC を実装・実機試験していません。
 
 ## P3: system-task と権限
 
