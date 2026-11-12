@@ -14,6 +14,10 @@ mruby/c の `src/`、`support/`、`mrblib/` も build directory にコピーし�
 
 VM 数と pool は `CONFIG_RBOS_MAX_VM_COUNT`（既定 8）と `CONFIG_RBOS_VM_POOL_SIZE`（既定 65536 bytes）で設定します。VM の他の設定は上流の既定値です。release は `CONFIG_RBOS_VM_NDEBUG` により、mruby/c source だけに `NDEBUG` を追加します。
 
+## 資源予約
+
+S115 の DPPI/PPIB 予約を nrfx allocator へ渡す header を application Kconfig の先行 default で選択し、Zephyr/nrfx library にも include path を渡します。`src/resources.c` は最終選択の header と IRQ/GRTC の前提を検査し、BLE 初期化成功後に SD RAM・BM heap byte 数・event header サイズを記録します。予約と callback context、診断値の読み方、未確認の実機項目は [P2 の資源予約](../research/implementation/resource-reservations.md)を参照してください。
+
 ## 実行
 
 BM の repeated timer は 31 ticks（992 µs）周期です。絶対 uptime から経過した整数 ms を求め、経過分だけ `mrbc_tick()` を呼びます。IRQ lock は BASEPRI により SoftDevice の priority 0/1 を残します。BLE のイベントは BM scheduler を通して main context で処理します。

@@ -22,11 +22,13 @@ case "$out/" in
 esac
 mkdir -p -- "$out"
 python3 - "$build" "$out" <<'PY'
+import json
 import pathlib
 import shutil
 import sys
 
 build, out = map(pathlib.Path, sys.argv[1:])
+resources = {}
 for source in sorted(build.rglob('*')):
     if not source.is_file() or source.is_symlink():
         continue
@@ -35,7 +37,7 @@ for source in sorted(build.rglob('*')):
     if name.endswith('.pem') or name == 'keyfile.json':
         continue
     selected = (
-        name in ('.config', 'zephyr.map', 'build_info.yml')
+        name in ('.config', 'zephyr.map', 'zephyr.dts', 'build_info.yml')
         or name.endswith(('.signed.bin', '.signed.hex'))
         or (name.endswith('.hex') and ('merged' in name or name in (
             'production.hex', 'combined_signed_update_images.hex')))
@@ -44,6 +46,18 @@ for source in sorted(build.rglob('*')):
         target = out / source.relative_to(build)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, target)
+        if name == '.config':
+            prefixes = ('CONFIG_SOFTDEVICE', 'CONFIG_NRF_SDH_', 'CONFIG_BM_SCHEDULER',
+                        'CONFIG_NRFX_RESERVED_RESOURCES_HEADER', 'CONFIG_ZERO_LATENCY',
+                        'CONFIG_BM_TIMER', 'CONFIG_LOG_BACKEND_BM_UARTE', 'CONFIG_SHELL',
+                        'CONFIG_RBOS_')
+            resources[source.relative_to(build).as_posix()] = {
+                key: value for line in source.read_text().splitlines()
+                if '=' in line
+                for key, value in [line.split('=', 1)] if key.startswith(prefixes)
+            }
+
+(out / 'resource-configurations.json').write_text(json.dumps(resources, indent=2) + '\n')
 
 with (out / 'cmake-commands.txt').open('w') as target:
     target.write('CMake regeneration commands recorded by Ninja; see build_info.yml for the west invocation.\n')

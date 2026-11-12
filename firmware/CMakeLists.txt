@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.20.0)
 list(PREPEND EXTRA_CONF_FILE "${CMAKE_CURRENT_SOURCE_DIR}/common.conf")
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(rbos)
+zephyr_include_directories(include)
 
 if(NOT DEFINED SYSBUILD)
   message(FATAL_ERROR "This must be built with sysbuild.")
@@ -15,4 +16,4 @@ if(NOT CONFIG_MCUBOOT_BOOTLOADER_MODE_FIRMWARE_UPDATER)
 endif()
 
 include(cmake/mrubyc.cmake)
-target_sources(app PRIVATE src/main.c src/runtime.c src/ble.c src/hal/hal.c)
+target_sources(app PRIVATE src/main.c src/runtime.c src/ble.c src/resources.c src/hal/hal.c)

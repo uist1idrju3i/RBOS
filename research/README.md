@@ -39,6 +39,8 @@ SDK の build は [BM の再現手順と P1 map 比較](implementation/bm-build.
 
 公式サイトの [latest](https://nrfconnectdocs.nordicsemi.com/ncs-bm/latest/nrf-bm/index.html) は可変です。2026-11-08 の調査記録では v2.0.99、sdk-nrf-bm main `14b3836` 由来でした。[single-bank DFU の章](https://nrfconnectdocs.nordicsemi.com/ncs-bm/latest/nrf-bm/app_dev/dfu/single_bank_dfu.html)の方式は固定版 v2.0.1 と同じく single-bank です。再現の基準は latest ではなく上表の固定版とします。固定版の明記は `vendor/sdk-nrf-bm/doc/nrf-bm/app_dev/dfu/single_bank_dfu.rst:6-24` を参照してください。
 
+P2 の [資源予約と配送 context](implementation/resource-reservations.md)には、S115 の DPPI/PPIB 保護、GRTC/IRQ 検査、SD RAM と BM scheduler の診断・未確認項目をまとめています。
+
 ## 決定事項
 
 | 日付 | 決定 | 文書 |

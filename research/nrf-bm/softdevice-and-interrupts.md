@@ -13,13 +13,13 @@ SDK v2.0.1 に含まれる SoftDevice は 10.0.1 です。S115 は peripheral �
 
 ## 予約資源と priority
 
-BM の割り込み番号は NVIC priority 0〜7 に直接対応し、SoftDevice 使用時は 0 と 1 を予約、アプリは 2〜7 を使います。Zephyr の zero-latency 構成の priority offset と混同しません。`BM_IRQ_DIRECT_CONNECT` と `BM_IRQ_SET_PRIORITY` は有効範囲を build-time assert します。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/drivers/allocation_interrupts.rst:20-39`。
+BM の割り込み優先度は NVIC priority 0〜7 に直接対応し、SoftDevice 使用時は 0 と 1 を予約、アプリは 2〜7 を使います。IRQ 番号や Zephyr の zero-latency 構成の priority offset と混同しません。`BM_IRQ_DIRECT_CONNECT` と `BM_IRQ_SET_PRIORITY` は有効範囲を build-time assert します。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/drivers/allocation_interrupts.rst:20-39`。
 
 system timer は GRTC channel0 と GRTC_2_IRQn を使用し、bm_timer と logging timestamp の両方に関係します。GRTC と SYSCOUNTER は SoftDevice の前提でもあります。出典: 同 `vendor/sdk-nrf-bm/doc/nrf-bm/drivers/allocation_interrupts.rst:8-18`。mruby/c の tick 用に同じ channel を無断で再設定しません。
 
-SoftDevice が所有する peripheral の ISR は handler が転送します。これらは zero-latency IRQ とされ、`irq_lock` で mask できません。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/libraries/nrf_sdh.rst:23-28`。全割り込みを一律に止める HAL は設計しません。
+SoftDevice が所有する peripheral の ISR は handler が転送します。RADIO/TIMER10/GRTC_3 は zero-latency IRQ で、`irq_lock` で mask できません。AAR/CCM、CLOCK、ECB、SWI00 の転送は zero-latency ではありません。出典: `vendor/sdk-nrf-bm/subsys/softdevice_handler/irq_connect.c:47-74`。全割り込みを一律に止める HAL は設計しません。
 
-資源の完全な予約表について、SDK 文書は SoftDevice Controller と MPSL の Integration Notes を参照させています。BM の短い一覧だけから「それ以外は全て自由」と結論しません。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/drivers/allocation_interrupts.rst:13-18`。個別の peripheral、DPPI、timer、IRQ 利用前に対象版の外部仕様と SD ヘッダを照合する作業は未完了です。
+資源の完全な予約表について、SDK 文書は SoftDevice Controller と MPSL の Integration Notes を参照させています。BM の短い一覧だけから「それ以外は全て自由」と結論しません。出典: `vendor/sdk-nrf-bm/doc/nrf-bm/drivers/allocation_interrupts.rst:13-18`。P2 で固定版の予約を[資源予約表](../implementation/resource-reservations.md)にまとめました。各 backend の具体的な owner と実機競合の確認は未完了です。
 
 ## observer とイベント処理
 

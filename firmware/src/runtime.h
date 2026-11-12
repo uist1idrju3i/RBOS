@@ -12,4 +12,5 @@ void rbos_maintenance(bool service);
 void rbos_system_define(void);
 void rbos_system_set_task(mrbc_tcb *task);
 int rbos_ble_init(void);
+void rbos_resources_log(void);
 #endif
