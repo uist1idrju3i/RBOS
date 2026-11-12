@@ -6,6 +6,7 @@
 #include "rbos/backend.h"
 
 /* A false result leaves an exception; the callback must return immediately. */
+/* argc counts positional arguments; validate keywords separately. */
 bool rbos_require_argc(mrbc_vm *vm, int argc, int minimum, int maximum);
 bool rbos_require_type(mrbc_vm *vm, const mrbc_value *value, mrbc_vtype type);
 bool rbos_require_integer(mrbc_vm *vm, const mrbc_value *value,

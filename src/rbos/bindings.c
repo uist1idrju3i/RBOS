@@ -6,6 +6,7 @@ static const struct rbos_backend *device;
 static void temperature_read(mrbc_vm *vm, mrbc_value v[], int argc)
 {
   if (!rbos_require_argc(vm, argc, 0, 0) ||
+      !MRBC_KW_END() ||
       !rbos_require_type(vm, &v[0], MRBC_TT_CLASS)) return;
 #if MRBC_USE_FLOAT
   if (!device || !device->temperature_read) {

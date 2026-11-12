@@ -13,6 +13,10 @@ calls = NativeFixture.temperature_calls
   expect_temperature_error(ArgumentError, "Expected no arguments") { Temperature.read(argument) }
 end
 expect_temperature_error(ArgumentError, "Expected no arguments") { Temperature.read(0, 1) }
+expect_temperature_error(ArgumentError, "unknown keyword") { Temperature.read(unexpected: nil) }
+expect_temperature_error(ArgumentError, "unknown keyword") { Temperature.read(first: 1, second: 2) }
+expect_temperature_error(ArgumentError, "unknown keyword") { Temperature.read(**{ unexpected: {} }) }
+expect_temperature_error(ArgumentError, "Expected no arguments") { Temperature.read(0, unexpected: 1) }
 expect_temperature_error(TypeError, "Temperature cannot be instantiated") { Temperature.new }
 expect_temperature_error(TypeError, "Temperature cannot be instantiated") { Temperature.new(nil) }
 raise "invalid temperature input reached backend" unless NativeFixture.temperature_calls == calls
@@ -42,4 +46,6 @@ memory = NativeFixture.memory_used
 end
 raise "temperature reference leak" unless NativeFixture.memory_used == memory
 raise "temperature repeated call count" unless NativeFixture.temperature_calls == calls + 1011
+raise "empty keyword splat" unless Temperature.read(**{}) == -0.25
+raise "empty keyword call count" unless NativeFixture.temperature_calls == calls + 1012
 puts "PASS: Temperature.read arguments, signed scale, failures, recovery and lifetime"
