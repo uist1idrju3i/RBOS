@@ -29,7 +29,7 @@ S115 の予約は `vendor/sdk-nrf-bm/components/softdevice/nrf54l/s115/s115_API/
 
 IRQ 接続の根拠は `vendor/sdk-nrf-bm/subsys/softdevice_handler/irq_connect.c:47-74`、SD event は `vendor/sdk-nrf-bm/components/softdevice/nrf54l/s115/s115_API/include/nrf_soc.h:81-85`、BM の予約は `vendor/sdk-nrf-bm/doc/nrf-bm/drivers/allocation_interrupts.rst:9-18,26-38` です。pin は `vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/include/board-config.h:36-107` に従います。NFC timer は `vendor/sdk-nrf-bm/doc/nrf-bm/libraries/nfc/integration_notes.rst:33-57` が根拠です。board-config の override は各 backend 追加時にも再照合します。
 
-**温度の計画不整合**: 既存計画の TEMP 直接操作は MPSL 予約と衝突します。S115 の `sd_temp_get` は0.25°C単位、約50 µsの同期 API です。採用は利用者の判断待ちで、今回の変更では温度の driver・契約・計画を置換しません。根拠: `vendor/sdk-nrf-bm/components/softdevice/nrf54l/s115/s115_API/include/nrf_soc.h:582-591`。
+**温度の経路変更（利用者承認）**: 既存計画の TEMP 直接操作は MPSL 予約と衝突するため、2026-11-12 に利用者が S115 公式 API の利用を承認しました。`sd_temp_get` は0.25°C単位、約50 µsの同期 API です。計画をこの経路へ変更し、TEMP register・nrfx_temp・IRQ215の直接利用はしません。公開 API の契約と driver の実装、同期処理の実機評価は未完了です。根拠: `vendor/sdk-nrf-bm/components/softdevice/nrf54l/s115/s115_API/include/nrf_soc.h:582-591`。
 
 ## DPPI と PPI bridge
 

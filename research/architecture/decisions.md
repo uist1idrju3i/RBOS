@@ -23,6 +23,10 @@
 
 これは MPIG の Integer / platform 固有表現を土台とする RBOS の決定です。Symbol が MPIG の必須型であるという意味ではありません。DT node label・alias・label property のどれを resolver へ渡すか、active-low の扱い、未知の名前・非対応 pin・競合の例外と発生時点は未実装です。unit の識別子へ同じ三形式を自動適用する決定もしていません。[共通 I/O 調査](../io-api/overview.md)と [nRF 対応](../io-api/nrf54l15-mapping.md)を参照してください。
 
+## ダイ温度の取得経路
+
+2026-11-12 の利用者承認により、温度 backend は S115 公式の `sd_temp_get` を利用します。MPSL が TEMP を予約するため、nrfx_temp/register の直接操作と app 独自の IRQ 接続は採用しません。0.25°C単位の値を約50 µsの同期 API で得る仕様で、公開 API の名前・型・失敗・待機契約と実機評価は別途確定します。[資源予約と出典](../implementation/resource-reservations.md)を参照してください。
+
 ## SemVer と公開権限
 
 利用者が承認した版管理の方針です。根拠となる規格、SDK の制約、parser 実行、ruleset の取得結果は [版管理調査](../release/versioning.md)に分けています。
