@@ -4,6 +4,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/logging/log_ctrl.h>
 #include "runtime.h"
+#include "rbos/native.h"
 
 LOG_MODULE_REGISTER(rbos_runtime, CONFIG_RBOS_LOG_LEVEL);
 K_THREAD_STACK_DECLARE(z_main_stack, CONFIG_MAIN_STACK_SIZE);
@@ -15,6 +16,23 @@ static unsigned int idle_count;
 static unsigned int service_count;
 static unsigned int drain_max_us;
 static int64_t last_stats;
+static struct rbos_event_queue event_queue;
+
+bool rbos_event_post(const struct rbos_event *event)
+{
+	unsigned int key = irq_lock();
+	bool accepted = rbos_event_queue_push(&event_queue, event);
+	irq_unlock(key);
+	return accepted;
+}
+
+bool rbos_event_take(struct rbos_event *event)
+{
+	unsigned int key = irq_lock();
+	bool available = rbos_event_queue_pop(&event_queue, event);
+	irq_unlock(key);
+	return available;
+}
 
 void rbos_stack_paint(void)
 {
@@ -59,9 +77,15 @@ void rbos_maintenance(bool service)
 		main_painted_end ? main_painted_end : main_base);
 	unsigned int isr_used = stack_used(isr_base, CONFIG_ISR_STACK_SIZE,
 		isr_base + CONFIG_ISR_STACK_SIZE);
-	LOG_INF("stats tick_us=%u..%u catchups=%u ticks=%u pool=%u/%u main=%u isr=%u idle=%u service=%u drain_us=%u",
+	unsigned int key = irq_lock();
+	uint32_t pending = event_queue.size;
+	uint32_t overflow = event_queue.overflow;
+	uint32_t coalesced = event_queue.coalesced;
+	irq_unlock(key);
+	LOG_INF("stats tick_us=%u..%u catchups=%u ticks=%u pool=%u/%u main=%u isr=%u idle=%u service=%u drain_us=%u event_pending=%u event_overflow=%u event_coalesced=%u",
 		ticks.min_us, ticks.max_us, ticks.catchups, ticks.count, pool_max, pool.total,
-		main_used, isr_used, idle_count, service_count, drain_max_us);
+		main_used, isr_used, idle_count, service_count, drain_max_us,
+		pending, overflow, coalesced);
 	drain_max_us = 0;
 }
 
@@ -71,10 +95,7 @@ static void system_service(mrbc_vm *vm, mrbc_value v[], int argc)
 		mrbc_raise(vm, MRBC_CLASS(RuntimeError), "System task only");
 		return;
 	}
-	if (argc != 0) {
-		mrbc_raise(vm, MRBC_CLASS(ArgumentError), "Expected no arguments");
-		return;
-	}
+	if (!rbos_require_argc(vm, argc, 0, 0)) return;
 	rbos_maintenance(true);
 	SET_INT_RETURN(CONFIG_RBOS_SERVICE_INTERVAL_MS);
 }

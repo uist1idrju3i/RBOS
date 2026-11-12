@@ -13,6 +13,10 @@ for tool in git ruby make cc emcc node python3 timeout; do
   command -v "$tool" >/dev/null || { echo "Missing tool: $tool" >&2; exit 2; }
 done
 mkdir -p "$build"
+cc -std=c11 -Wall -Wextra -Werror -I"$root/include" \
+  "$root/src/rbos/event_queue.c" "$root/tools/mrubyc-wasm/test_event_queue.c" \
+  -o "$build/test-event-queue"
+timeout 10s "$build/test-event-queue"
 sha=$(git -C "$root/vendor/mruby" rev-parse HEAD)
 host="$build/mruby-$sha"
 if [[ ! -d "$host" ]]; then
@@ -41,6 +45,7 @@ build_runner() {
   -sSTACK_SIZE=1048576 -sASYNCIFY_STACK_SIZE=65536 \
   "$root/tools/mrubyc-wasm/main.c" "${sources[@]}" \
   "${bindings[@]}" "$root/tools/mrubyc-wasm/backend.c" \
+  "$root/tools/mrubyc-wasm/native_fixture.c" \
   "$build/mrubyc/hal/emscripten/hal.c" -o "$output"
 }
 build_runner 1048576 "$build/runner.js"
@@ -122,7 +127,7 @@ mutex_case 'mutex ensure release' "$build/mutex_ensure.mrb" \
 mutex_case 'mutex priority inversion' "$build/mutex_inversion.mrb" \
   "$build/mutex_fault_owner.mrb" "$build/mutex_fault_middle.mrb" "$build/mutex_fault_waiter.mrb"
 
-for fixture in idiom_collections idiom_objects idiom_values idiom_resources; do
+for fixture in native_helpers idiom_collections idiom_objects idiom_values idiom_resources; do
   timeout 30s node "$build/runner.js" "$build/$fixture.mrb"
 done
 

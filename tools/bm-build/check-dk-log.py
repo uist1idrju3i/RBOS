@@ -21,10 +21,12 @@ BOOT_START = re.compile(r"\*\*\* Booting (MCUboot|My Application)\b")
 STATS = re.compile(
     r"\bstats tick_us=(\d+)\.\.(\d+) catchups=(\d+) ticks=(\d+) "
     r"pool=(\d+)/(\d+) main=(\d+) isr=(\d+) idle=(\d+) service=(\d+)"
-    r"(?: drain_us=(\d+))?\s*$"
+    r"(?: drain_us=(\d+))?"
+    r"(?: event_pending=(\d+) event_overflow=(\d+) event_coalesced=(\d+))?\s*$"
 )
 FIELDS = ("tick_min", "tick_max", "catchups", "ticks", "pool", "pool_total",
-          "main", "isr", "idle", "service", "drain_us")
+          "main", "isr", "idle", "service", "drain_us",
+          "event_pending", "event_overflow", "event_coalesced")
 FATAL = re.compile(
     r"RBOS fatal|fatal error|assertion.*fail|assert.*fail|\bassert(?:ion)?(?:\s|:|\()|abort\(\)|Halting system|Kernel panic",
     re.IGNORECASE,
@@ -169,6 +171,12 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
             errors.append("Nonzero catchups at line %d" % row["line"])
         if row["tick_min"] > row["tick_max"] or not 0 < row["pool_total"] >= row["pool"]:
             errors.append("Invalid stats range at line %d" % row["line"])
+        if row["event_pending"] is not None:
+            if row["event_pending"] > 16 or any(row[key] > 0xffffffff for key in
+                    ("event_overflow", "event_coalesced")):
+                errors.append("Invalid native event stats at line %d" % row["line"])
+            if row["event_overflow"]:
+                errors.append("Native event overflow at line %d" % row["line"])
     jitter = {key: {"windows": 0, "duration_s": 0, "tick_us_min": None, "tick_us_max": None}
               for key in ("disconnected", "connected")}
     rates = {key: [] for key in ("idle", "service")}
@@ -191,6 +199,9 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
                 errors.append("%s counter decreased at line %d" % (key, row["line"]))
             else:
                 rates[key].append(delta / dt)
+        for key in ("event_overflow", "event_coalesced"):
+            if previous[key] is not None and row[key] is not None and row[key] < previous[key]:
+                errors.append("%s counter decreased at line %d" % (key, row["line"]))
         changes = [event for event in transitions if previous["time"] <= event["time"] <= row["time"]]
         if changes:
             excluded += 1
@@ -276,6 +287,8 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
             warnings.append("Spinner rates unavailable: need two progress samples on distinct stats anchors")
     peak = {key: max((row[key] for row in stats if row[key] is not None), default=None)
             for key in ("pool", "main", "isr", "drain_us")}
+    native_events = {key: max((row[key] for row in stats if row[key] is not None), default=None)
+                     for key in ("event_pending", "event_overflow", "event_coalesced")}
     totals = sorted({row["pool_total"] for row in stats})
     if len(totals) > 1:
         errors.append("Pool capacity changed within the log")
@@ -293,6 +306,7 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
         "stress_connected_duration_s": loaded_connected,
         "required_connected_duration_s": require_connected,
         "spinner_a_b_ratio": spinner_ratio, "spinner_imbalance_ratio": spinner_imbalance,
+        "native_events": native_events,
         "peaks": peak, "rates_per_s": {key: {"min": min(values), "max": max(values)} if values else None
                                             for key, values in rates.items()},
         "spinners": spinner_report, "events": events, "errors": errors, "warnings": warnings,
@@ -323,6 +337,9 @@ def human(report):
         else "| Pool sampled peak (B) | unmeasured |")
     for key in ("main", "isr", "drain_us"):
         output.append("| %s max | %s |" % (key, peak[key] if peak[key] is not None else "unmeasured"))
+    for key, value in report["native_events"].items():
+        if value is not None:
+            output.append("| %s max | %s |" % (key, value))
     for key, value in report["rates_per_s"].items():
         output.append("| %s / s | %s |" % (key, "%s..%s" % (value["min"], value["max"]) if value else "unavailable"))
     for key, value in report["spinners"].items():
