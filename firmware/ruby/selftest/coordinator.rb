@@ -52,4 +52,12 @@ sleep_ms 30
 check(VM.tick > started, "idle wakeup")
 puts "PASS: P1 selftest"
 puts "temperature c=#{Temperature.read}"
+[:dvdd, :avdd, :vdd].each do |rail|
+  begin
+    adc = ADC.internal(rail)
+    puts "adc rail=#{rail} raw=#{adc.read_raw} volts=#{adc.read_voltage}"
+  rescue RuntimeError => error
+    puts "adc rail=#{rail} error=#{error.message}"
+  end
+end
 $p1_done = true

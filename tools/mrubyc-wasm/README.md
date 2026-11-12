@@ -5,6 +5,8 @@ firmware の build や Nordic の IRQ・BLE・タイミング試験を代替す�
 
 `temperature.rb` は共有 `Temperature.read` を fake backend で実行し、正負・0.25°C刻み、位置・keyword 引数と constructor の拒否、driver failure/busy/timeout、backend 不在からの復帰、反復読出しと参照寿命を検査します。[温度の契約と Float 無効 build の制限](../../research/implementation/temperature-api.md)も参照してください。SDK の実時間・校正精度は検査しません。
 
+`adc.rb` と複数 task の fixture は、三電源の共有 binding、busy、協調待機、取消し、task 終了と VM ID の再利用を実行します。[ADC の契約と検査の境界](../../research/implementation/adc-api.md)を参照してください。runner の `hal.h` は vendor HAL を取り込み、idle に foreground service を追加する薄い adapter です。
+
 ## ローカル実行
 
 Ruby、C compiler、Make、Python 3、Git、Node.js、GNU timeout が必要です。
@@ -33,7 +35,7 @@ host build のキャッシュは mruby の submodule SHA ごとに分けます�
 - host C の event queue 検査で FIFO・wrap・newest drop・Button の coalesce・counter 飽和を確かめます。Wasm の `native_helpers.rb` は、試験専用 `NativeFixture` から共有 helper を呼び、引数・fake backend の失敗・参照寿命を検査します。`NativeFixture` は firmware へ結合しない試験用 API です。
 - `tests/mruby/` では複数 task、sleep_ms、priority、pass、Mutex、join/value、rescue、空プログラムを実行します。
 - 未捕捉例外の fixture は exit 1 と例外メッセージを照合します。引数なし・存在しない file・空 file・不一致 RITE version・magic・宣言サイズは exit 2 と診断を照合します。timeout は失敗です。
-- 将来の `src/**/*.rb` はすべて個別に compile します。まだ存在しなければ 0 件として成功します。これらは無限 loop や native API を含み得るため、自動実行しません。
+- `src/**/*.rb` はすべて個別に compile します。共有 library `src/rbos/adc.rb` は bytecode として firmware / Wasm に結合し、登録時に一度だけ定義を読み込みます。それ以外の製品 Ruby は無限 loop や native API を含み得るため、自動実行しません。
 
 runner は `.mrb` ごとに task を作り、Node.js の NODERAWFS で読みます。ASYNCIFY を有効にし、emscripten HAL の MRBC_NO_TIMER と MRBC_SCHEDULER_EXIT に従います。検査用 heap は 1 MiB、MAX_VM_COUNT は 32、実行 timeout は 30 秒です。BM のメモリ設定ではありません。
 
@@ -43,7 +45,7 @@ bytecode の buffer は VM 終了まで保持します。runner は信頼する�
 
 ## RBOS の Ruby API を追加する
 
-runner は task 作成前に `rbos_define_classes(rbos_wasm_backend())` を呼びます。共有 binding は `src/rbos/`、backend 契約は `include/rbos/backend.h`、Wasm fake は `tools/mrubyc-wasm/backend.c` に置きます。現在は空の登録関数と context だけで、device operation は未実装です。
+runner は task 作成前に `rbos_define_classes(rbos_wasm_backend())` を呼びます。共有 binding は `src/rbos/`、backend 契約は `include/rbos/backend.h`、Wasm fake は `tools/mrubyc-wasm/backend.c` に置き、温度と三電源 ADC を実装しています。NativeFixture の task 生成・破棄等は検査専用で、firmware へは結合しません。
 class/method の登録、引数・所有権・権限の検査、fake と Ruby test の追加手順は [ruby-api-binding skill](../../.agents/skills/ruby-api-binding/SKILL.md)にまとめています。同じ C binding を将来の nRF build と共有し、製品開発者が Ruby を主に書ける構成を目指します。
 
 ## temporary の browser bridge との比較

@@ -52,6 +52,12 @@ file(GLOB_RECURSE vm_inputs CONFIGURE_DEPENDS "${RBOS_ROOT}/vendor/mrubyc/src/*"
   "${RBOS_ROOT}/vendor/mruby/build_config/*" "${RBOS_ROOT}/vendor/mruby/src/*")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${vm_inputs})
 target_sources(app PRIVATE ${vm_sources} ${shared_sources})
+set(adc_bytecode "${CMAKE_CURRENT_BINARY_DIR}/rbos_adc_bytecode.c")
+add_custom_command(OUTPUT "${adc_bytecode}"
+  COMMAND "${RBOS_MRBC}" -Brbos_adc_bytecode -o "${adc_bytecode}" "${RBOS_ROOT}/src/rbos/adc.rb"
+  COMMAND "${RBOS_PYTHON}" "${RBOS_ROOT}/tools/bm-build/check-bytecode.py" "${adc_bytecode}"
+  DEPENDS "${RBOS_ROOT}/src/rbos/adc.rb" "${RBOS_MRBC}" VERBATIM)
+target_sources(app PRIVATE "${adc_bytecode}")
 target_include_directories(app BEFORE PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/hal")
 target_include_directories(app PRIVATE "${vm}/src" "${RBOS_ROOT}/include" "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_compile_definitions(app PRIVATE MAX_VM_COUNT=${CONFIG_RBOS_MAX_VM_COUNT})

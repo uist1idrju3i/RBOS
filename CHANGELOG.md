@@ -6,6 +6,7 @@
 
 ### Added
 
+- 0.1.3 向けに三電源の factory `ADC.internal(:dvdd)`・`ADC.internal(:avdd)`・`ADC.internal(:vdd)` を追加しました。`read_voltage` と alias の `read` は Float の V、`read_raw` は signed sample を返します。測定中の後発呼出しは RuntimeError（busy）とし、完了待ちは呼出し task だけを待たせます。nrfx の非同期校正・測定・STOP 確認、固定 DMA buffer と native request の寿命管理、RBS、host/Wasm の異常系検査を追加しました。実機の精度・IRQ/DMA・BLE/tick・stack/pool は未確認で、外部 pin ADC や P2 全体の完了を意味しません。
 - 0.1.1 向けに `Temperature.read` を追加しました。S115 公式の `sd_temp_get` からダイ温度を Float の °C で返します。引数ありは ArgumentError、取得失敗は RuntimeError、インスタンス生成は TypeError です。共有 binding・RBS・Wasm fake と自己検査後の温度診断を追加しました。SDK の約50 µsは同期処理の目安で、精度・実時間・BLE/tick・stack/pool の実機確認は未完了です。固定 mruby/c の Float 無効 build は未対応で、binding の拒否処理のみ host で検査します。P2 全体の完了を意味しません。
 - S115 の DPPI/PPIB 予約を nrfx allocator へ反映し、SCHED・NVIC/GRTC の前提を build 時に検査します。SD RAM と BM scheduler の起動診断、生成 DTS と image 別の設定抜粋を CI 成果物へ追加しました。実機での資源競合と容量の照合は未完了で、周辺機器 API の追加や P2 完了を意味しません。
 - P2 の共通基盤として、native callback の引数・型・Integer 範囲・backend 失敗の helper と、借用値・生成値の返却処理を追加しました。16件の固定長 event ring は newest drop と pin ごとの Button coalesce を行い、stats に pending・overflow・coalesced を出します。実機の Button producer と Ruby への通知は未接続で、GPIO・温度 API の追加や P2 完了を意味しません。

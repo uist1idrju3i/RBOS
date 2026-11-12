@@ -122,6 +122,7 @@ void mrbc_define_method(mrbc_vm *, mrbc_class *, const char *, callback);
 #include "rbos/native.h"
 #include "rbos/bindings.h"
 static callback read_method, new_method;
+void rbos_adc_define(const struct rbos_backend *backend) {}
 static int calls;
 static mrbc_class cls;
 void mrbc_raise(mrbc_vm *vm, const char *error, const char *message) {
