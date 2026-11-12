@@ -58,6 +58,12 @@ add_custom_command(OUTPUT "${adc_bytecode}"
   COMMAND "${RBOS_PYTHON}" "${RBOS_ROOT}/tools/bm-build/check-bytecode.py" "${adc_bytecode}"
   DEPENDS "${RBOS_ROOT}/src/rbos/adc.rb" "${RBOS_MRBC}" VERBATIM)
 target_sources(app PRIVATE "${adc_bytecode}")
+set(button_bytecode "${CMAKE_CURRENT_BINARY_DIR}/rbos_button_bytecode.c")
+add_custom_command(OUTPUT "${button_bytecode}"
+  COMMAND "${RBOS_MRBC}" -Brbos_button_bytecode -o "${button_bytecode}" "${RBOS_ROOT}/src/rbos/button.rb"
+  COMMAND "${RBOS_PYTHON}" "${RBOS_ROOT}/tools/bm-build/check-bytecode.py" "${button_bytecode}"
+  DEPENDS "${RBOS_ROOT}/src/rbos/button.rb" "${RBOS_MRBC}" VERBATIM)
+target_sources(app PRIVATE "${button_bytecode}")
 target_include_directories(app BEFORE PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/hal")
 target_include_directories(app PRIVATE "${vm}/src" "${RBOS_ROOT}/include" "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_compile_definitions(app PRIVATE MAX_VM_COUNT=${CONFIG_RBOS_MAX_VM_COUNT})
@@ -75,6 +81,9 @@ else()
   endif()
 endif()
 set(table "#include <stdint.h>\n#include \"embedded.h\"\n")
+if(CONFIG_RBOS_PERIPHERAL_EXERCISE)
+  list(APPEND task_sources peripherals.rb)
+endif()
 set(entries "")
 set(index 0)
 foreach(source ${task_sources})

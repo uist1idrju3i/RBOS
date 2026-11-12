@@ -3,6 +3,15 @@ config NRFX_RESERVED_RESOURCES_HEADER
 
 menu "RBOS application"
 
+config RBOS_GPIO
+	bool "RBOS board GPIO and Button API"
+	default y
+
+config RBOS_PERIPHERAL_EXERCISE
+	bool "Run the P2 LED/Button diagnostic task after selftests"
+	default y
+	depends on RBOS_GPIO && !RBOS_TEST_PROFILE_OOM
+
 choice RBOS_TEST_PROFILE
 	prompt "Ruby test profile"
 	default RBOS_TEST_PROFILE_SELFTEST

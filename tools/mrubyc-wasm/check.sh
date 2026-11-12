@@ -25,7 +25,10 @@ fi
 (cd "$host" && MRUBY_CONFIG=build_config/mrbc.rb ruby minirake)
 mrbc="$host/build/host/bin/mrbc"
 "$mrbc" -Brbos_adc_bytecode -o "$build/adc_bytecode.c" "$root/src/rbos/adc.rb"
+"$mrbc" -Brbos_button_bytecode -o "$build/button_bytecode.c" "$root/src/rbos/button.rb"
 "$mrbc" -Brbos_adc_lifetime_worker -o "$build/adc_lifetime_worker.c" "$root/tests/mruby/adc_lifetime_worker.rb"
+"$mrbc" -Brbos_button_lifetime_worker -o "$build/button_lifetime_worker.c" "$root/tests/mruby/button_lifetime_worker.rb"
+"$mrbc" -Brbos_peripherals_fixture -o "$build/peripherals_fixture.c" "$root/firmware/ruby/peripherals.rb"
 
 mkdir -p "$build/mrubyc"
 for dir in src support mrblib hal; do
@@ -48,7 +51,10 @@ build_runner() {
   -sSTACK_SIZE=1048576 -sASYNCIFY_STACK_SIZE=65536 \
   "$root/tools/mrubyc-wasm/main.c" "${sources[@]}" \
   "$build/adc_bytecode.c" \
+  "$build/button_bytecode.c" \
   "$build/adc_lifetime_worker.c" \
+  "$build/button_lifetime_worker.c" \
+  "$build/peripherals_fixture.c" \
   "${bindings[@]}" "$root/tools/mrubyc-wasm/backend.c" \
   "$root/tools/mrubyc-wasm/native_fixture.c" \
   "$build/mrubyc/hal/emscripten/hal.c" -o "$output"
@@ -147,6 +153,10 @@ adc_case() {
 adc_case 'ADC input voltage errors cancellation and ownership' "$build/adc.mrb"
 adc_case 'ADC cooperative waiting and concurrent busy' "$build/adc_concurrent.mrb" "$build/adc_worker.mrb"
 adc_case 'ADC termination VM-ID reuse and foreground recovery' "$build/adc_lifetime.mrb"
+adc_case 'GPIO pin modes physical levels errors and ownership' "$build/gpio.mrb"
+adc_case 'Button coalescing overflow generation and cleanup' "$build/button.mrb"
+adc_case 'Button cooperative wait termination and VM-ID reuse' "$build/button_lifetime.mrb"
+adc_case 'P2 diagnostic task repeated samples and cleanup' "$build/peripherals.mrb"
 
 expect_failure() {
   local expected=$1 marker=$2 status=0

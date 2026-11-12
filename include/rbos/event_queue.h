@@ -16,7 +16,10 @@ struct rbos_event {
   uint32_t source;
   uint32_t value;
   uint32_t count;
+  uint32_t generation;
 };
+
+struct rbos_event_stats { uint32_t pending, overflow, coalesced; };
 
 struct rbos_event_queue {
   struct rbos_event events[RBOS_EVENT_QUEUE_CAPACITY];

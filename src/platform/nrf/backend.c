@@ -4,6 +4,10 @@
 #include <nrf_sdm.h>
 #include <nrf_soc.h>
 #include "backend.h"
+#if defined(CONFIG_RBOS_GPIO)
+#include "gpio.h"
+#include "button.h"
+#endif
 #if defined(CONFIG_NRFX_SAADC)
 #include "adc.h"
 #endif
@@ -28,6 +32,13 @@ static enum rbos_status temperature_read(void *context, int32_t *quarter_celsius
 const struct rbos_backend *rbos_nrf_backend(void)
 {
   static const struct rbos_backend backend = {
+#if defined(CONFIG_RBOS_GPIO)
+    .pin_lookup = rbos_nrf_pin_lookup, .pin_validate = rbos_nrf_pin_validate,
+    .gpio_configure = rbos_nrf_gpio_configure, .gpio_read = rbos_nrf_gpio_read,
+    .gpio_write = rbos_nrf_gpio_write,
+    .button_watch = rbos_nrf_button_watch, .button_unwatch = rbos_nrf_button_unwatch,
+    .event_take = rbos_nrf_event_take, .event_stats = rbos_nrf_event_stats,
+#endif
     .temperature_read = temperature_read,
 #if defined(CONFIG_NRFX_SAADC)
     .uptime_ms = rbos_nrf_uptime_ms, .adc_start = rbos_nrf_adc_start,

@@ -1,5 +1,7 @@
 #include "rbos/bindings.h"
 #include "rbos/native.h"
+#include "rbos/gpio.h"
+#include "rbos/button.h"
 
 static const struct rbos_backend *device;
 
@@ -33,4 +35,6 @@ void rbos_define_classes(const struct rbos_backend *backend)
   mrbc_define_method(NULL, cls, "read", temperature_read);
   mrbc_define_method(NULL, cls, "new", temperature_new);
   rbos_adc_define(backend);
+  rbos_gpio_define(backend);
+  rbos_button_define(backend);
 }

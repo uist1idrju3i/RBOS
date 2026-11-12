@@ -50,17 +50,22 @@
 
 ## P2: native API と資源
 
+GPIO/Button・Temperature・三電源 ADC の binding/backend、固定 ring と foreground 配送、RBS、Wasm fake、起動 probe を実装しました。以下のうち実装と実機確認を合わせた項目は、実機の証拠が揃うまで空欄を保ちます。[実機受け入れ手順](p2-acceptance.md)に残る操作・事前基準・log 検査をまとめました。
+
+- [x] GPIO の Integer/String/DT Symbol 解決、物理値・mode・例外・予約 pin・所有、nRF/Wasm backend と RBS を実装する。
+- [x] Button の GPIOTE20/30 producer、caller-task の poll/wait/each_event、generation と VM-independent lease の回収を実装する。Wasm で task 終了・VM ID 再利用・coalesce/overflow・close retry を検査する。
+
 - [ ] P1 から利用者承認で移管: peripheral を使う前に peripheral/DPPI/IRQ の完全な予約表を対象 SoftDevice の仕様と照合する。
-  - [資源予約表](resource-reservations.md)で固定 S115/MPSL/Controller の予約を照合し、nrfx の DPPI/PPIB 予約と GRTC/IRQ の build-time guard を追加しました。各 backend の具体的な owner・channel・pin と実機の競合検査は未完了です。
+  - [資源予約表](resource-reservations.md)で固定 S115/MPSL/Controller の予約を照合し、nrfx の DPPI/PPIB 予約と GRTC/IRQ の build-time guard を追加しました。GPIO/Button/ADC の具体的な owner・channel・pin も反映しました。実機の競合検査は未完了です。
 - [ ] P1 から利用者承認で移管: SDH 配送 model、SD RAM usage、BM queue 容量を SDK 仕様・`.config`・map・実測で照合する。P1 の SCHED/512 B設定と drain 観測値を照合完了や上限保証の代わりにしない。
   - SCHED を build 時に検査し、SD RAM と scheduler の起動診断、生成 DTS と設定抜粋の保存を追加しました。512 Bは件数ではありません。実機での必要 RAM・heap 容量・producer ごとの枯渇時動作の照合は未完了です。
 
-- [ ] console を UARTE/RTT/BLE のどれにするか決め、pin の共有を確認する。
+- [x] console は利用者承認で UARTE20 を維持する。TX/CTS の GPIO 保護、shell/NFC 無効の build guard を追加する。実配線・電気レベルは別途実機確認する。
 - [ ] native API を追加するたびに、P1 と同じ map 分類と stack/pool 観測方法で増分を記録する。瞬間 peak の捕捉や paint margin の校正は別に検証し、標本値を厳密な上限と呼ばない。
-- [ ] 共有 C API の argc/type/range 検査を共通 helper に集約し、return/raise・参照カウントの規約を実装する。Wasm fake で正常・引数なし・nil・誤型・境界・driver failure を試す。
-  - 共通 helper と試験専用 fake を追加しました。検査の対象と限界は [native 共通基盤](native-foundation.md)を参照してください。温度 API でも helper を使用し、残る peripheral API と実機の受け入れは未完了です。
-- [ ] ISR event queue を固定長 ring とし、overflow 時は newest を drop して stats に overflow counter を出す。Button edge は pin ごとに coalesce し、count を保持する。承認済みの設計であり、実装・試験は未完了です。
-  - ring core、IRQ 保護付きの入口、stats と host C 検査を追加しました。Button の実機 producer と Ruby への通知、実際の IRQ 競合は未確認のため、この項目は空欄のままです。
+- [x] 共有 C API の argc/type/range・keyword 検査を共通 helper に集約し、return/raise・参照カウントの規約を実装する。Wasm fake で正常・引数なし・nil・誤型・境界・driver failure を試す。
+  - [native 共通基盤](native-foundation.md)を全 P2 binding で使用します。GPIO/Button の寿命・失敗も host/Wasm で検査します。実機の受け入れは未完了です。
+- [ ] ISR event queue を固定長 ring とし、overflow 時は newest を drop して stats に overflow counter を出す。Button edge は pin/generation ごとに coalesce し、count を保持する。実機の IRQ 競合・飽和を確認する。
+  - ring、IRQ 保護、nRF producer、foreground mailbox と Ruby 通知を実装し、host/Wasm で検査しました。実機の IRQ 競合・計数・電気特性は未確認のため、この項目は空欄のままです。
 - [x] 温度 API の契約を決める（class/method 名、返り値の型と単位、失敗時の例外、同期・非同期の扱い）。MPIG の六 class に温度は含まれないため、RBOS 独自の契約として決める。
   - 利用者承認済みの `Temperature.read`、Float °C、RuntimeError と同期経路を実装しました。[契約と RBS・検査の境界](temperature-api.md)を参照してください。
 - [ ] S115 公式の `sd_temp_get` で温度 backend を実装し、0.25°C 単位の換算と校正・精度条件を確認する。利用者承認により、MPSL が予約する TEMP を nrfx_temp/register から直接操作する旧案は置換する。TEMP IRQ215 は app で接続しない。約50 µsの同期処理が他 Ruby task・BLE/tick に与える影響を実機で確認する。
@@ -69,9 +74,9 @@
 - [x] DVDD・AVDD・VDD の電源 ADC の公開契約を決める。内部入力の選択方法は RBOS 拡張とし、物理 pin・DT label と区別する。MPIG の `read_voltage` / `read`（Float、V）と `read_raw`（換算前の Integer）を維持し、raw 値の範囲・符号、Float 無効時、busy・timeout・driver failure、待機・所有・解放と RBS を定義する。[承認済みの入口と busy 方針、実装契約](adc-api.md)を参照する。
 - [ ] SAADC backend で三電源の内部入力を実装する。DVDD/AVDD は内部 0.9 V 電源、VDD は主電源として区別する。BM の `&adc` 削除を踏まえ、nrfx_saadc、IRQ 213、EasyDMA buffer、将来の外部 pin ADC との排他を予約表と照合する。reference・gain・分解能・校正・入力切替と換算を確認し、VDD の固定分圧比を他 SoC から流用しない。
 - [ ] 電源 ADC の完了を IRQ から bounded event で foreground へ渡し、待機中も他 Ruby task と BM の保守処理が進むことを確認する。IRQ で Ruby を呼ばず、C の spin 待機だけで実装しない。
-- [ ] 三電源 ADC を Wasm fake と DK で検査する。fake は入力選択・換算境界・不正入力・busy・timeout・driver failure、DK は VDD と実測電源値の比較・DVDD/AVDD の妥当性・入力切替・反復測定を対象とする。許容誤差を仕様と校正条件から事前に決め、BLE 接続中の tick・stack/pool、map 増分を保存する。[計画と根拠](porting-plan.md#p2-native-class-と値の規約)参照。実装・実機試験は未完了のため、空欄のままにする。
-- [ ] application/shell UARTE30 の重複、NFC TIMER24、GRTC 予約、各 callback の実行 context を照合する。
-- [ ] bonding を採用する場合、初期 BLE でも BM_ZMS/SD backend と peer partition の予算を確保する。
+- [ ] 三電源 ADC を Wasm fake と DK で検査する。fake は入力選択・換算境界・不正入力・busy・timeout・driver failure、DK は VDD と実測電源値の比較・DVDD/AVDD の妥当性・入力切替・反復測定を対象とする。許容誤差を仕様と校正条件から事前に決め、BLE 接続中の tick・stack/pool、map 増分を保存する。[計画と根拠](porting-plan.md#p2-native-class-と値の規約)参照。binding/backend と host/Wasm は実装・検査済みですが、実機試験が未完了のため空欄のままにします。
+- [x] application/shell UARTE30 は未初期化、NFC TIMER24 は NFC 無効、GRTC は既存予約を維持し、各 callback の実行 context を予約表で照合する。実機での競合は上記に残す。
+- [x] bonding は今回は採用せず、現行の非対応を維持する。将来採用時に BM_ZMS/SD backend と peer partition の予算を確保する。
 
 ## P3: system task と信頼境界
 

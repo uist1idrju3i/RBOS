@@ -45,7 +45,9 @@ bytecode の buffer は VM 終了まで保持します。runner は信頼する�
 
 ## RBOS の Ruby API を追加する
 
-runner は task 作成前に `rbos_define_classes(rbos_wasm_backend())` を呼びます。共有 binding は `src/rbos/`、backend 契約は `include/rbos/backend.h`、Wasm fake は `tools/mrubyc-wasm/backend.c` に置き、温度と三電源 ADC を実装しています。NativeFixture の task 生成・破棄等は検査専用で、firmware へは結合しません。
+runner は task 作成前に `rbos_define_classes(rbos_wasm_backend())` を呼びます。共有 binding は `src/rbos/`、backend 契約は `include/rbos/backend.h`、Wasm fake は `tools/mrubyc-wasm/backend.c` に置き、温度・三電源 ADC・GPIO・Button を実装しています。NativeFixture の task 生成・破棄等は検査専用で、firmware へは結合しません。
+
+`gpio.rb` は同じ物理 pin の三表記、mode と予約・所有、backend failure を検査します。`button.rb` / `button_lifetime.rb` は物理値、coalesce/overflow、stale generation、caller-task の wait/each_event、close retry、orphan 回収と VM ID 再利用を検査します。`peripherals.rb` は実際の firmware Ruby 診断 task を別 VM で実行し、反復 ADC と task 終了時の4 Button 回収を確かめます。GPIOTE の IRQ latency や実配線は fake で検査できません。
 class/method の登録、引数・所有権・権限の検査、fake と Ruby test の追加手順は [ruby-api-binding skill](../../.agents/skills/ruby-api-binding/SKILL.md)にまとめています。同じ C binding を将来の nRF build と共有し、製品開発者が Ruby を主に書ける構成を目指します。
 
 ## temporary の browser bridge との比較

@@ -51,6 +51,7 @@ void hal_abort(const char *);
 static mrbc_class adc_class, req_class;
 static callback start_method;
 static int calls, allocations;
+void rbos_button_service(void) {}
 const uint8_t rbos_adc_bytecode[] = {0};
 void mrbc_raise(mrbc_vm *vm, const char *error, const char *message) {
   (void)message;

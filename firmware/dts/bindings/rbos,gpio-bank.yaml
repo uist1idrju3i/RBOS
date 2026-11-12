@@ -1,0 +1,14 @@
+description: RBOS native GPIO metadata (no Zephyr GPIO driver)
+compatible: "rbos,gpio-bank"
+properties:
+  port-pin-counts:
+    type: array
+    required: true
+child-binding:
+  description: Board-reviewed native pin
+  properties:
+    pin:
+      type: int
+      required: true
+    active-low:
+      type: boolean

@@ -1,8 +1,10 @@
-# P1 runtime
+# P1/P2 runtime
 
 対象と build 手順は [BM build 手順](../research/implementation/bm-build.md)を参照してください。flash / erase は build に含めません。
 
 P2 の `Temperature.read` は共有 binding と `src/platform/nrf/backend.c` で実装し、S115 の `sd_temp_get` を利用します。既定／stress profile の coordinator は P1 自己検査の後に `temperature c=<Floatの°C>` を一回出します。P1 の PASS/stats 形式は変えません。OOM profile では coordinator を実行しません。[API 契約・同期処理・未確認条件](../research/implementation/temperature-api.md)を参照してください。
+
+P2 は GPIO と Button の [共有 API・DT pin メタデータ・GPIOTE 配送](../research/implementation/gpio-button-api.md)も実装します。既定の `RBOS_PERIPHERAL_EXERCISE` は自己検査の終了後に LED0 を GPIO API へ引き渡し、4 Button の物理値と count、温度と三電源の反復値を出します。この診断 task が Button を所有するため、製品 Ruby では task を置き換えるかこの設定を無効にしてください。console は UARTE20、pairing/bonding は非対応のままです。
 
 ## build 時の生成
 
@@ -10,7 +12,7 @@ P2 の `Temperature.read` は共有 binding と `src/platform/nrf/backend.c` で
 
 mruby/c の `src/`、`support/`、`mrblib/` も build directory にコピーします。vendor にある `mrblib.c` は使わず、コピー上で `make -C mrblib MRBC=... all` を毎回 configure 時に実行します。vendor にない `_autogen*.h` は、コピー上の `make -C src autogen` で生成します。vendor のファイルは変更しません。元の VM source と mrblib の変更は CMake の再構成対象です。
 
-既定 profile の Ruby の順序は system、coordinator、worker_a、worker_b で固定します。各 `.rb` は build 時に `mrbc -B` で `const uint8_t` 配列へ変換し、生成した `embedded.c` の表から task を作ります。`.rb` の変更は対応する配列の再生成対象です。bytecode は RRAM の rodata に置き、RAM へコピーしません。
+既定 profile の Ruby の順序は system、coordinator、worker_a、worker_b、診断有効時の peripherals です。各 `.rb` は build 時に `mrbc -B` で `const uint8_t` 配列へ変換し、生成した `embedded.c` の表から task を作ります。`.rb` の変更は対応する配列の再生成対象です。bytecode は RRAM の rodata に置き、RAM へコピーしません。
 
 生成した task 配列と mrblib は `tools/bm-build/check-bytecode.py` で検査します。先頭の `RITE0400` と、big-endian の宣言サイズが実サイズと一致することを確認し、不一致なら build を止めます。正常・空・不正 magic・不正 version・不正 size の検査は `tests/check-changes/test_bytecode.py` に置き、CI の変更判定 job でも実行します。
 
@@ -40,6 +42,6 @@ build と Wasm の成功だけでは、実機の tick 精度、stack の余裕�
 
 Kconfig choice `RBOS_TEST_PROFILE` の既定は SELFTEST です。STRESS/OOM は debug build の west build の `--` の後に、それぞれ `-DEXTRA_CONF_FILE=<RBOS>/firmware/stress.conf` / `-DEXTRA_CONF_FILE=<RBOS>/firmware/oom.conf` を渡して選びます。system task は全 profile の先頭です。CI は debug/release に加えて stress/oom を build し、同じ `firmware-evidence-<variant>-<sha>` 形式で証拠を保存します。
 
-STRESS は自己検査三 task に spinner 二 task を追加します。spinner は priority 128 で、coordinator の最終 PASS 後の `$p1_done` を sleep_ms で待ち、開始行を出して常時 ready の loop に入ります。各 spinner は VM tick で10000 msごとに `stress a=<count>` / `stress b=<count>` を出し、count は int32 の範囲に収めるため100万で巡回します。loop 内に sleep はありません。既定8 VMに対して計6 taskです。30分の DK 負荷試験用であり、実機での試験完了を意味しません。
+STRESS は自己検査三 task に spinner 二 task を追加します。spinner は priority 128 で、coordinator の最終 PASS 後の `$p1_done` を sleep_ms で待ち、開始行を出して常時 ready の loop に入ります。各 spinner は VM tick で10000 msごとに `stress a=<count>` / `stress b=<count>` を出し、count は int32 の範囲に収めるため100万で巡回します。loop 内に sleep はありません。診断有効時は既定8 VMに対して計7 taskです。利用者承認済みの完全接続窓5分を採用しますが、この P2 構成での実機確認は未完了です。
 
 OOM は system と fault task の二つだけです。`OOM: start` の後、配列に1024 byteの文字列を保持し続けます。`vendor/mrubyc/src/alloc.c:570-578` の枯渇分岐は HAL の MRBC_OUT_OF_MEMORY を呼び、`src/hal/hal.h` では `mrbc_hal_abort("Ruby pool exhausted\n")` に展開します。想定する最終行は `RBOS fatal: Ruby pool exhausted` で、LOG_PANIC 後に halt し、自動 reboot はしません。NoMemoryError の rescue loop ではありません。DK での fatal log はまだ未確認です。Wasm はこれらの新 task を compile するだけで、無限 loop や firmware の abort は実行しません。

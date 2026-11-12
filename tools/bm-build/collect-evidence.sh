@@ -50,6 +50,8 @@ for source in sorted(build.rglob('*')):
             prefixes = ('CONFIG_SOFTDEVICE', 'CONFIG_NRF_SDH_', 'CONFIG_BM_SCHEDULER',
                         'CONFIG_NRFX_RESERVED_RESOURCES_HEADER', 'CONFIG_ZERO_LATENCY',
                         'CONFIG_BM_TIMER', 'CONFIG_LOG_BACKEND_BM_UARTE', 'CONFIG_SHELL',
+                        'CONFIG_NRFX_GPIOTE', 'CONFIG_NRFX_SAADC', 'CONFIG_NFC_',
+                        'CONFIG_GPIO', 'CONFIG_BM_ZMS',
                         'CONFIG_RBOS_')
             resources[source.relative_to(build).as_posix()] = {
                 key: value for line in source.read_text().splitlines()

@@ -4,6 +4,104 @@
 
 extern const uint8_t rbos_adc_lifetime_worker[];
 static mrbc_tcb *adc_worker;
+extern const uint8_t rbos_button_lifetime_worker[];
+static mrbc_tcb *button_worker;
+extern const uint8_t rbos_peripherals_fixture[];
+static mrbc_tcb *peripherals_worker;
+
+static void peripherals_spawn(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  if (peripherals_worker) { mrbc_raise(vm, MRBC_CLASS(RuntimeError), "Peripheral worker exists"); return; }
+  peripherals_worker = mrbc_create_task(rbos_peripherals_fixture, NULL);
+  if (!peripherals_worker) { mrbc_raise(vm, MRBC_CLASS(RuntimeError), "Peripheral worker failed"); return; }
+  SET_NIL_RETURN();
+}
+
+static void peripherals_delete(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  if (!peripherals_worker) { mrbc_raise(vm, MRBC_CLASS(RuntimeError), "Peripheral worker missing"); return; }
+  mrbc_terminate_task(peripherals_worker);
+  mrbc_vm_end(&peripherals_worker->vm);
+  mrbc_delete_task(peripherals_worker);
+  mrbc_raw_free(peripherals_worker);
+  peripherals_worker = NULL;
+  SET_NIL_RETURN();
+}
+
+static void button_spawn(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  if (button_worker) { mrbc_raise(vm, MRBC_CLASS(RuntimeError), "Button worker exists"); return; }
+  button_worker = mrbc_create_task(rbos_button_lifetime_worker, NULL);
+  if (!button_worker) { mrbc_raise(vm, MRBC_CLASS(RuntimeError), "Button worker failed"); return; }
+  SET_INT_RETURN(button_worker->vm.vm_id);
+}
+
+static void button_delete(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  if (!button_worker) { mrbc_raise(vm, MRBC_CLASS(RuntimeError), "Button worker missing"); return; }
+  if (button_worker->state != TASKSTATE_DORMANT) {
+    mrbc_terminate_task(button_worker);
+    mrbc_vm_end(&button_worker->vm);
+  }
+  mrbc_delete_task(button_worker);
+  mrbc_raw_free(button_worker);
+  button_worker = NULL;
+  SET_NIL_RETURN();
+}
+
+static void button_edge(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  mrbc_int_t pin, level, generation;
+  if (!rbos_require_argc(vm, argc, 3, 3) ||
+      !rbos_require_integer(vm, &v[1], 0, 95, &pin) ||
+      !rbos_require_integer(vm, &v[2], 0, 1, &level) ||
+      !rbos_require_integer(vm, &v[3], 0, INT32_MAX, &generation)) return;
+  rbos_wasm_button_edge(pin, level, generation);
+  SET_NIL_RETURN();
+}
+
+static void button_generation(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  mrbc_int_t pin;
+  if (!rbos_require_argc(vm, argc, 1, 1) || !rbos_require_integer(vm, &v[1], 0, 95, &pin)) return;
+  SET_INT_RETURN(rbos_wasm_button_generation(pin));
+}
+
+static void event_fill(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  rbos_wasm_event_fill();
+  SET_NIL_RETURN();
+}
+
+static void gpio_status(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  mrbc_int_t status;
+  if (!rbos_require_argc(vm, argc, 1, 1) || !rbos_require_integer(vm, &v[1], 0, 7, &status)) return;
+  rbos_wasm_gpio_status(status);
+  SET_NIL_RETURN();
+}
+
+static void gpio_calls(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  SET_INT_RETURN(rbos_wasm_gpio_calls());
+}
+
+static void gpio_level(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  mrbc_int_t pin, level;
+  if (!rbos_require_argc(vm, argc, 2, 2) ||
+      !rbos_require_integer(vm, &v[1], 0, 95, &pin) ||
+      !rbos_require_integer(vm, &v[2], 0, 1, &level)) return;
+  rbos_wasm_gpio_level(pin, level);
+  SET_NIL_RETURN();
+}
+
+static void gpio_mode(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  mrbc_int_t pin;
+  if (!rbos_require_argc(vm, argc, 1, 1) || !rbos_require_integer(vm, &v[1], 0, 95, &pin)) return;
+  SET_INT_RETURN(rbos_wasm_gpio_mode(pin));
+}
 
 static void adc_done(mrbc_vm *vm, mrbc_value v[], int argc)
 {
@@ -204,6 +302,17 @@ static void ownership(mrbc_vm *vm, mrbc_value v[], int argc)
 void rbos_wasm_native_fixture_define(void)
 {
   mrbc_class *cls = mrbc_define_class(NULL, "NativeFixture", NULL);
+  mrbc_define_method(NULL, cls, "button_spawn", button_spawn);
+  mrbc_define_method(NULL, cls, "peripherals_spawn", peripherals_spawn);
+  mrbc_define_method(NULL, cls, "peripherals_delete", peripherals_delete);
+  mrbc_define_method(NULL, cls, "button_delete", button_delete);
+  mrbc_define_method(NULL, cls, "button_edge", button_edge);
+  mrbc_define_method(NULL, cls, "button_generation", button_generation);
+  mrbc_define_method(NULL, cls, "event_fill", event_fill);
+  mrbc_define_method(NULL, cls, "gpio_status=", gpio_status);
+  mrbc_define_method(NULL, cls, "gpio_calls", gpio_calls);
+  mrbc_define_method(NULL, cls, "gpio_level", gpio_level);
+  mrbc_define_method(NULL, cls, "gpio_mode", gpio_mode);
   mrbc_define_method(NULL, cls, "adc_spawn", adc_spawn);
   mrbc_define_method(NULL, cls, "adc_delete", adc_delete);
   mrbc_define_method(NULL, cls, "adc_done", adc_done);

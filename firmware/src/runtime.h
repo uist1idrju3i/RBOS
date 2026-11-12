@@ -7,10 +7,12 @@
 bool rbos_event_post(const struct rbos_event *event);
 /* Foreground consumer; native dispatch is added with each peripheral driver. */
 bool rbos_event_take(struct rbos_event *event);
+void rbos_event_snapshot(struct rbos_event_stats *stats);
 void rbos_stack_paint(void);
 void rbos_maintenance(bool service);
 void rbos_system_define(void);
 void rbos_system_set_task(mrbc_tcb *task);
 int rbos_ble_init(void);
 void rbos_resources_log(void);
+int rbos_resources_probe(void);
 #endif

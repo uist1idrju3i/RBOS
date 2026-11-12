@@ -1,0 +1,21 @@
+class GPIO
+  IN: Integer
+  OUT: Integer
+  HIGH_Z: Integer
+  PULL_UP: Integer
+  PULL_DOWN: Integer
+  OPEN_DRAIN: Integer
+
+  def self.new: (Integer | String | Symbol, Integer) -> GPIO
+  def self.setmode: (Integer | String | Symbol, Integer) -> nil
+  def self.read_at: (Integer | String | Symbol) -> Integer
+  def self.high_at?: (Integer | String | Symbol) -> bool
+  def self.low_at?: (Integer | String | Symbol) -> bool
+  def self.write_at: (Integer | String | Symbol, Integer) -> nil
+
+  def read: () -> Integer
+  def high?: () -> bool
+  def low?: () -> bool
+  def write: (Integer) -> nil
+  def setmode: (Integer) -> nil
+end
