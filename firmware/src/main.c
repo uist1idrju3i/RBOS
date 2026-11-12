@@ -20,6 +20,7 @@ int main(void)
 	nrf_gpio_cfg_output(BOARD_PIN_LED_0);
 	nrf_gpio_pin_write(BOARD_PIN_LED_0, BOARD_LED_ACTIVE_STATE);
 
+	if (rbos_resources_probe()) mrbc_hal_abort("BM scheduler capacity probe failed\n");
 	if (rbos_ble_init()) mrbc_hal_abort("BLE initialization failed\n");
 	rbos_resources_log();
 	mrbc_init(vm_pool, sizeof(vm_pool));

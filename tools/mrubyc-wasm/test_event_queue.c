@@ -93,11 +93,25 @@ static void saturating_counters(void)
   assert(queue.overflow == UINT32_MAX);
 }
 
+static void generations(void)
+{
+  struct rbos_event_queue queue = {0};
+  struct rbos_event input = event(RBOS_EVENT_BUTTON, 45, 0), output;
+  input.generation = 1;
+  assert(rbos_event_queue_push(&queue, &input));
+  input.generation = 2;
+  assert(rbos_event_queue_push(&queue, &input));
+  assert(queue.size == 2 && queue.coalesced == 0);
+  assert(rbos_event_queue_pop(&queue, &output) && output.generation == 1);
+  assert(rbos_event_queue_pop(&queue, &output) && output.generation == 2);
+}
+
 int main(void)
 {
   fifo_and_wrap();
   coalesce_and_overflow();
   saturating_counters();
+  generations();
   puts("PASS: event queue / FIFO / wrap / drop-newest / coalesce / saturation");
   return 0;
 }

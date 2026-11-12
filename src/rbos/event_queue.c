@@ -10,7 +10,8 @@ bool rbos_event_queue_push(struct rbos_event_queue *queue, const struct rbos_eve
   if (event->type == RBOS_EVENT_BUTTON) {
     for (uint32_t i = 0; i < queue->size; ++i) {
       struct rbos_event *pending = &queue->events[(queue->head + i) % RBOS_EVENT_QUEUE_CAPACITY];
-      if (pending->type != RBOS_EVENT_BUTTON || pending->source != event->source) continue;
+      if (pending->type != RBOS_EVENT_BUTTON || pending->source != event->source ||
+          pending->generation != event->generation) continue;
       if (pending->count == UINT32_MAX) {
         increment(&queue->overflow);
         return false;

@@ -1,0 +1,9 @@
+class Button
+  def self.new: (Integer | String | Symbol) -> Button
+  def self.stats: () -> [Integer, Integer, Integer, Integer]
+  def poll: () -> [Integer, Integer]?
+  def wait: () -> [Integer, Integer]
+  def each_event: () { (Integer, Integer) -> untyped } -> untyped
+  def pressed?: () -> bool
+  def close: () -> nil
+end

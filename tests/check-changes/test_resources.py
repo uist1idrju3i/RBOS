@@ -17,6 +17,10 @@ CONFIG = {
     "BM_IRQ_OFFSET": 2,
     "CONFIG_BM_TIMER_IRQ_PRIO": 5,
     "CONFIG_LOG_BACKEND_BM_UARTE_IRQ_PRIO": 5,
+    "CONFIG_LOG_BACKEND_BM_UARTE": 1,
+    "CONFIG_SHELL": 0,
+    "CONFIG_NFC_T2T_NRFXLIB": 0,
+    "CONFIG_NFC_T4T_NRFXLIB": 0,
     "CONFIG_RBOS_LOG_LEVEL": 3,
     "CONFIG_RBOS_SERVICE_INTERVAL_MS": 10,
     "CONFIG_NRFX_RESERVED_RESOURCES_HEADER": '"rbos_reserved_resources.h"',
@@ -101,6 +105,10 @@ class ResourceTests(unittest.TestCase):
             "BM_IRQ_OFFSET": 1,
             "CONFIG_BM_TIMER_IRQ_PRIO": 1,
             "CONFIG_LOG_BACKEND_BM_UARTE_IRQ_PRIO": 8,
+            "CONFIG_LOG_BACKEND_BM_UARTE": 0,
+            "CONFIG_SHELL": 1,
+            "CONFIG_NFC_T2T_NRFXLIB": 1,
+            "CONFIG_NFC_T4T_NRFXLIB": 1,
             "CONFIG_MPSL": 1,
             "CONFIG_BT_LL_SOFTDEVICE": 1,
             "CONFIG_NRFX_RESERVED_RESOURCES_HEADER": '"nrfx_reserved_resources_ncs.h"',
@@ -137,3 +145,4 @@ class ResourceTests(unittest.TestCase):
         self.assertIn('config NRFX_RESERVED_RESOURCES_HEADER\n\tdefault "rbos_reserved_resources.h"', kconfig)
         self.assertIn("CONFIG_NRF_SDH_BLE_LOG_SD_RAM_USAGE=y", config)
         self.assertLess(main.index("if (rbos_ble_init())"), main.index("rbos_resources_log();"))
+        self.assertLess(main.index("if (rbos_resources_probe())"), main.index("if (rbos_ble_init())"))

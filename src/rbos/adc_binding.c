@@ -3,6 +3,7 @@
 #include "rbos/adc.h"
 #include "rbos/bindings.h"
 #include "rbos/native.h"
+#include "rbos/button.h"
 
 extern const uint8_t rbos_adc_bytecode[];
 static struct rbos_adc adc;
@@ -14,6 +15,7 @@ static bool voltage;
 
 void rbos_bindings_service(void)
 {
+  rbos_button_service();
   rbos_adc_service(&adc);
   if (!adc.active) mrbc_decref_empty(&lease);
 }

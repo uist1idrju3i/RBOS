@@ -46,7 +46,7 @@
 
 - 利用者の決定により P1 から移管: peripheral を使い始める前に peripheral/DPPI/IRQ の完全な予約表を照合し、SDH 配送 model・SD RAM usage・BM queue 容量を SDK 仕様・設定・map・実測で確認する。
 
-- LED/Button/GPIO を最初の対象とし、board pin を C 側で管理する。
+- LED/Button/GPIO を最初の対象とし、board の許可 pin を DT メタデータで定め、C backend で解決する。[GPIO/Button 契約](gpio-button-api.md)の物理値、caller-task 配送と generation/lease を実装し、実機の受け入れは分けて確認する。
 - ダイ温度の読み出しを native API として追加する。利用者承認により backend は S115 公式の `sd_temp_get` を使う。MPSL が TEMP を予約するため、旧案の nrfx_temp/register 直接操作は採用せず、TEMP IRQ215も app で接続しない。0.25°C単位の値を約50 µsの同期 API で取得する仕様で、換算・校正と精度条件、他 Ruby task・BLE/tick への影響を確認する。BM board は `&temp` を削除しており、DT 駆動や OpenBlink の [Zephyr sensor API による温度 HAL](https://github.com/OpenBlink/openblink-demo-mdbt50q-db-40/blob/d6efc07877ebac6bd55519b8458be4629bef80c3/src/drv/hal/die_temperature.c)は流用しない。
 - 温度 API の契約は、利用者承認済みの `Temperature.read`、Float °C、取得失敗時の RuntimeError と同期経路にする。[契約と実装・検査の境界](temperature-api.md)を参照する。実機の受け入れは未完了。
 - DVDD・AVDD・VDD の ADC 読み出しを追加する。nRF54L15 の SAADC 内部入力 `NRF_SAADC_INPUT_DVDD` / `NRF_SAADC_INPUT_AVDD` / `NRF_SAADC_INPUT_VDD` を使う。DVDD と AVDD は内部 0.9 V のデジタル／アナログ電源、VDD は主電源であり、外部 analog pin 三本の測定とは区別する。
@@ -54,7 +54,7 @@
 - backend は nrfx_saadc を候補とする。BM board は `&adc` node を削除するため、Zephyr の DT ADC driver を前提にしない。SAADC と IRQ 213、EasyDMA buffer、将来の外部 pin ADC との排他を予約表に含める。reference・gain・分解能・校正・入力切替時の条件と電圧換算を照合し、VDD に他 SoC の固定分圧比を流用しない。完了 IRQ は bounded event を渡し、Ruby 処理は foreground で行う。待機中は呼出し task だけを待たせ、他 task の実行を止める C の spin 待機にしない。
 - 電源 ADC は Wasm fake で三入力の選択、換算の境界、不正入力、busy・timeout・driver failure を検査する。DK では VDD と実測電源値の比較、DVDD/AVDD の内部電源としての妥当性、入力切替と反復測定を確認する。許容誤差は仕様・校正条件から事前に定め、BLE 接続中の tick・stack/pool と map の増分も記録する。fake の値を実機の精度の証拠とは扱わない。
 - argc、type、範囲の検査を共有 C helper に集約し、所有権・エラー値/例外を共通規約にする。Wasm fake で正常・引数なし・nil・誤型・境界・driver failure を検査する。
-- ISR から Ruby へ直接入らず、固定長 ring を介して foreground で通知する。overflow は newest を drop し、stats の overflow counter で観測する。Button edge は pin ごとに coalesce して count を残す。
+- ISR から Ruby へ直接入らず、固定長 ring を介して foreground で通知する。overflow は newest を drop し、stats の overflow counter で観測する。Button edge は pin と generation ごとに coalesce して count を残す。console は利用者承認で UARTE20 を維持し、pairing/bonding は非対応のままとする。
 - native API を追加するたびに P1 の map 分類と stack/pool 観測方法で増分を記録する。標本 peak と厳密な上限は区別する。
 - 外部 pin 用 ADC と PWM/I2C/UART は要件と pin/IRQ の一覧が揃ってから追加する。上の三電源 ADC は P2 の対象に含めるが、公開契約・資源予約の照合前に実装しない。
 - [SDK component 表](../nrf-bm/component-catalog.md)の backend 候補から必要なものを選ぶ。共有 binding に Nordic header を入れず、製品動作は Ruby へ置く。UART/shell の instance 重複、NFC TIMER24、GRTC の所有を確認する。
@@ -63,7 +63,7 @@
 
 根拠: `vendor/mrubyc/src/class.h:234-246`、`vendor/mrubyc/src/value.h:221-263,546-572`、[OpenBlink API](../openblink/api-binding-patterns.md)、[S115/MPSL の予約照合と承認済み温度経路](resource-reservations.md)、`vendor/sdk-nrf-bm/components/softdevice/nrf54l/s115/s115_API/include/nrf_soc.h:582-591`、`vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/bm_nrf54l15dk_nrf54l051015_peripherals.dtsi:58`。
 
-電源 ADC の根拠: [固定 HAL の内部入力](https://github.com/zephyrproject-rtos/hal_nordic/blob/1acb428a205bad58f3dfd4e38f2d1663bb784ba1/nrfx/hal/nrf_saadc.h#L298-L315)、[nRF54L15 の入力定義](https://github.com/zephyrproject-rtos/hal_nordic/blob/1acb428a205bad58f3dfd4e38f2d1663bb784ba1/nrfx/bsp/stable/mdk/nrf54l15_types.h#L29265-L29273)、[SAADC と IRQ 213](https://github.com/nrfconnect/sdk-zephyr/blob/fd9204a02d52630660ce8d729945a4dd743feabf/dts/vendor/nordic/nrf54l_05_10_15.dtsi#L527-L534)、[公式 SAADC 仕様](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/saadc.html)、[MPIG の ADC 契約](../io-api/gpio-adc-pwm.md#adc)、`vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/bm_nrf54l15dk_nrf54l051015_peripherals.dtsi:14`。資料との照合であり、本リポジトリではまだ電源 ADC を実装・実機試験していません。
+電源 ADC の根拠: [固定 HAL の内部入力](https://github.com/zephyrproject-rtos/hal_nordic/blob/1acb428a205bad58f3dfd4e38f2d1663bb784ba1/nrfx/hal/nrf_saadc.h#L298-L315)、[nRF54L15 の入力定義](https://github.com/zephyrproject-rtos/hal_nordic/blob/1acb428a205bad58f3dfd4e38f2d1663bb784ba1/nrfx/bsp/stable/mdk/nrf54l15_types.h#L29265-L29273)、[SAADC と IRQ 213](https://github.com/nrfconnect/sdk-zephyr/blob/fd9204a02d52630660ce8d729945a4dd743feabf/dts/vendor/nordic/nrf54l_05_10_15.dtsi#L527-L534)、[公式 SAADC 仕様](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/saadc.html)、[MPIG の ADC 契約](../io-api/gpio-adc-pwm.md#adc)、`vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/bm_nrf54l15dk_nrf54l051015_peripherals.dtsi:14`。電源 ADC の binding/backend は実装済みで、実機の精度・IRQ/DMA・BLE/tick は未確認です。
 
 ## P3: system-task と権限
 

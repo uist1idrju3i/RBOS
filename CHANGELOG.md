@@ -6,6 +6,8 @@
 
 ### Added
 
+- 0.1.4 向けに物理値で統一した GPIO API と、Integer/String/DeviceTree node label・sw alias の pin 解決を追加しました。既定は DK の LED/Button 8 pinだけを許可し、console pin と Button 所有中の再設定を保護します。Button は `poll` / `wait` / `each_event` / `pressed?` / `close` を備え、GPIOTE IRQ から16件の固定 ring、foreground mailbox、呼出し task の順で配送します。RBS、Wasm の寿命・overflow・VM ID 再利用試験、nRF adapter の host 試験、自己検査後の Ruby 診断 task、BLE 起動前の BM queue 容量・復帰 probe を追加しました。console は利用者承認で UARTE20 を維持し、pairing/bonding は引き続き非対応です。実機の GPIO/IRQ・電圧/温度精度・BLE/tick・SD RAM/queue・stack/pool の受け入れは未完了で、P2 全体の完了を意味しません。
+
 - 0.1.3 向けに三電源の factory `ADC.internal(:dvdd)`・`ADC.internal(:avdd)`・`ADC.internal(:vdd)` を追加しました。`read_voltage` と alias の `read` は Float の V、`read_raw` は signed sample を返します。測定中の後発呼出しは RuntimeError（busy）とし、完了待ちは呼出し task だけを待たせます。nrfx の非同期校正・測定・STOP 確認、固定 DMA buffer と native request の寿命管理、RBS、host/Wasm の異常系検査を追加しました。実機の精度・IRQ/DMA・BLE/tick・stack/pool は未確認で、外部 pin ADC や P2 全体の完了を意味しません。
 - 0.1.1 向けに `Temperature.read` を追加しました。S115 公式の `sd_temp_get` からダイ温度を Float の °C で返します。引数ありは ArgumentError、取得失敗は RuntimeError、インスタンス生成は TypeError です。共有 binding・RBS・Wasm fake と自己検査後の温度診断を追加しました。SDK の約50 µsは同期処理の目安で、精度・実時間・BLE/tick・stack/pool の実機確認は未完了です。固定 mruby/c の Float 無効 build は未対応で、binding の拒否処理のみ host で検査します。P2 全体の完了を意味しません。
 - S115 の DPPI/PPIB 予約を nrfx allocator へ反映し、SCHED・NVIC/GRTC の前提を build 時に検査します。SD RAM と BM scheduler の起動診断、生成 DTS と image 別の設定抜粋を CI 成果物へ追加しました。実機での資源競合と容量の照合は未完了で、周辺機器 API の追加や P2 完了を意味しません。

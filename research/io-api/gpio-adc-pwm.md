@@ -21,7 +21,7 @@
 
 mode の省略 default はありません。`read` は bool ではなく数値なので `if gpio.read` を high 判定に使えません。Ruby で 0 は真です。MPIG は割込み callback、edge event、debounce、ALT、pull 抵抗値、drive strength、実行時間上限を規定していません。blocking / IRQ safe / 再入可とも断言していません。
 
-RBOS 候補は nrf_gpio による値・mode の操作と、必要な場合だけ GPIOTE の event queue です。GPIOTE event を足すなら MPIG 外の拡張として設計します。現時点で Ruby GPIO API は未実装です。
+RBOS は nrf_gpio による物理値・mode 操作を実装しました。Button は MPIG 外の拡張として GPIOTE、固定 ring と foreground 配送を使います。[pin・mode・例外・所有・RBS と検査の境界](../implementation/gpio-button-api.md)を参照してください。Wasm/build の成功は実機の電気特性・IRQ の受け入れを意味しません。
 
 ## ADC
 

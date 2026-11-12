@@ -1,3 +1,25 @@
 / {
 	model = "RBOS nRF54L15 DK S115";
+	aliases {
+		led0 = &led0;
+		led1 = &led1;
+		led2 = &led2;
+		led3 = &led3;
+		sw0 = &button0;
+		sw1 = &button1;
+		sw2 = &button2;
+		sw3 = &button3;
+	};
+	rbos_gpio_pins: rbos-gpio-pins {
+		compatible = "rbos,gpio-bank";
+		port-pin-counts = <7 16 11>;
+		led0: led0 { pin = <73>; };
+		led1: led1 { pin = <42>; };
+		led2: led2 { pin = <71>; };
+		led3: led3 { pin = <46>; };
+		button0: button0 { pin = <45>; active-low; };
+		button1: button1 { pin = <41>; active-low; };
+		button2: button2 { pin = <40>; active-low; };
+		button3: button3 { pin = <4>; active-low; };
+	};
 };

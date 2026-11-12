@@ -31,10 +31,17 @@ bool rbos_require_integer(mrbc_vm *vm, const mrbc_value *value,
 bool rbos_require_status(mrbc_vm *vm, enum rbos_status status)
 {
   if (status == RBOS_OK) return true;
+  if (status == RBOS_INVALID_PIN || status == RBOS_UNSUPPORTED) {
+    mrbc_raise(vm, status == RBOS_INVALID_PIN ? MRBC_CLASS(RangeError) :
+               MRBC_CLASS(NotImplementedError),
+               status == RBOS_INVALID_PIN ? "Pin out of range" : "Unsupported operation");
+    return false;
+  }
   const char *message;
   switch (status) {
   case RBOS_BUSY: message = "Device busy"; break;
   case RBOS_TIMEOUT: message = "Device timeout"; break;
+  case RBOS_RESERVED_PIN: message = "Pin is reserved"; break;
   default: message = "Driver failure"; break;
   }
   mrbc_raise(vm, MRBC_CLASS(RuntimeError), message);

@@ -19,6 +19,10 @@ SDK の build は [BM の再現手順と P1 map 比較](implementation/bm-build.
 
 三電源 ADC: [内部入力・協調待機・busy・DMA 寿命と検査の境界](implementation/adc-api.md)。外部 pin ADC と DK での検証は未完了です。
 
+GPIO/Button: [物理 pin・mode・foreground 配送・寿命と検査の境界](implementation/gpio-button-api.md)。実機の IRQ・電気特性の受け入れは未完了です。
+
+P2 の残る [実機受け入れ手順と log 検査](implementation/p2-acceptance.md)。flash 承認、事前の許容区間、Button、反復測定、SD RAM/queue と5分 stress の証拠を分けて確認します。
+
 後続の `ruby-idiomatic` / `io-api-guideline` skill に先立つ調査です。skill 本体・RuboCop・六 class の実装は今回追加していません。
 
 - Ruby: [原則と一次資料](ruby-style/principles.md)、[guide と VM の対応](ruby-style/idiom-compatibility.md)、[組込み idiom](ruby-style/embedded-idioms.md)、[外部の主張の照合](ruby-style/attachment-review.md)。

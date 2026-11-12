@@ -1,6 +1,6 @@
 # P2 の native 共通基盤
 
-P2 の最初の実装です。GPIO・温度 API、peripheral 予約表、実機 IRQ、Ruby への event 通知は対象外であり、P2 は未完了です。[checklist](checklist.md#p2-native-api-と資源)に未確認項目を残します。
+P2 の最初の共通基盤を記録した文書です。後続の [GPIO/Button](gpio-button-api.md)、[温度](temperature-api.md)、[ADC](adc-api.md)、[予約表](resource-reservations.md)に公開 API と backend を追加しました。実機の受け入れは未完了で、[checklist](checklist.md#p2-native-api-と資源)に未確認項目を残します。
 
 ## callback の規約
 
@@ -11,7 +11,7 @@ P2 の最初の実装です。GPIO・温度 API、peripheral 予約表、実機 
 | `rbos_require_argc` | 位置引数の最小・最大を含む個数を検査。範囲外は ArgumentError。引数へ触れる前に呼ぶ |
 | `rbos_require_type` | 型の一致を検査。不一致は TypeError。暗黙変換はしない |
 | `rbos_require_integer` | Integer 型を検査し、最小・最大を含む範囲外は RangeError。失敗時は出力先を変えない |
-| `rbos_require_status` | OK 以外を RuntimeError に変換。IO・未知の値は `Driver failure`、busy は `Device busy`、timeout は `Device timeout` |
+| `rbos_require_status` | invalid pin は RangeError、unsupported は NotImplementedError、それ以外の非 OK は RuntimeError。IO・未知の値は `Driver failure`、busy は `Device busy`、timeout は `Device timeout`、reserved は `Pin is reserved` |
 | `rbos_return_borrowed` | incref 後に返却 slot の旧参照を decref。返却 slot と借用元が同じ場合も保持する |
 | `rbos_return_owned` | 生成した一参照を返却 slot へ移す。移譲後に呼出し元が decref しない |
 
@@ -27,7 +27,7 @@ native callback の `argc` は位置引数だけで、keyword は `v[argc+1]` �
 
 - 静的にゼロ初期化する16件の ring です。一回の push が一 event を表し、入力の count は使いません。callback、動的確保、Ruby 操作は行いません。
 - completion は source が同じでも別々に FIFO へ入ります。満杯では新しい event を捨て、overflow を増やします。
-- Button は同じ source（解決済みの物理 pin）の未処理 event にまとめます。最初の FIFO 位置を維持し、count を加算して value を最新値へ置き換えます。これは全 edge の時刻・値の列を保存する仕組みではありません。
+- Button は同じ source（解決済みの物理 pin）と generation の未処理 event にまとめます。最初の FIFO 位置を維持し、count を加算して value を最新値へ置き換えます。これは全 edge の時刻・値の列を保存する仕組みではありません。
 - 満杯でも既存 Button の coalesce は受け付けます。別 pin は新しい event なので満杯なら捨てます。pop 後の同じ pin は新しい event になります。
 - count が UINT32_MAX ならその追加 edge を捨て、overflow を増やします。捨てた edge の値は反映しません。overflow と coalesced も UINT32_MAX で飽和し、0 へ巻き戻りません。
 - push は最大16件を走査し、pop は一件をコピーします。実行時間の実測や IRQ latency の上限は未確認です。

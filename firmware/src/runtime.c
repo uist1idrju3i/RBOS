@@ -35,6 +35,13 @@ bool rbos_event_take(struct rbos_event *event)
 	return available;
 }
 
+void rbos_event_snapshot(struct rbos_event_stats *stats)
+{
+	unsigned int key = irq_lock();
+	*stats = (struct rbos_event_stats){ event_queue.size, event_queue.overflow, event_queue.coalesced };
+	irq_unlock(key);
+}
+
 void rbos_stack_paint(void)
 {
 	uintptr_t sp = __get_PSP();
