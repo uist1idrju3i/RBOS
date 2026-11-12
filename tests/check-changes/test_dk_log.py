@@ -61,11 +61,11 @@ class LogTests(unittest.TestCase):
         for data, expected in [(synthetic(), None), (self.event_log(), 2)]:
             report = dk_log.analyze(data)
             self.assertEqual(report["status"], "PASS", report["errors"])
-            self.assertEqual(report["peaks"]["event_pending"], expected)
-            self.assertIn("event_pending max", dk_log.human(report))
+            self.assertEqual(report["native_events"]["event_pending"], expected)
+            self.assertEqual("event_pending max" in dk_log.human(report), expected is not None)
         report = dk_log.analyze(self.event_log())
-        self.assertEqual(report["peaks"]["event_coalesced"], 3)
-        self.assertEqual(report["peaks"]["event_overflow"], 0)
+        self.assertEqual(report["native_events"]["event_coalesced"], 3)
+        self.assertEqual(report["native_events"]["event_overflow"], 0)
 
     def test_native_event_overflow_and_bounds(self):
         self.assert_fails(self.event_log().replace(b"event_overflow=0", b"event_overflow=1"),

@@ -286,8 +286,9 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
         if any(spinner_report[key]["mean_per_s"] is None for key in "ab"):
             warnings.append("Spinner rates unavailable: need two progress samples on distinct stats anchors")
     peak = {key: max((row[key] for row in stats if row[key] is not None), default=None)
-            for key in ("pool", "main", "isr", "drain_us",
-                        "event_pending", "event_overflow", "event_coalesced")}
+            for key in ("pool", "main", "isr", "drain_us")}
+    native_events = {key: max((row[key] for row in stats if row[key] is not None), default=None)
+                     for key in ("event_pending", "event_overflow", "event_coalesced")}
     totals = sorted({row["pool_total"] for row in stats})
     if len(totals) > 1:
         errors.append("Pool capacity changed within the log")
@@ -305,6 +306,7 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
         "stress_connected_duration_s": loaded_connected,
         "required_connected_duration_s": require_connected,
         "spinner_a_b_ratio": spinner_ratio, "spinner_imbalance_ratio": spinner_imbalance,
+        "native_events": native_events,
         "peaks": peak, "rates_per_s": {key: {"min": min(values), "max": max(values)} if values else None
                                             for key, values in rates.items()},
         "spinners": spinner_report, "events": events, "errors": errors, "warnings": warnings,
@@ -333,8 +335,11 @@ def human(report):
     output.append("| Pool sampled peak (B) | %s / %s (%s%%) |" % (
         peak["pool"], peak["pool_total"], peak["pool_percent"]) if peak["pool"] is not None
         else "| Pool sampled peak (B) | unmeasured |")
-    for key in ("main", "isr", "drain_us", "event_pending", "event_overflow", "event_coalesced"):
+    for key in ("main", "isr", "drain_us"):
         output.append("| %s max | %s |" % (key, peak[key] if peak[key] is not None else "unmeasured"))
+    for key, value in report["native_events"].items():
+        if value is not None:
+            output.append("| %s max | %s |" % (key, value))
     for key, value in report["rates_per_s"].items():
         output.append("| %s / s | %s |" % (key, "%s..%s" % (value["min"], value["max"]) if value else "unavailable"))
     for key, value in report["spinners"].items():
