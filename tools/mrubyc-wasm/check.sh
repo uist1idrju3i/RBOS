@@ -138,25 +138,7 @@ mutex_case 'mutex ensure release' "$build/mutex_ensure.mrb" \
 mutex_case 'mutex priority inversion' "$build/mutex_inversion.mrb" \
   "$build/mutex_fault_owner.mrb" "$build/mutex_fault_middle.mrb" "$build/mutex_fault_waiter.mrb"
 
-for fixture in native_helpers temperature idiom_collections idiom_objects idiom_values idiom_resources; do
-  timeout 30s node "$build/runner.js" "$build/$fixture.mrb"
-done
-adc_case() {
-  local expected=$1 log="$build/adc-check.log"
-  shift
-  timeout 30s node "$build/runner.js" "$@" | tee "$log"
-  if grep -Fq 'Exception(' "$log" || ! grep -Fxq "PASS: $expected" "$log"; then
-    echo "Missing ADC PASS or unexpected exception: $expected" >&2
-    exit 1
-  fi
-}
-adc_case 'ADC input voltage errors cancellation and ownership' "$build/adc.mrb"
-adc_case 'ADC cooperative waiting and concurrent busy' "$build/adc_concurrent.mrb" "$build/adc_worker.mrb"
-adc_case 'ADC termination VM-ID reuse and foreground recovery' "$build/adc_lifetime.mrb"
-adc_case 'GPIO pin modes physical levels errors and ownership' "$build/gpio.mrb"
-adc_case 'Button coalescing overflow generation and cleanup' "$build/button.mrb"
-adc_case 'Button cooperative wait termination and VM-ID reuse' "$build/button_lifetime.mrb"
-adc_case 'P2 diagnostic task repeated samples and cleanup' "$build/peripherals.mrb"
+python3 "$root/tools/mrubyc-wasm/check-contracts.py" --run "$build"
 
 expect_failure() {
   local expected=$1 marker=$2 status=0

@@ -33,6 +33,8 @@ class EvidenceTests(unittest.TestCase):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(content)
             (build / "linked.signed.bin").symlink_to(build / "secret.pem")
+            build_log = base / "build.log"
+            build_log.write_text("fixture build memory values\n")
             fake = '#!/usr/bin/env python3\nimport sys\n'
             fake += f'print({str(ROOT)!r} if sys.argv[1:3] == ["list", "manifest"] else "fixture tool")\n'
             for name in ("west", "arm-zephyr-eabi-gcc", "cmake", "ninja", "nrfutil"):
@@ -41,11 +43,12 @@ class EvidenceTests(unittest.TestCase):
                 path.chmod(0o755)
             result = subprocess.run([
                 "bash", str(ROOT / "tools/bm-build/collect-evidence.sh"),
-                str(workspace), str(build), str(output),
+                str(workspace), str(build), str(output), str(build_log),
             ], text=True, capture_output=True, env=os.environ | {"PATH": str(binaries) + os.pathsep + os.environ["PATH"]})
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertTrue((output / "firmware/zephyr/zephyr.dts").is_file())
             self.assertTrue((output / "firmware/zephyr/zephyr.map").is_file())
+            self.assertEqual((output / "build.log").read_text(), build_log.read_text())
             for name in ("secret.pem", "keyfile.json", "ignored.txt", "linked.signed.bin"):
                 self.assertFalse((output / name).exists(), name)
             report = json.loads((output / "resource-configurations.json").read_text())

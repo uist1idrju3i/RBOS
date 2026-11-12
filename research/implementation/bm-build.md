@@ -82,6 +82,8 @@ west zephyr-export
 
 ## build
 
+実装を広げる前に [BM preflight](development-gates.md#1-sdk-と-bm-の事前照合) を実行します。四構成の build log と成果物は [共通 verifier](development-gates.md#3-成果物の再利用可能な検査) で照合し、build 成功を実機受け入れとして報告しません。
+
 `<workspace>` で実行します。`<workspace>` は BM workspace root、`<RBOS>` は別に置いた RBOS checkout、`<build-debug>` / `<build-release>` はリポジトリと workspace の外の出力先に置き換えます。v3.3.0 の toolchain 環境を読み込んだ後、`cd "<workspace>"` と `west topdir` で参照先を確かめてください。別の NCS workspace が選ばれると `No board named 'bm_nrf54l15dk'` で失敗します（[環境の確認](dk-provisioning.md#path-の置き換えと-build-環境)）。
 
 ```sh

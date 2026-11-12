@@ -4,6 +4,8 @@
 
 ## 実施前の条件
 
+[開発・証拠検査](development-gates.md)の `implementation` / `host_wasm` / `bm_build` と、以下の `real_hardware` を別々に記録してください。log checker の診断 PASS だけでは実機の全項目を完了にしません。
+
 GPIO/Button・温度・三電源 ADC の実装と host/Wasm/build の検査は、実機の受け入れと分けます。この手順の実行結果はまだありません。DK の flash/erase は所有者の明示的な承認を得てから行ってください。鍵の生成・KMU provisioning・erase・release の書込みは P2 の通常試験には含めません。
 
 1. [BM build 手順](bm-build.md)で debug/stress image を用意し、commit、artifact 名、image header、SHA-256 を記録します。SDK の既定開発鍵を使う debug から始めます。

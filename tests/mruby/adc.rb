@@ -67,8 +67,12 @@ check_adc_error(RuntimeError) { adc.__poll(request.dup) }
 raise 'ADC busy started driver' unless NativeFixture.adc_calls == before
 adc.__finish(request)
 check_adc_error(RuntimeError) { adc.read_raw }
-sleep_ms(50)
-NativeFixture.adc_service
+deadline = NativeFixture.adc_time + 1000
+while NativeFixture.adc_active
+  raise 'ADC cancel STOPPED timeout' if NativeFixture.adc_time >= deadline
+  sleep_ms(1)
+  NativeFixture.adc_service
+end
 NativeFixture.adc_configure(0, 0, 0, 0)
 raise 'ADC cancel recovery' unless adc.read_raw == 0
 check_adc_error(RuntimeError) { adc.__poll(request) }

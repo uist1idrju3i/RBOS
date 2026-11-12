@@ -1,27 +1,45 @@
-vm_id = NativeFixture.button_spawn
-deadline = NativeFixture.adc_time + 1000
-while NativeFixture.button_generation(45) == 0
-  raise 'Button worker start timeout' if NativeFixture.adc_time > deadline
-  sleep_ms(1)
+$button_polls = 0
+class Button
+  alias fixture_poll poll
+  def poll
+    $button_polls += 1
+    fixture_poll
+  end
 end
-old = NativeFixture.button_generation(45)
-NativeFixture.button_edge(45, 0, old)
-NativeFixture.button_delete
-NativeFixture.adc_service
-raise 'Button task termination leaked watch' unless NativeFixture.button_generation(45) == 0
-reused = NativeFixture.button_spawn
-raise 'Button VM ID not reused' unless reused == vm_id
-deadline = NativeFixture.adc_time + 1000
-while NativeFixture.button_generation(45) == 0
-  raise 'Button reused worker start timeout' if NativeFixture.adc_time > deadline
-  sleep_ms(1)
+
+def await_button_fixture(message)
+  deadline = NativeFixture.adc_time + 1000
+  until yield
+    raise message if NativeFixture.adc_time >= deadline
+    sleep_ms(1)
+  end
 end
-NativeFixture.button_edge(45, 0, old)
-NativeFixture.adc_service
-sleep_ms(3)
-NativeFixture.button_edge(45, 1, 0)
-sleep_ms(5)
-NativeFixture.button_delete
-NativeFixture.adc_service
+
+worker = false
+begin
+  vm_id = NativeFixture.button_spawn
+  worker = true
+  await_button_fixture('Button worker start timeout') { NativeFixture.button_generation(45) != 0 }
+  old = NativeFixture.button_generation(45)
+  NativeFixture.button_edge(45, 0, old)
+  NativeFixture.button_delete
+  worker = false
+  NativeFixture.adc_service
+  raise 'Button task termination leaked watch' unless NativeFixture.button_generation(45) == 0
+  reused = NativeFixture.button_spawn
+  worker = true
+  raise 'Button VM ID not reused' unless reused == vm_id
+  await_button_fixture('Button reused worker start timeout') { NativeFixture.button_generation(45) != 0 }
+  polls = $button_polls
+  NativeFixture.button_edge(45, 0, old)
+  NativeFixture.adc_service
+  await_button_fixture('Button stale event poll timeout') { $button_polls > polls }
+  raise 'Button stale event ended watch' if NativeFixture.button_generation(45) == 0
+  NativeFixture.button_edge(45, 1, 0)
+  await_button_fixture('Button current edge timeout') { NativeFixture.button_generation(45) == 0 }
+ensure
+  NativeFixture.button_delete if worker
+  NativeFixture.adc_service
+end
 raise 'Button normal completion leaked watch' unless NativeFixture.button_generation(45) == 0
 puts 'PASS: Button cooperative wait termination and VM-ID reuse'

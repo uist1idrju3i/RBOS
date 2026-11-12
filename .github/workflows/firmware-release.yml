@@ -38,6 +38,9 @@ jobs:
       - name: BM の build 環境を用意する
         uses: ./.github/actions/ncs-bm-setup
 
+      - name: 最小 BM application を先に検査する
+        run: tools/bm-build/preflight.sh "$BM_WORKSPACE" "$RUNNER_TEMP/bm-preflight"
+
       - name: Ruby VM の source と host build の依存を用意する
         run: |
           git submodule update --init --depth 1 vendor/mruby vendor/mrubyc
@@ -65,25 +68,21 @@ jobs:
           west build -b bm_nrf54l15dk/nrf54l15/cpuapp/s115_softdevice/mcuboot \
             "$GITHUB_WORKSPACE/firmware" --sysbuild -d "$RUNNER_TEMP/build-release" -p always -- \
             -DFILE_SUFFIX=release \
-            "-DSB_CONFIG_BM_BOOTLOADER_MCUBOOT_SIGNATURE_KEY_FILE=\"$RUNNER_TEMP/keys/rbos-release.pem\""
+            "-DSB_CONFIG_BM_BOOTLOADER_MCUBOOT_SIGNATURE_KEY_FILE=\"$RUNNER_TEMP/keys/rbos-release.pem\"" \
+            2>&1 | tee "$RUNNER_TEMP/build-release.log"
 
       - name: release の証拠と hash を集める
         run: |
           tools/bm-build/collect-evidence.sh "$BM_WORKSPACE" \
-            "$RUNNER_TEMP/build-release" "$RUNNER_TEMP/evidence-release"
+            "$RUNNER_TEMP/build-release" "$RUNNER_TEMP/evidence-release" "$RUNNER_TEMP/build-release.log"
           cat "$RUNNER_TEMP/evidence-release/SHA256SUMS"
 
       - name: release の秘密鍵を削除する
         if: always()
         run: rm -f "$RUNNER_TEMP/keys/rbos-release.pem"
 
-      - name: 成果物に鍵の file がないことを確かめる
-        run: |
-          forbidden=$(find "$RUNNER_TEMP/evidence-release" \( -name '*.pem' -o -name keyfile.json \) -print -quit)
-          if [ -n "$forbidden" ]; then
-            echo '::error::Evidence contains a PEM or keyfile.json file.'
-            exit 1
-          fi
+      - name: 成果物と build log・鍵不在を照合する
+        run: python3 tools/bm-build/verify-evidence.py "$RUNNER_TEMP/evidence-release" --profile release --revision "$GITHUB_SHA"
 
       - name: release の証拠を保存する
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

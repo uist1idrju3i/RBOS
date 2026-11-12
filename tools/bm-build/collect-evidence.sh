@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ "$#" -ne 3 ]; then
-  echo "Usage: $0 <workspace> <build_dir> <out_dir>" >&2
+if [ "$#" -ne 3 ] && [ "$#" -ne 4 ]; then
+  echo "Usage: $0 <workspace> <build_dir> <out_dir> [build_log]" >&2
   exit 2
 fi
 script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
@@ -21,6 +21,9 @@ case "$out/" in
   "$build/"*|"$workspace/"*) echo 'Evidence directory must be outside the build and workspace.' >&2; exit 2 ;;
 esac
 mkdir -p -- "$out"
+if [ "$#" -eq 4 ]; then
+  cp -- "$4" "$out/build.log"
+fi
 python3 - "$build" "$out" <<'PY'
 import json
 import pathlib

@@ -53,7 +53,7 @@ def analyze(data, limits=None, min_samples=3):
     buttons = [set() for _ in range(4)]
     samples = {key: [] for key in QUANTITIES}
     for line in lines:
-        probe = re.search(r"scheduler_probe payload=(\d+) accepted=(\d+) delivered=(\d+) exhausted=([01]) recovered=([01])", line)
+        probe = re.search(r"scheduler_probe payload=(\d+) accepted=(\d+) delivered=(\d+) exhausted=([01]) recovered=([01])\s*$", line)
         if probe:
             length, accepted, delivered, exhausted, recovered = map(int, probe.groups())
             if length in probes or length not in (0, 16, 64) or not 0 < accepted <= 64 or delivered != accepted + 1 or not recovered:
@@ -61,9 +61,11 @@ def analyze(data, limits=None, min_samples=3):
             probes[length] = {"accepted": accepted, "exhausted": bool(exhausted)}
         elif "scheduler_probe payload=" in line:
             errors.append("Malformed scheduler probe")
-        resource = re.search(r"resources sched_bytes=(\d+) sched_header=(\d+) service_ms=(\d+) sd_ram=(\d+)", line)
+        resource = re.search(r"resources sched_bytes=(\d+) sched_header=(\d+) service_ms=(\d+) sd_ram=(\d+)\s*$", line)
         if resource:
             resources.append(tuple(map(int, resource.groups())))
+        elif "resources sched_bytes=" in line:
+            errors.append("Malformed resource diagnostics")
         button = re.fullmatch(r"button index=([0-3]) level=([01]) count=(\d+)", line.strip())
         if button:
             index, level, count = map(int, button.groups())
@@ -108,6 +110,8 @@ def analyze(data, limits=None, min_samples=3):
         "warnings": [] if limits else ["Measurement bounds not supplied; accuracy not evaluated"],
         "probes": probes, "resources": resources, "samples": summary,
         "scope": "Diagnostic presence, repeatability and supplied bounds only; run the P1 stress checker separately",
+        "completion": {"implementation": "NOT_EVALUATED", "host_wasm": "NOT_EVALUATED",
+                       "bm_build": "NOT_EVALUATED", "real_hardware": "INCOMPLETE"},
     }
 
 

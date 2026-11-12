@@ -22,6 +22,7 @@ class P2LogTests(unittest.TestCase):
     def test_repeatability_bounds_and_incomplete_accuracy(self):
         self.assertEqual(p2_log.analyze(fixture(), self.limits)["status"], "PASS")
         self.assertEqual(p2_log.analyze(fixture())["status"], "INCOMPLETE")
+        self.assertEqual(p2_log.analyze(fixture(), self.limits)["completion"]["real_hardware"], "INCOMPLETE")
 
     def test_missing_failure_bad_count_voltage_and_duplicate_probe(self):
         variants = [
@@ -33,6 +34,11 @@ class P2LogTests(unittest.TestCase):
             fixture().replace(b"recovered=1", b"recovered=0"),
             fixture().replace(b"sd_ram=5000", b"sd_ram=0"),
             fixture() + b"p2 error=driver failed\n",
+            fixture() + b"resources sched_bytes=bad\n",
+            fixture().replace(b"sd_ram=5000", b"sd_ram=5000 trailing"),
+            fixture().replace(b"recovered=1", b"recovered=1 trailing"),
+            fixture() + b"Exception(vm_id=1): unexpected\n",
+            fixture() + b"RBOS fatal: unexpected\n",
             fixture() + b"temperature c=1e999\n",
             fixture() + b"adc rail=vdd raw=0 volts=nan\n",
             fixture() + b"button index=7 level=1 count=1\n",

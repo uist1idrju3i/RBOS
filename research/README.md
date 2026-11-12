@@ -23,6 +23,8 @@ GPIO/Button: [物理 pin・mode・foreground 配送・寿命と検査の境界](
 
 P2 の残る [実機受け入れ手順と log 検査](implementation/p2-acceptance.md)。flash 承認、事前の許容区間、Button、反復測定、SD RAM/queue と5分 stress の証拠を分けて確認します。
 
+P2 の [開発・証拠検査](implementation/development-gates.md)では、BM preflight、[API 契約・試験在庫](implementation/api-contracts.json)、四構成の成果物 verifier、期限付きの条件待機と四段階の完了状態を定めています。
+
 後続の `ruby-idiomatic` / `io-api-guideline` skill に先立つ調査です。skill 本体・RuboCop・六 class の実装は今回追加していません。
 
 - Ruby: [原則と一次資料](ruby-style/principles.md)、[guide と VM の対応](ruby-style/idiom-compatibility.md)、[組込み idiom](ruby-style/embedded-idioms.md)、[外部の主張の照合](ruby-style/attachment-review.md)。

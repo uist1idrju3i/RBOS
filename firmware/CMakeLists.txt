@@ -15,6 +15,12 @@ if(NOT CONFIG_MCUBOOT_BOOTLOADER_MODE_FIRMWARE_UPDATER)
   message(FATAL_ERROR "Invalid MCUboot mode selected.")
 endif()
 
+zephyr_get(RBOS_PREFLIGHT SYSBUILD LOCAL)
+if(RBOS_PREFLIGHT)
+  target_sources(app PRIVATE ../tools/bm-build/preflight.c)
+  return()
+endif()
+
 include(cmake/mrubyc.cmake)
 target_include_directories(app PRIVATE ../src/platform/nrf)
 target_sources(app PRIVATE ../src/platform/nrf/backend.c)
