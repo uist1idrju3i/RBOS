@@ -34,7 +34,8 @@ begin
   end
   before = NativeFixture.adc_calls
   deadline = NativeFixture.adc_time + 10000
-  while NativeFixture.adc_calls < before + 6
+  # The next request starts only after two six-request sweeps have returned.
+  while NativeFixture.adc_calls < before + 13
     if NativeFixture.adc_time > deadline
       raise 'P2 diagnostic ADC repeats missing'
     end
