@@ -32,4 +32,5 @@ void rbos_define_classes(const struct rbos_backend *backend)
   mrbc_class *cls = mrbc_define_class(NULL, "Temperature", NULL);
   mrbc_define_method(NULL, cls, "read", temperature_read);
   mrbc_define_method(NULL, cls, "new", temperature_new);
+  rbos_adc_define(backend);
 }

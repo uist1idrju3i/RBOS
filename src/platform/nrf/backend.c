@@ -4,6 +4,9 @@
 #include <nrf_sdm.h>
 #include <nrf_soc.h>
 #include "backend.h"
+#if defined(CONFIG_NRFX_SAADC)
+#include "adc.h"
+#endif
 
 #if !defined(CONFIG_SOFTDEVICE_S115) || !CONFIG_SOFTDEVICE_S115
 #error "The temperature backend requires S115"
@@ -24,6 +27,12 @@ static enum rbos_status temperature_read(void *context, int32_t *quarter_celsius
 
 const struct rbos_backend *rbos_nrf_backend(void)
 {
-  static const struct rbos_backend backend = { .temperature_read = temperature_read };
+  static const struct rbos_backend backend = {
+    .temperature_read = temperature_read,
+#if defined(CONFIG_NRFX_SAADC)
+    .uptime_ms = rbos_nrf_uptime_ms, .adc_start = rbos_nrf_adc_start,
+    .adc_poll = rbos_nrf_adc_poll, .adc_cancel = rbos_nrf_adc_cancel,
+#endif
+  };
   return &backend;
 }

@@ -66,7 +66,7 @@
 - [ ] S115 公式の `sd_temp_get` で温度 backend を実装し、0.25°C 単位の換算と校正・精度条件を確認する。利用者承認により、MPSL が予約する TEMP を nrfx_temp/register から直接操作する旧案は置換する。TEMP IRQ215 は app で接続しない。約50 µsの同期処理が他 Ruby task・BLE/tick に与える影響を実機で確認する。
 - [ ] 温度 API を Wasm fake と DK 実機で試し、正常・driver failure・timeout の結果を記録する。
   - 共有 binding と S115 backend、Wasm の正常・引数・失敗・復帰・反復検査を追加しました。SDK はソフトウェア timeout/cancel を提供せず、校正・精度条件と実時間の DK 検証は未完了です。backend とこの項目は空欄のまま残します。
-- [ ] DVDD・AVDD・VDD の電源 ADC の公開契約を決める。内部入力の選択方法は RBOS 拡張とし、物理 pin・DT label と区別する。MPIG の `read_voltage` / `read`（Float、V）と `read_raw`（換算前の Integer）を維持し、raw 値の範囲・符号、Float 無効時、busy・timeout・driver failure、待機・所有・解放と RBS を定義する。
+- [x] DVDD・AVDD・VDD の電源 ADC の公開契約を決める。内部入力の選択方法は RBOS 拡張とし、物理 pin・DT label と区別する。MPIG の `read_voltage` / `read`（Float、V）と `read_raw`（換算前の Integer）を維持し、raw 値の範囲・符号、Float 無効時、busy・timeout・driver failure、待機・所有・解放と RBS を定義する。[承認済みの入口と busy 方針、実装契約](adc-api.md)を参照する。
 - [ ] SAADC backend で三電源の内部入力を実装する。DVDD/AVDD は内部 0.9 V 電源、VDD は主電源として区別する。BM の `&adc` 削除を踏まえ、nrfx_saadc、IRQ 213、EasyDMA buffer、将来の外部 pin ADC との排他を予約表と照合する。reference・gain・分解能・校正・入力切替と換算を確認し、VDD の固定分圧比を他 SoC から流用しない。
 - [ ] 電源 ADC の完了を IRQ から bounded event で foreground へ渡し、待機中も他 Ruby task と BM の保守処理が進むことを確認する。IRQ で Ruby を呼ばず、C の spin 待機だけで実装しない。
 - [ ] 三電源 ADC を Wasm fake と DK で検査する。fake は入力選択・換算境界・不正入力・busy・timeout・driver failure、DK は VDD と実測電源値の比較・DVDD/AVDD の妥当性・入力切替・反復測定を対象とする。許容誤差を仕様と校正条件から事前に決め、BLE 接続中の tick・stack/pool、map 増分を保存する。[計画と根拠](porting-plan.md#p2-native-class-と値の規約)参照。実装・実機試験は未完了のため、空欄のままにする。

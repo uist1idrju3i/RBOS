@@ -1,0 +1,7 @@
+class ADC
+  def self.internal: (:dvdd | :avdd | :vdd) -> ADC
+  def self.new: (untyped, *untyped) -> bot
+  def read_voltage: () -> Float
+  alias read read_voltage
+  def read_raw: () -> Integer
+end

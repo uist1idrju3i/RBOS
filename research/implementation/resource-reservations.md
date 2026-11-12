@@ -4,7 +4,7 @@
 
 ## 対象と確認の限界
 
-調査基準は RBOS `57dcd09`、BM v2.0.1、S115 10.0.1、NCS v3.3.0 です。以下は固定版の仕様と source を照合した予約表であり、実機での競合・時間上限の確認ではありません。GPIO/Button、温度、三電源 ADC の driver は未実装です。採用する channel、DMA buffer、pin の owner は各 backend の追加時に確定します。
+調査基準は RBOS `57dcd09`、BM v2.0.1、S115 10.0.1、NCS v3.3.0 です。以下は固定版の仕様と source を照合した予約表であり、実機での競合・時間上限の確認ではありません。温度と三電源 ADC は以下の実装経路へ更新しました。GPIO/Button は未実装で、採用する channel・pin の owner は backend 追加時に確定します。
 
 S115 の予約は `vendor/sdk-nrf-bm/components/softdevice/nrf54l/s115/s115_API/include/nrf_sd_def.h:54-77` に従います。S115 10.0.1 が NCS v3.3.0 の Controller/MPSL を内包する根拠は `vendor/sdk-nrf-bm/components/softdevice/nrf54l/s115/doc/s115_10.0.1_release-notes.rst:49-51` です。予約全体は [MPSL Integration Notes（3.3.0）](https://docs.nordicsemi.com/bundle/ncs-3.3.0/page/nrfxlib/mpsl/doc/mpsl.html)と [Controller Integration Notes（3.3.0）](https://docs.nordicsemi.com/bundle/ncs-3.3.0/page/nrfxlib/softdevice_controller/doc/softdevice_controller.html)の nRF54L の一覧を合わせて照合しました。
 
@@ -24,7 +24,7 @@ S115 の予約は `vendor/sdk-nrf-bm/components/softdevice/nrf54l/s115/s115_API/
 | UARTE30 / SERIAL30 IRQ260 | BOARD_APP と BOARD_SHELL の両方の既定 | TX/RX=P0.00/P0.01、任意 RTS/CTS=P0.02/P0.03。現 app の shell は無効。将来 application UART と shell を同時に有効化しない |
 | TIMER24 IRQ206 | NFC の nrfx_nfct が使う候補 | NFC を採用した構成では予約し、汎用 timer と重ねない。現 app で NFC は初期化していない |
 | GPIOTE20/30、GPIO P0/P1/P2 | 将来の Button/GPIO backend | nrfx の Kconfig y は初期化済みの意味ではない。channel・port event・IRQ・pin の owner を backend ごとに決める |
-| SAADC IRQ213、EasyDMA buffer | 将来の電源 ADC backend | S115 の上記予約には含まれない。DVDD/AVDD/VDD と将来の外部 pin ADC を一つの owner で排他する |
+| SAADC channel0、IRQ213 / NVIC priority7、4-byte aligned static sample | 電源 ADC backend | S115 の上記予約には含まれない。DVDD/AVDD/VDD は一つの owner で排他し、後発は busy。外部 pin ADC も将来この owner を使う。[停止確認と寿命](adc-api.md) |
 | LED0=P2.09 | 現 app 起動表示 | GPIO API が未実装でも、既に app が出力として設定している |
 
 IRQ 接続の根拠は `vendor/sdk-nrf-bm/subsys/softdevice_handler/irq_connect.c:47-74`、SD event は `vendor/sdk-nrf-bm/components/softdevice/nrf54l/s115/s115_API/include/nrf_soc.h:81-85`、BM の予約は `vendor/sdk-nrf-bm/doc/nrf-bm/drivers/allocation_interrupts.rst:9-18,26-38` です。pin は `vendor/sdk-nrf-bm/boards/nordic/bm_nrf54l15dk/include/board-config.h:36-107` に従います。NFC timer は `vendor/sdk-nrf-bm/doc/nrf-bm/libraries/nfc/integration_notes.rst:33-57` が根拠です。board-config の override は各 backend 追加時にも再照合します。
@@ -54,8 +54,9 @@ IRQ 接続の根拠は `vendor/sdk-nrf-bm/subsys/softdevice_handler/irq_connect.
 | S115 zero-latency IRQ | SoftDevice の handler へ転送 | Ruby、RBOS ring、allocation、refcount、task 操作をしない |
 | SD event IRQ → BM defer | application IRQ、payloadなしの poll 通知 | `bm_scheduler_defer()` の `-ENOMEM` を容量不足として扱う。SDK は warning を出すが、配送保証にはならない |
 | BM process → SDH BLE/SoC observer | foreground、SDH の一時 event buffer | observer 内でも Ruby へ再入しない。非同期に渡す field は所有する buffer へコピーする |
-| 将来の Button/SAADC IRQ → RBOS ring | NVIC2–7。値だけを固定長16件の ring へコピー | IRQ で Ruby を呼ばない。overflow/drop/coalesce と完了 event の回復規約は driver 側でも扱う |
-| system service / HAL idle | Ruby の C callback / foreground、BM process を実行 | payload 処理で VM を再入せず、native completion は後続 dispatcher で処理する |
+| 将来の Button IRQ → RBOS ring | NVIC2–7。値だけを固定長16件の ring へコピー | IRQ で Ruby を呼ばない。overflow/drop/coalesce と完了 event の回復規約は driver 側でも扱う |
+| SAADC IRQ → 専用 mailbox | priority7、一つの request の校正・完了・STOPPED と sample | Ruby・allocation・refcount・task 操作をせず、foreground が phase を進める。一般 ring の満杯に依存しない |
+| system service / HAL idle | Ruby の C callback / foreground、BM process と ADC service を実行 | VM を再入せず、ADC の期限と校正・測定・停止完了を処理する。Button の Ruby dispatcher は後続実装 |
 
 BM scheduler は `sizeof(struct bm_scheduler_event) + len` を固定 heap から `K_NO_WAIT` で確保し、payload をコピーします。handler 実行が終わるまでその allocation は解放されません。512 Bを512件、あるいは `512 / header` 件の保証として扱いません。allocator の metadata・alignment・実行中の一件・他の defer producer を含めた容量試験は未完了です。`bm_scheduler_process()` は空になるまで drain するため、厳密な時間上限は P6 に残します。出典: `vendor/sdk-nrf-bm/lib/bm_scheduler/bm_scheduler.c:22-80`。
 

@@ -24,6 +24,8 @@ if [[ ! -d "$host" ]]; then
 fi
 (cd "$host" && MRUBY_CONFIG=build_config/mrbc.rb ruby minirake)
 mrbc="$host/build/host/bin/mrbc"
+"$mrbc" -Brbos_adc_bytecode -o "$build/adc_bytecode.c" "$root/src/rbos/adc.rb"
+"$mrbc" -Brbos_adc_lifetime_worker -o "$build/adc_lifetime_worker.c" "$root/tests/mruby/adc_lifetime_worker.rb"
 
 mkdir -p "$build/mrubyc"
 for dir in src support mrblib hal; do
@@ -38,12 +40,15 @@ build_runner() {
   emcc -O1 -Wall -Wextra -Wno-unused-parameter \
   -include "$root/tools/mrubyc-wasm/runner_config.h" \
   -I"$root/include" \
+  -I"$root/tools/mrubyc-wasm" \
   -I"$build/mrubyc/src" -I"$build/mrubyc/hal/emscripten" \
   -DRBOS_WASM_POOL_SIZE="$pool" -DMAX_VM_COUNT=32 -sASYNCIFY -sNODERAWFS=1 -sENVIRONMENT=node \
   -sEXIT_RUNTIME=1 -sALLOW_MEMORY_GROWTH=1 \
   -sASSERTIONS=1 -sSTACK_OVERFLOW_CHECK=1 -sCHECK_NULL_WRITES=1 \
   -sSTACK_SIZE=1048576 -sASYNCIFY_STACK_SIZE=65536 \
   "$root/tools/mrubyc-wasm/main.c" "${sources[@]}" \
+  "$build/adc_bytecode.c" \
+  "$build/adc_lifetime_worker.c" \
   "${bindings[@]}" "$root/tools/mrubyc-wasm/backend.c" \
   "$root/tools/mrubyc-wasm/native_fixture.c" \
   "$build/mrubyc/hal/emscripten/hal.c" -o "$output"
@@ -130,6 +135,18 @@ mutex_case 'mutex priority inversion' "$build/mutex_inversion.mrb" \
 for fixture in native_helpers temperature idiom_collections idiom_objects idiom_values idiom_resources; do
   timeout 30s node "$build/runner.js" "$build/$fixture.mrb"
 done
+adc_case() {
+  local expected=$1 log="$build/adc-check.log"
+  shift
+  timeout 30s node "$build/runner.js" "$@" | tee "$log"
+  if grep -Fq 'Exception(' "$log" || ! grep -Fxq "PASS: $expected" "$log"; then
+    echo "Missing ADC PASS or unexpected exception: $expected" >&2
+    exit 1
+  fi
+}
+adc_case 'ADC input voltage errors cancellation and ownership' "$build/adc.mrb"
+adc_case 'ADC cooperative waiting and concurrent busy' "$build/adc_concurrent.mrb" "$build/adc_worker.mrb"
+adc_case 'ADC termination VM-ID reuse and foreground recovery' "$build/adc_lifetime.mrb"
 
 expect_failure() {
   local expected=$1 marker=$2 status=0

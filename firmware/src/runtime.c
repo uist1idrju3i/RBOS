@@ -5,6 +5,7 @@
 #include <zephyr/logging/log_ctrl.h>
 #include "runtime.h"
 #include "rbos/native.h"
+#include "rbos/bindings.h"
 
 LOG_MODULE_REGISTER(rbos_runtime, CONFIG_RBOS_LOG_LEVEL);
 K_THREAD_STACK_DECLARE(z_main_stack, CONFIG_MAIN_STACK_SIZE);
@@ -58,6 +59,7 @@ void rbos_maintenance(bool service)
 	else ++idle_count;
 	uint32_t drain_start = k_cycle_get_32();
 	bm_scheduler_process();
+	rbos_bindings_service();
 	uint32_t drain_us = k_cyc_to_us_floor32(k_cycle_get_32() - drain_start);
 	if (drain_us > drain_max_us) drain_max_us = drain_us;
 	for (int i = 0; i < 4; ++i) {
