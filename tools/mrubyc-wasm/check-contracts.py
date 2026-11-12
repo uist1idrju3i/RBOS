@@ -73,7 +73,8 @@ def validate(inventory, root=ROOT, surface=None):
     public_names = {method.replace(".", "#") for method in surface}
     public_classes = {method.split("#")[0] for method in public_names}
     internal = inventory["internal_classes"]
-    require(all(internal.values()), "Internal classes need a rationale")
+    require(all(internal.values()) and all(inventory["internal_methods"].values()),
+            "Internal classes/methods need a rationale")
     for path in (root / "src/rbos").glob("*.c"):
         source = path.read_text()
         classes = dict(re.findall(r'(\w+)\s*=\s*mrbc_define_class\([^,]+,\s*"(\w+)"', source))
@@ -89,7 +90,9 @@ def validate(inventory, root=ROOT, surface=None):
         source = path.read_text()
         klass = re.search(r"^class (\w+)", source, re.M)
         require(klass is not None, "Ruby API wrapper needs an explicit class")
-        for method in re.findall(r"^\s*def ([\w!?]+)", source, re.M):
+        require(len(re.findall(r"^class (\w+)", source, re.M)) == 1,
+                "Use one explicit API class per Ruby wrapper")
+        for method in re.findall(r"^\s*(?:def|alias) ([\w!?]+)", source, re.M):
             name = klass[1] + "#" + method
             require(name in public_names or name in inventory["internal_methods"], "Ruby method missing contract: " + name)
     return len(documented)

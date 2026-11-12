@@ -4,7 +4,12 @@
     "RBOSADCRequest": "VM-independent SAADC request の内部 lease。公開 constructor は拒否する。",
     "RBOSButtonSubscription": "Button の内部 lease。公開 constructor は拒否する。"
   },
-  "internal_methods": ["ADC#__start", "ADC#__poll", "ADC#__finish", "ADC#__measure"],
+  "internal_methods": {
+    "ADC#__start": "Ruby wrapper 用の要求開始。公開 factory/read ではない。",
+    "ADC#__poll": "Ruby wrapper 用の lease 検査と非待機 poll。",
+    "ADC#__finish": "Ruby ensure 用の停止要求。STOPPED までは native lease を維持する。",
+    "ADC#__measure": "raw/電圧の read が共用する Ruby wrapper の内部処理。"
+  },
   "defaults": {
     "GPIO": {
       "keywords": "すべて拒否する。検査失敗時は backend を呼ばない。",

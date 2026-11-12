@@ -39,6 +39,11 @@ class ContractInventoryTests(unittest.TestCase):
             path.write_text(path.read_text() + '\nmrbc_define_method(NULL, gpio_class, "undocumented", callback);\n')
             with self.assertRaisesRegex(ValueError, "Binding missing RBS/contract"):
                 checker.validate(self.inventory, root)
+            path.write_text((ROOT / "src/rbos/gpio_binding.c").read_text())
+            wrapper = root / "src/rbos/adc.rb"
+            wrapper.write_text(wrapper.read_text() + "\n  alias undocumented read_raw\n")
+            with self.assertRaisesRegex(ValueError, "Ruby method missing contract"):
+                checker.validate(self.inventory, root)
 
     def test_missing_lifetime_keyword_contract_or_assertion_fails(self):
         for field in ("lifetime", "keywords"):
