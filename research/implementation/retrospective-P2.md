@@ -71,6 +71,16 @@ RAM は配置・alignment を含む静的な値で、Ruby pool の空きや stac
 
 [PR #42 の検査](https://github.com/uist1idrju3i/RBOS/pull/42/checks)で実行結果を追跡します。実装時の host は88件、skill unittest は7件、Wasm の正常 suite と最小 BM preflight の compile/link は成功しました。四構成の機械可読結果は CI の `firmware-verification-<revision>` artifact を正本とし、上の過去の image hash を流用しません。[開発検査](development-gates.md)がコマンド・完了状態・保証しない範囲を定義します。
 
+## 改善適用後の最終 CI と成果物
+
+[PR #42 最終 head 3ab7129](https://github.com/uist1idrju3i/RBOS/commit/3ab71297341074149e5427f55ec59d6bee8271e1)の全16 check と、[main 8096c28](https://github.com/uist1idrju3i/RBOS/commit/8096c2864849390fdf5f2185ba4a7bda42642590)の全18 check が成功しました。PR の build 入力は GitHub の検査用 merge revision `995bae77a1d321ebadcb3656ee7eb5e41681c685` です。main の [firmware CI](https://github.com/uist1idrju3i/RBOS/actions/runs/43334033333)と [Wasm CI](https://github.com/uist1idrju3i/RBOS/actions/runs/43334033318)を参照してください。
+
+main の四構成 evidence を取得し、共通 verifier を再実行しました。各構成35ファイルの checksum、source/module、0.1.4+0、profile、秘密鍵不在、IRQ/vector、map/build log は PASS です。再実行した集約 JSON は CI の集約結果と一致しました。以前の34ファイルからは build.log が追加されています。
+
+さらに main 039d4ea の四構成 evidence を baseline として、各構成の map 差分を検査しました。FLASH/RAM と text/rodata/data/bss/noinit は全構成とも増減0 Bです。保存した [四構成の検証 JSON](p2-gate-results.json)には、この追加の `map_delta` と、各 image の SHA-256、debug 比の profile 差分を含みます。`map_delta` 以外の field は CI の集約結果と一致します。署名済み image の hash が異なっても、binary 再現性を判定したものではありません。
+
+JSON の完了状態は `bm_build: PASS`、`real_hardware: NOT_RUN` です。`implementation` / `host_wasm` が NOT_EVALUATED なのは、成果物 verifier の担当外のためで、上記の実装・host/Wasm の失敗を表しません。実機の確認項目は引き続き未完了です。
+
 ## 調査結果の反映確認と残る受け入れ
 
 このセッションの判断・SDK 制約・失敗原因・検証結果を、上記の契約、設計判断、予約表、開発検査、[checklist](checklist.md#p2-native-api-と資源)と照合しました。初回の Common I/O 調査・pin 対応・共通基盤・段階計画に残っていた「未実装」「候補」「mock は今後」の記述を、現在の実装と履歴に分けて更新しました。外部 pin ADC と他の未実装 I/O は未実装のまま明記します。

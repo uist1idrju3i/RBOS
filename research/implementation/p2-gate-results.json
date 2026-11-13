@@ -1,0 +1,205 @@
+{
+  "status": "PASS",
+  "profiles": {
+    "debug": {
+      "revision": "8096c2864849390fdf5f2185ba4a7bda42642590",
+      "image_version": [
+        0,
+        1,
+        4,
+        0
+      ],
+      "profile": "debug",
+      "sha256": "c110e2043952136796ef133d6df8d9fd70c5454766f66709e10dd73b93665a33",
+      "checksummed_files": 35,
+      "vectors": {
+        "213": "saadc_irq",
+        "218": "button_irq20",
+        "268": "button_irq30"
+      },
+      "map": {
+        "flash": 140036,
+        "ram": 85536,
+        "text": 109432,
+        "rodata": 25396,
+        "data": 1448,
+        "bss": 73248,
+        "noinit": 10752
+      },
+      "build_log": {
+        "flash": 140036,
+        "ram": 85536
+      },
+      "map_delta": {
+        "flash": 0,
+        "ram": 0,
+        "text": 0,
+        "rodata": 0,
+        "data": 0,
+        "bss": 0,
+        "noinit": 0
+      }
+    },
+    "release": {
+      "revision": "8096c2864849390fdf5f2185ba4a7bda42642590",
+      "image_version": [
+        0,
+        1,
+        4,
+        0
+      ],
+      "profile": "release",
+      "sha256": "613e80fb5d86c98e6325cf0e37da769893597a0069aa9249be1aa7487b8f11a4",
+      "checksummed_files": 35,
+      "vectors": {
+        "213": "saadc_irq",
+        "218": "button_irq20",
+        "268": "button_irq30"
+      },
+      "map": {
+        "flash": 120280,
+        "ram": 85288,
+        "text": 91824,
+        "rodata": 23492,
+        "data": 1209,
+        "bss": 73238,
+        "noinit": 10752
+      },
+      "build_log": {
+        "flash": 120280,
+        "ram": 85288
+      },
+      "map_delta": {
+        "flash": 0,
+        "ram": 0,
+        "text": 0,
+        "rodata": 0,
+        "data": 0,
+        "bss": 0,
+        "noinit": 0
+      }
+    },
+    "stress": {
+      "revision": "8096c2864849390fdf5f2185ba4a7bda42642590",
+      "image_version": [
+        0,
+        1,
+        4,
+        0
+      ],
+      "profile": "stress",
+      "sha256": "0c935ec1065ec70742cd07c80ae4ae32b9bc8d05fdb1a0466d9ca78330f47b69",
+      "checksummed_files": 35,
+      "vectors": {
+        "213": "saadc_irq",
+        "218": "button_irq20",
+        "268": "button_irq30"
+      },
+      "map": {
+        "flash": 140836,
+        "ram": 85536,
+        "text": 109432,
+        "rodata": 26196,
+        "data": 1448,
+        "bss": 73248,
+        "noinit": 10752
+      },
+      "build_log": {
+        "flash": 140836,
+        "ram": 85536
+      },
+      "map_delta": {
+        "flash": 0,
+        "ram": 0,
+        "text": 0,
+        "rodata": 0,
+        "data": 0,
+        "bss": 0,
+        "noinit": 0
+      }
+    },
+    "oom": {
+      "revision": "8096c2864849390fdf5f2185ba4a7bda42642590",
+      "image_version": [
+        0,
+        1,
+        4,
+        0
+      ],
+      "profile": "oom",
+      "sha256": "3030c8cbf6d98a85398c7787b31079f23562d6f9b7c4c1c99d28320cc3104ec7",
+      "checksummed_files": 35,
+      "vectors": {
+        "213": "saadc_irq",
+        "218": "button_irq20",
+        "268": "button_irq30"
+      },
+      "map": {
+        "flash": 136412,
+        "ram": 85536,
+        "text": 109432,
+        "rodata": 21772,
+        "data": 1448,
+        "bss": 73248,
+        "noinit": 10752
+      },
+      "build_log": {
+        "flash": 136412,
+        "ram": 85536
+      },
+      "map_delta": {
+        "flash": 0,
+        "ram": 0,
+        "text": 0,
+        "rodata": 0,
+        "data": 0,
+        "bss": 0,
+        "noinit": 0
+      }
+    }
+  },
+  "completion": {
+    "implementation": "NOT_EVALUATED",
+    "host_wasm": "NOT_EVALUATED",
+    "bm_build": "PASS",
+    "real_hardware": "NOT_RUN"
+  },
+  "profile_delta_from_debug": {
+    "debug": {
+      "flash": 0,
+      "ram": 0,
+      "text": 0,
+      "rodata": 0,
+      "data": 0,
+      "bss": 0,
+      "noinit": 0
+    },
+    "release": {
+      "flash": -19756,
+      "ram": -248,
+      "text": -17608,
+      "rodata": -1904,
+      "data": -239,
+      "bss": -10,
+      "noinit": 0
+    },
+    "stress": {
+      "flash": 800,
+      "ram": 0,
+      "text": 0,
+      "rodata": 800,
+      "data": 0,
+      "bss": 0,
+      "noinit": 0
+    },
+    "oom": {
+      "flash": -3624,
+      "ram": 0,
+      "text": 0,
+      "rodata": -3624,
+      "data": 0,
+      "bss": 0,
+      "noinit": 0
+    }
+  }
+}
