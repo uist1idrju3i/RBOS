@@ -3,6 +3,8 @@
 host の mrbc と emscripten HAL を使い、Ruby の compile と smoke test を実行します。
 firmware の build や Nordic の IRQ・BLE・タイミング試験を代替するものではありません。
 
+P2 の正常 suite と必須 PASS は [API 契約・試験在庫](../../research/implementation/api-contracts.json)で管理し、`check.sh` から `check-contracts.py --run` で実行します。exit 0 だけでなく、worker の完了も含む全 PASS と runtime failure の不在を検査します。[開発・証拠検査](../../research/implementation/development-gates.md)も参照してください。
+
 `temperature.rb` は共有 `Temperature.read` を fake backend で実行し、正負・0.25°C刻み、位置・keyword 引数と constructor の拒否、driver failure/busy/timeout、backend 不在からの復帰、反復読出しと参照寿命を検査します。[温度の契約と Float 無効 build の制限](../../research/implementation/temperature-api.md)も参照してください。SDK の実時間・校正精度は検査しません。
 
 `adc.rb` と複数 task の fixture は、三電源の共有 binding、busy、協調待機、取消し、task 終了と VM ID の再利用を実行します。[ADC の契約と検査の境界](../../research/implementation/adc-api.md)を参照してください。runner の `hal.h` は vendor HAL を取り込み、idle に foreground service を追加する薄い adapter です。

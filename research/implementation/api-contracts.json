@@ -1,0 +1,477 @@
+{
+  "schema": 1,
+  "internal_classes": {
+    "RBOSADCRequest": "VM-independent SAADC request の内部 lease。公開 constructor は拒否する。",
+    "RBOSButtonSubscription": "Button の内部 lease。公開 constructor は拒否する。"
+  },
+  "internal_methods": {
+    "ADC#__start": "Ruby wrapper 用の要求開始。公開 factory/read ではない。",
+    "ADC#__poll": "Ruby wrapper 用の lease 検査と非待機 poll。",
+    "ADC#__finish": "Ruby ensure 用の停止要求。STOPPED までは native lease を維持する。",
+    "ADC#__measure": "raw/電圧の read が共用する Ruby wrapper の内部処理。"
+  },
+  "defaults": {
+    "GPIO": {
+      "keywords": "すべて拒否する。検査失敗時は backend を呼ばない。",
+      "effects": "pin は物理電位で扱う。DT の active-low で反転しない。出力設定の初期値は low。",
+      "waiting": "短い同期処理。協調待機・queue はない。",
+      "busy": "Button が所有する pin の設定・書込みは RuntimeError。",
+      "cancellation": "非同期要求を作らないため取消しはない。",
+      "cleanup": "GPIO instance は lease を持たず、破棄時に pin 設定を変更しない。",
+      "reuse": "Button の同期解放完了後に再利用できる。",
+      "abnormal": [
+        "gpio-input"
+      ],
+      "lifetime": [
+        "gpio-owner"
+      ],
+      "hardware": [
+        "電圧・配線・active-low と電気特性"
+      ]
+    },
+    "Button": {
+      "keywords": "すべて拒否する。",
+      "effects": "DK の押下は物理値0。ISR は固定 ring に積み、foreground が配送する。Ruby Proc・task pointer・VM ID を native で保持しない。",
+      "waiting": "poll は非待機。wait/each_event は sleep_ms で他 task に実行機会を譲る。",
+      "busy": "二重購読・所有 pin の変更を RuntimeError として拒否する。",
+      "cancellation": "close または task 終了で停止する。native が解除に失敗した場合は lease を保持する。",
+      "cleanup": "partial unwatch の成功箇所を重ねて解放せず、再試行後に lease を返す。",
+      "reuse": "generation の異なる旧 event を破棄し、VM ID 再利用先へ配送しない。",
+      "abnormal": [
+        "button-input"
+      ],
+      "lifetime": [
+        "button-retry",
+        "button-generation",
+        "button-termination"
+      ],
+      "hardware": [
+        "実 IRQ の競合・飽和・latency・接点 bounce"
+      ]
+    },
+    "Temperature": {
+      "keywords": "未知 keyword は backend 呼出し前に ArgumentError。unexpected: nil と空 keyword splat を別々に検査する。",
+      "effects": "S115 の sd_temp_get だけを使う。TEMP を直接操作しない。",
+      "waiting": "同期呼出し。API 実行中は他 Ruby task が進むとは保証しない。",
+      "busy": "backend の失敗・busy は RuntimeError。",
+      "cancellation": "固定 SDK は software timeout/cancel を提供しない。fake の timeout は S115 の保証ではない。",
+      "cleanup": "要求・DMA buffer を保持しない。",
+      "reuse": "取得失敗後に再取得でき、反復で参照を漏らさない。",
+      "abnormal": [
+        "temperature-keyword"
+      ],
+      "lifetime": [
+        "temperature-repeat"
+      ],
+      "hardware": [
+        "測定精度・実時間・BLE/tick への影響"
+      ]
+    },
+    "ADC": {
+      "keywords": "すべて拒否する。",
+      "effects": "SAADC を一要求で占有する。DVDD/AVDD は内部0.9 V電源、VDD は主電源。",
+      "waiting": "開始・poll・finish に分け、待機中は sleep_ms で他 task と保守処理を進める。",
+      "busy": "測定中の後発要求は queue に入れず RuntimeError。",
+      "cancellation": "deadline/ensure/task 終了で取消し、foreground が STOPPED を確認する。",
+      "cleanup": "STOPPED を確認するまで DMA buffer と SAADC の所有を維持する。",
+      "reuse": "token と VM-independent request を用い、旧結果を再利用 VM に渡さない。",
+      "abnormal": [
+        "adc-input"
+      ],
+      "lifetime": [
+        "adc-stop",
+        "adc-termination"
+      ],
+      "hardware": [
+        "実 IRQ/DMA・STOPPED・精度/校正・BLE/tick・stack/pool"
+      ]
+    }
+  },
+  "contracts": [
+    {
+      "class": "GPIO",
+      "methods": [
+        "GPIO.new"
+      ],
+      "arguments": "pin: Integer(port*32+pin) / String(P<port>.<pin>) / DT label Symbol、mode: 必須 Integer。IN/OUT/HIGH_Z と許可する pull/open-drain の組合せ。",
+      "returns": "GPIO",
+      "suites": [
+        "gpio"
+      ]
+    },
+    {
+      "class": "GPIO",
+      "methods": [
+        "GPIO.setmode",
+        "GPIO#setmode"
+      ],
+      "arguments": "class は pin, mode、instance は mode。nil・誤型・不正 bit・矛盾する mode を拒否。",
+      "returns": "nil",
+      "suites": [
+        "gpio"
+      ]
+    },
+    {
+      "class": "GPIO",
+      "methods": [
+        "GPIO.read_at",
+        "GPIO#read"
+      ],
+      "arguments": "class は pin、instance は引数なし。予約・存在しない pin を拒否。",
+      "returns": "物理値0または1の Integer",
+      "suites": [
+        "gpio"
+      ]
+    },
+    {
+      "class": "GPIO",
+      "methods": [
+        "GPIO.high_at?",
+        "GPIO.low_at?",
+        "GPIO#high?",
+        "GPIO#low?"
+      ],
+      "arguments": "class は pin、instance は引数なし。",
+      "returns": "物理値との比較による bool",
+      "suites": [
+        "gpio"
+      ]
+    },
+    {
+      "class": "GPIO",
+      "methods": [
+        "GPIO.write_at",
+        "GPIO#write"
+      ],
+      "arguments": "class は pin, level、instance は level。level は Integer の0または1だけ。",
+      "returns": "nil",
+      "suites": [
+        "gpio"
+      ]
+    },
+    {
+      "class": "Button",
+      "methods": [
+        "Button.new"
+      ],
+      "arguments": "監査済みDK Button pinを Integer / String / DT label Symbol で指定する。未定義・誤型・予約・LED pin を拒否。",
+      "returns": "Button",
+      "suites": [
+        "button"
+      ]
+    },
+    {
+      "class": "Button",
+      "methods": [
+        "Button.stats"
+      ],
+      "arguments": "引数なし。",
+      "returns": "[queued, overflow, coalesced, delivery_overflow] の Integer 配列。ring は16件、newest-drop、count は飽和する。",
+      "suites": [
+        "button"
+      ]
+    },
+    {
+      "class": "Button",
+      "methods": [
+        "Button#poll",
+        "Button#wait"
+      ],
+      "arguments": "引数なし。poll は空なら nil、wait は取得まで待つ。",
+      "returns": "[physical_level, edge_count]。同一 pin/generation を coalesce する。",
+      "suites": [
+        "button"
+      ]
+    },
+    {
+      "class": "Button",
+      "methods": [
+        "Button#each_event"
+      ],
+      "arguments": "引数なし、block 必須。呼出し task 内で level, count を yield する。",
+      "returns": "終了まで反復。通常の最終戻り値は規定しない。",
+      "suites": [
+        "button"
+      ]
+    },
+    {
+      "class": "Button",
+      "methods": [
+        "Button#pressed?"
+      ],
+      "arguments": "引数なし。",
+      "returns": "bool（物理値0なら true）",
+      "suites": [
+        "button"
+      ]
+    },
+    {
+      "class": "Button",
+      "methods": [
+        "Button#close"
+      ],
+      "arguments": "引数なし。解除完了後の再 close は安全。",
+      "returns": "nil。解除失敗は RuntimeError で再試行可能。",
+      "suites": [
+        "button"
+      ]
+    },
+    {
+      "class": "Temperature",
+      "methods": [
+        "Temperature.read"
+      ],
+      "arguments": "位置引数なし。nil・誤型を含む入力は backend 前に拒否。",
+      "returns": "ダイ温度を0.25°C刻みの Float °Cで返す。負値を符号付きで換算。Float 無効時は NotImplementedError。",
+      "suites": [
+        "temperature"
+      ]
+    },
+    {
+      "class": "Temperature",
+      "methods": [
+        "Temperature.new"
+      ],
+      "arguments": "常に拒否する。",
+      "returns": "TypeError",
+      "suites": [
+        "temperature"
+      ]
+    },
+    {
+      "class": "ADC",
+      "methods": [
+        "ADC.internal"
+      ],
+      "arguments": "Symbol :dvdd / :avdd / :vdd のみ。nil・誤型・範囲外・未知 Symbol を拒否。",
+      "returns": "ADC",
+      "suites": [
+        "adc"
+      ]
+    },
+    {
+      "class": "ADC",
+      "methods": [
+        "ADC.new"
+      ],
+      "arguments": "外部 pin ADC は未対応で常に拒否する。引数なしは ArgumentError、pin 指定は NotImplementedError。",
+      "returns": "成功する呼出しはない。引数検査に応じて ArgumentError / NotImplementedError。",
+      "suites": [
+        "adc"
+      ]
+    },
+    {
+      "class": "ADC",
+      "methods": [
+        "ADC#read_raw"
+      ],
+      "arguments": "引数なし。",
+      "returns": "換算前の符号付き Integer。backend の範囲/失敗を検査する。",
+      "suites": [
+        "adc"
+      ]
+    },
+    {
+      "class": "ADC",
+      "methods": [
+        "ADC#read",
+        "ADC#read_voltage"
+      ],
+      "arguments": "引数なし。read は read_voltage の alias。",
+      "returns": "Float V。reference/gain/resolution により換算。Float 無効時は NotImplementedError。",
+      "suites": [
+        "adc"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "gpio-input",
+      "file": "tests/mruby/gpio.rb",
+      "marker": "GPIO invalid input changed hardware",
+      "scope": "host_wasm"
+    },
+    {
+      "id": "gpio-owner",
+      "file": "tests/mruby/button.rb",
+      "marker": "GPIO",
+      "scope": "host_wasm"
+    },
+    {
+      "id": "button-input",
+      "file": "tests/mruby/button.rb",
+      "marker": "Button.new",
+      "scope": "host_wasm"
+    },
+    {
+      "id": "button-retry",
+      "file": "tests/check-changes/test_nrf_button.py",
+      "marker": "already_uninitialized",
+      "scope": "host"
+    },
+    {
+      "id": "button-generation",
+      "file": "tests/mruby/button.rb",
+      "marker": "generation",
+      "scope": "host_wasm"
+    },
+    {
+      "id": "button-termination",
+      "file": "tests/mruby/button_lifetime.rb",
+      "marker": "VM ID",
+      "scope": "host_wasm"
+    },
+    {
+      "id": "temperature-keyword",
+      "file": "tests/mruby/temperature.rb",
+      "marker": "Temperature.read(unexpected: nil)",
+      "scope": "host_wasm"
+    },
+    {
+      "id": "temperature-repeat",
+      "file": "tests/mruby/temperature.rb",
+      "marker": "memory_used == memory",
+      "scope": "host_wasm"
+    },
+    {
+      "id": "adc-input",
+      "file": "tests/mruby/adc.rb",
+      "marker": "ADC.internal",
+      "scope": "host_wasm"
+    },
+    {
+      "id": "adc-stop",
+      "file": "tests/check-changes/test_adc_nrf.py",
+      "marker": "NRF_SAADC_EVENT_STOPPED",
+      "scope": "host"
+    },
+    {
+      "id": "adc-termination",
+      "file": "tests/mruby/adc_lifetime.rb",
+      "marker": "ADC old result delivered",
+      "scope": "host_wasm"
+    }
+  ],
+  "suites": [
+    {
+      "name": "native_helpers",
+      "bytecode": [
+        "native_helpers"
+      ],
+      "required_pass": [
+        "PASS: native helpers / validation / backend failures / ownership"
+      ]
+    },
+    {
+      "name": "temperature",
+      "bytecode": [
+        "temperature"
+      ],
+      "required_pass": [
+        "PASS: Temperature.read arguments, signed scale, failures, recovery and lifetime"
+      ]
+    },
+    {
+      "name": "idiom_collections",
+      "bytecode": [
+        "idiom_collections"
+      ],
+      "required_pass": [
+        "PASS: idiom collections / explicit blocks / matching count / empty inputs"
+      ]
+    },
+    {
+      "name": "idiom_objects",
+      "bytecode": [
+        "idiom_objects"
+      ],
+      "required_pass": [
+        "PASS: idiom objects / naming / guards / keywords / blocks / Proc.new"
+      ]
+    },
+    {
+      "name": "idiom_values",
+      "bytecode": [
+        "idiom_values"
+      ],
+      "required_pass": [
+        "PASS: idiom values / false cache / safe navigation / bytes / bounded integers"
+      ]
+    },
+    {
+      "name": "idiom_resources",
+      "bytecode": [
+        "idiom_resources"
+      ],
+      "required_pass": [
+        "PASS: idiom resources / specific rescue / ensure / Mutex / task sleep"
+      ]
+    },
+    {
+      "name": "adc",
+      "bytecode": [
+        "adc"
+      ],
+      "required_pass": [
+        "PASS: ADC input voltage errors cancellation and ownership"
+      ]
+    },
+    {
+      "name": "adc_concurrent",
+      "bytecode": [
+        "adc_concurrent",
+        "adc_worker"
+      ],
+      "required_pass": [
+        "PASS: ADC cooperative waiting and concurrent busy"
+      ]
+    },
+    {
+      "name": "adc_lifetime",
+      "bytecode": [
+        "adc_lifetime"
+      ],
+      "required_pass": [
+        "PASS: ADC termination VM-ID reuse and foreground recovery"
+      ]
+    },
+    {
+      "name": "gpio",
+      "bytecode": [
+        "gpio"
+      ],
+      "required_pass": [
+        "PASS: GPIO pin modes physical levels errors and ownership"
+      ]
+    },
+    {
+      "name": "button",
+      "bytecode": [
+        "button"
+      ],
+      "required_pass": [
+        "PASS: Button coalescing overflow generation and cleanup"
+      ]
+    },
+    {
+      "name": "button_lifetime",
+      "bytecode": [
+        "button_lifetime"
+      ],
+      "required_pass": [
+        "PASS: Button cooperative wait termination and VM-ID reuse",
+        "PASS: Button reused VM received current edge"
+      ]
+    },
+    {
+      "name": "peripherals",
+      "bytecode": [
+        "peripherals"
+      ],
+      "required_pass": [
+        "PASS: P2 diagnostic task repeated samples and cleanup",
+        "PASS: P2 native setup"
+      ]
+    }
+  ]
+}

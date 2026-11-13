@@ -42,6 +42,8 @@ VM ID や TCB の再利用で他 task へ結果を push / resume することは
 
 ## nRF54L15 backend と換算
 
+Float 無効は binding の guard を host で検査した契約です。固定 VM 全体の Float 無効 build は [温度 API に記録した vendor header の制限](temperature-api.md#検査と未確認項目)で未対応であり、raw の契約だけから動作済みとは判断しません。
+
 [nRF adapter](../../src/platform/nrf/adc.c)は一つの SAADC、channel 0、NVIC IRQ 213 / priority 7 を専有します。BM の優先度 offset を引いた Zephyr priority で接続し、nrfx の設定と揃えます。S115 の予約と console UARTE に重ならない資源です。外部 pin ADC を追加するときも、この同じ owner を通す必要があります。
 
 固定 nrfx の public input 型は `nrfx_analog_input_t` です。`NRFX_ANALOG_INTERNAL_DVDD` / `AVDD` / `VDD` を渡し、SDK の `nrfx_saadc_ain_get` が `NRF_SAADC_INPUT_*` へ変換します。HAL の encoded selector を nrfx の引数へ直接渡しません。BM は `&adc` を削除するため、DT ADC driver は使わず BM の `CONFIG_NRFX_SAADC` を有効にします。

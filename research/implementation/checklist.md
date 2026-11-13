@@ -50,6 +50,8 @@
 
 ## P2: native API と資源
 
+完了は `implementation`・`host_wasm`・`bm_build`・`real_hardware` の四段階で記録します。build/CI の成功だけで実機欄を完了にしません。[開発時の必須検査と状態の意味](development-gates.md)に従い、[API 契約・試験在庫](api-contracts.json)の異常系・寿命検査を PR 前に実行します。
+
 GPIO/Button・Temperature・三電源 ADC の binding/backend、固定 ring と foreground 配送、RBS、Wasm fake、起動 probe を実装しました。以下のうち実装と実機確認を合わせた項目は、実機の証拠が揃うまで空欄を保ちます。[実機受け入れ手順](p2-acceptance.md)に残る操作・事前基準・log 検査をまとめました。
 
 - [x] GPIO の Integer/String/DT Symbol 解決、物理値・mode・例外・予約 pin・所有、nRF/Wasm backend と RBS を実装する。

@@ -29,6 +29,10 @@ Button も利用者の A 選択により、`wait` が `[物理値, edge数]` を
 
 2026-11-12 の利用者承認により、温度 backend は S115 公式の `sd_temp_get` を利用します。MPSL が TEMP を予約するため、nrfx_temp/register の直接操作と app 独自の IRQ 接続は採用しません。公開形は A の `Temperature.read`（引数なし、Float °C、取得失敗は RuntimeError）を選択しました。0.25°C単位の値を約50 µsの同期 API で得る仕様で、呼出し中は他 Ruby task が進みません。これは温度の承認済み例外で、実機評価は未完了です。[公開契約](../implementation/temperature-api.md)と [資源予約・出典](../implementation/resource-reservations.md)を参照してください。
 
+## 三電源 ADC の選択と同時要求
+
+利用者は `ADC.internal(:dvdd)` / `:avdd` / `:vdd` の factory と、測定中の後発呼出しを RuntimeError（busy）で拒否する方式を選択しました。順番待ち queue は作りません。`read_voltage` と `read` は Float の V、`read_raw` は signed Integer です。他 Ruby task と BM maintenance は待機中も進めます。停止要求の発行だけで DMA buffer を再利用せず、停止確認まで native lease を維持します。[入力・換算・取消しと検査](../implementation/adc-api.md)を正本とし、外部 pin ADC と実機の精度確認は含めません。
+
 ## SemVer と公開権限
 
 利用者が承認した版管理の方針です。根拠となる規格、SDK の制約、parser 実行、ruleset の取得結果は [版管理調査](../release/versioning.md)に分けています。
@@ -64,7 +68,7 @@ TWEAK の一意化は rollback 対策ではありません。BM MCUmgr の upgra
 | 項目 | 現時点の提案と残る確認 |
 |---|---|
 | compiler 配布 | vendor/mruby 4.0.0 を build。配布 OS、再現用 toolchain、生成物 hash を決める |
-| console | 最初は UARTE。RTT/BLE、バッファ上限、ISR 中の禁止を検討 |
+| console の将来拡張 | 現行は承認済みの UARTE20。RTT/BLE への変更や別の buffer 設計は今回採用していない |
 | system-task 認証 | 初期は署名済み firmware 内コードを信頼。将来の外部コードには HMAC 等を設計 |
 | 権限単位 | callback で VM 権限を検査。子 task、VM ID 再利用、破棄時の失効を決める |
 | RAM と alignment | const blob とは別に IREP/文字列等を見積もり、配置と access 条件を検証 |

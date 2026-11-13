@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -182,7 +183,9 @@ int main(void) {
         shared = (ROOT / "src/rbos/bindings.c").read_text()
         self.assertNotIn("nrf_", shared)
         self.assertNotIn("zephyr", shared)
-        self.assertIn("native_helpers temperature ", (ROOT / "tools/mrubyc-wasm/check.sh").read_text())
+        self.assertIn('check-contracts.py" --run', (ROOT / "tools/mrubyc-wasm/check.sh").read_text())
+        inventory = json.loads((ROOT / "research/implementation/api-contracts.json").read_text())
+        self.assertIn("temperature", [suite["name"] for suite in inventory["suites"]])
 
 
 if __name__ == "__main__":

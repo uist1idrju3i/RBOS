@@ -15,6 +15,8 @@ SDK の build は [BM の再現手順と P1 map 比較](implementation/bm-build.
 
 ## Ruby らしさと共通 I/O API
 
+P2 の [調査判断・検証結果と振り返り](implementation/retrospective-P2.md)に、採用・不採用の理由、四構成の証拠、改善4項目と文書への反映確認をまとめました。P2 のコード実装と CLI 検査は実施済みですが、実機受け入れは未完了です。
+
 実装済みの RBOS 拡張: [ダイ温度 API の契約・検査・未確認条件](implementation/temperature-api.md)。MPIG 六 class の実装完了や P2 全体の完了を意味しません。
 
 三電源 ADC: [内部入力・協調待機・busy・DMA 寿命と検査の境界](implementation/adc-api.md)。外部 pin ADC と DK での検証は未完了です。
@@ -22,6 +24,8 @@ SDK の build は [BM の再現手順と P1 map 比較](implementation/bm-build.
 GPIO/Button: [物理 pin・mode・foreground 配送・寿命と検査の境界](implementation/gpio-button-api.md)。実機の IRQ・電気特性の受け入れは未完了です。
 
 P2 の残る [実機受け入れ手順と log 検査](implementation/p2-acceptance.md)。flash 承認、事前の許容区間、Button、反復測定、SD RAM/queue と5分 stress の証拠を分けて確認します。
+
+P2 の [開発・証拠検査](implementation/development-gates.md)では、BM preflight、[API 契約・試験在庫](implementation/api-contracts.json)、四構成の成果物 verifier、期限付きの条件待機と四段階の完了状態を定めています。
 
 後続の `ruby-idiomatic` / `io-api-guideline` skill に先立つ調査です。skill 本体・RuboCop・六 class の実装は今回追加していません。
 

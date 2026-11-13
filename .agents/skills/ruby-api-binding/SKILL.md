@@ -13,11 +13,13 @@ RBOS では mruby/c が scheduler です。製品開発者が Ruby を中心に�
 |---|---|
 | 共有 binding | `src/rbos/`。Ruby の class/method は nRF と Wasm で同じ C を使う |
 | 登録入口 | `include/rbos/bindings.h` の `rbos_define_classes(backend)`。`src/rbos/bindings.c` から各登録関数を呼ぶ |
-| backend 契約 | `include/rbos/backend.h`。現在は context のみで、device operation は未定義 |
+| backend 契約 | `include/rbos/backend.h`。context と GPIO/Button・温度・ADC・event の operation |
 | Wasm fake | `tools/mrubyc-wasm/backend.c`。hardware operation の追加時に fake も実装する |
-| nRF 実装 | 将来の `src/platform/nrf/`。実機用 backend を link し、共有 binding から Nordic の header を直接 include しない |
+| nRF 実装 | `src/platform/nrf/`。実機用 backend を link し、共有 binding から Nordic の header を直接 include しない |
 
-現在の登録関数は空で、実際の device API はまだありません。runner は `mrbc_init()` の直後、task 作成前に一度だけ登録関数を呼びます。nRF 起動処理も同じ順序で実装してください。
+GPIO/Button・Temperature・内部三電源 ADC を登録済みです。runner と nRF は `mrbc_init()` の後、task 作成前に一度だけ登録関数を呼びます。
+
+[開発・証拠検査](../../../research/implementation/development-gates.md)に従い、公開 API は RBS・契約在庫・異常系と寿命の試験を同じ PR に揃えます。`check-contracts.py` は共有 C/Ruby だけに増えた公開面や、必須 PASS の欠落も拒否します。内部 helper の名前・理由も明示し、内部という表示を認可として扱いません。
 
 ## 追加手順
 

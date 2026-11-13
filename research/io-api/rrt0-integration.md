@@ -33,6 +33,6 @@ nrfx の参照 source は [hal_nordic 固定版](https://github.com/zephyrprojec
 
 Wasm fake backend で通常・空データ・短い転送・不正引数・失敗・timeout・cancel を制御できることを受け入れ条件にします。待機中に別 task の counter と BM foreground 相当処理が進み、queue / buffer が上限を守り、同一 instance への競合と task 終了後の event が安全であることも確認します。これらの fake API・試験は今回追加していません。
 
-nRF 実機では S115 有効時の IRQ priority、DMA alignment / RAM、GPIO 電気特性、実効周波数、I2C repeated start、SPI dummy zero、UART flush、CPU 負荷・latency・消費電力を確認します。既存 [Wasm scheduler 検査](../../tools/mrubyc-wasm/README.md)の成功は、この未実装 I/O の保証にはなりません。
+nRF 実機では S115 有効時の IRQ priority、DMA alignment / RAM、GPIO 電気特性、実効周波数、I2C repeated start、SPI dummy zero、UART flush、CPU 負荷・latency・消費電力を確認します。[Wasm 検査](../../tools/mrubyc-wasm/README.md)には GPIO/Button・温度・内部 ADC の fake を追加済みですが、実機の動作や未実装の他 I/O の保証にはなりません。
 
 [調査の入口](overview.md) / [調査索引へ戻る](../README.md)

@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -28,8 +29,11 @@ class ADCTests(unittest.TestCase):
             self.assertNotIn("#include <nrf", text)
             self.assertNotIn("#include <zephyr", text)
         script = (ROOT / "tools/mrubyc-wasm/check.sh").read_text()
-        for fixture in ("adc", "adc_concurrent", "adc_worker"):
-            self.assertIn(f'"$build/{fixture}.mrb"', script)
+        self.assertIn('check-contracts.py" --run', script)
+        inventory = json.loads((ROOT / "research/implementation/api-contracts.json").read_text())
+        fixtures = [name for suite in inventory["suites"] for name in suite["bytecode"]]
+        for fixture in ("adc", "adc_concurrent", "adc_worker", "adc_lifetime"):
+            self.assertIn(fixture, fixtures)
 
 
 if __name__ == "__main__":

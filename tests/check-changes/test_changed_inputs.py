@@ -66,7 +66,7 @@ class ChangedInputsTests(unittest.TestCase):
                   'tests/check-changes/test_dk_log.py',
                   'vendor/mruby', 'vendor/mrubyc', 'src/new\nfile.rb', 'include/space name.h',
                   'src/rbos/new.c', 'src/platform/nrf/backend.c', 'include/rbos/new.h',
-                  'sig/temperature.rbs',
+                  'sig/temperature.rbs', 'research/implementation/api-contracts.json',
                   'firmware/ruby/system.rb', 'firmware/ruby/selftest/coordinator.rb',
                   'firmware/ruby/stress/spinner_a.rb', 'firmware/ruby/fault/oom.rb']
         paths = {
@@ -141,28 +141,29 @@ class SummaryTests(unittest.TestCase):
         self.assertIn('variant: [debug, release, stress, oom]', workflow)
         script = textwrap.dedent(workflow.split('      - name: 選んだ構成を build する\n')[1]
                                  .split('        run: |\n')[1].split('\n      - name:')[0])
-        for variant in ['debug', 'release', 'stress', 'oom']:
-            with self.subTest(variant=variant):
-                result = subprocess.run(
-                    ['bash', '-eo', 'pipefail', '-c',
-                     'cd() { :; }; west() { printf "%s\\n" "$@"; };\n' + script],
-                    env={**os.environ, 'VARIANT': variant, 'BM_WORKSPACE': '/workspace',
-                         'GITHUB_WORKSPACE': '/repo with space', 'RUNNER_TEMP': '/runner'},
-                    capture_output=True, text=True,
-                )
-                self.assertEqual(result.returncode, 0, result.stderr)
-                args = result.stdout.splitlines()
-                self.assertIn('/repo with space/firmware', args)
-                if variant == 'release':
-                    self.assertIn('-DFILE_SUFFIX=release', args)
-                    self.assertIn('-DSB_CONFIG_BM_BOOTLOADER_MCUBOOT_SIGNATURE_KEY_FILE='
-                                  '"/runner/keys/rbos-test-release.pem"', args)
-                else:
-                    self.assertFalse(any('SIGNATURE_KEY_FILE' in arg for arg in args))
-                if variant in ['stress', 'oom']:
-                    self.assertIn(f'-DEXTRA_CONF_FILE=/repo with space/firmware/{variant}.conf', args)
-                else:
-                    self.assertFalse(any('EXTRA_CONF_FILE' in arg for arg in args))
+        with tempfile.TemporaryDirectory() as runner:
+            for variant in ['debug', 'release', 'stress', 'oom']:
+                with self.subTest(variant=variant):
+                    result = subprocess.run(
+                        ['bash', '-eo', 'pipefail', '-c',
+                         'cd() { :; }; west() { printf "%s\\n" "$@"; };\n' + script],
+                        env={**os.environ, 'VARIANT': variant, 'BM_WORKSPACE': '/workspace',
+                             'GITHUB_WORKSPACE': '/repo with space', 'RUNNER_TEMP': runner},
+                        capture_output=True, text=True,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    args = result.stdout.splitlines()
+                    self.assertIn('/repo with space/firmware', args)
+                    if variant == 'release':
+                        self.assertIn('-DFILE_SUFFIX=release', args)
+                        self.assertIn('-DSB_CONFIG_BM_BOOTLOADER_MCUBOOT_SIGNATURE_KEY_FILE='
+                                      f'"{runner}/keys/rbos-test-release.pem"', args)
+                    else:
+                        self.assertFalse(any('SIGNATURE_KEY_FILE' in arg for arg in args))
+                    if variant in ['stress', 'oom']:
+                        self.assertIn(f'-DEXTRA_CONF_FILE=/repo with space/firmware/{variant}.conf', args)
+                    else:
+                        self.assertFalse(any('EXTRA_CONF_FILE' in arg for arg in args))
 
     def test_required_names_and_summary_results(self):
         agent = (ROOT / '.github/workflows/agent-docs.yml').read_text()
@@ -180,11 +181,25 @@ class SummaryTests(unittest.TestCase):
                             result = subprocess.run(
                                 ['bash', '-eo', 'pipefail', '-c', script], capture_output=True,
                                 env={**os.environ, 'CHANGES_RESULT': changes,
-                                     'CHANGED': changed, 'WORK_RESULT': work},
+                                     'CHANGED': changed, 'WORK_RESULT': work,
+                                     'PREFLIGHT_RESULT': work, 'EVIDENCE_RESULT': work},
                             )
                             expected = changes == 'success' and (changed, work) in [
                                 ('true', 'success'), ('false', 'skipped')]
                             self.assertEqual(result.returncode == 0, expected)
+
+    def test_firmware_summary_rejects_preflight_and_evidence_failures(self):
+        workflow = (ROOT / '.github/workflows/firmware.yml').read_text()
+        self.assertIn('needs: [changes, preflight]', workflow)
+        self.assertIn('needs: [changes, preflight, build, evidence]', workflow)
+        summary = workflow.split('\n  firmware:\n')[1]
+        script = textwrap.dedent(summary.split('        run: |\n')[1])
+        for key in ('PREFLIGHT_RESULT', 'EVIDENCE_RESULT'):
+            for status in ('failure', 'cancelled', 'skipped', ''):
+                env = os.environ | dict(CHANGES_RESULT='success', CHANGED='true', WORK_RESULT='success',
+                                        PREFLIGHT_RESULT='success', EVIDENCE_RESULT='success') | {key: status}
+                result = subprocess.run(['bash', '-eo', 'pipefail', '-c', script], env=env, capture_output=True)
+                self.assertNotEqual(result.returncode, 0)
 
 
 if __name__ == '__main__':
