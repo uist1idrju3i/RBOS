@@ -21,6 +21,7 @@ runs:
         # shellcheck source=/dev/null
         source /opt/toolchain-env.sh
         test "$ZEPHYR_SDK_INSTALL_DIR" = /opt/ncs/toolchains/911f4c5c26/opt/zephyr-sdk
+        chown -R --no-dereference "$(id -u):$(id -g)" "${GITHUB_WORKSPACE:?}"
         python3 - /opt/toolchain-env.sh <<'PY'
         import os
         import pathlib
