@@ -4,6 +4,7 @@
 #include "rbos/backend.h"
 
 const struct rbos_backend *rbos_wasm_backend(void);
+unsigned int rbos_wasm_backend_calls(void);
 void rbos_wasm_gpio_status(enum rbos_status status);
 unsigned int rbos_wasm_gpio_calls(void);
 void rbos_wasm_gpio_level(uint32_t pin, uint32_t level);

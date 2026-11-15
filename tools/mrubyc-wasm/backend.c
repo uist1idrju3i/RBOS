@@ -9,11 +9,13 @@ static const uint32_t board_pins[] = { 73, 42, 71, 46, 45, 41, 40, 4 };
 static struct { uint32_t mode, level; } gpio[96];
 static enum rbos_status gpio_status;
 static unsigned int gpio_calls;
+static unsigned int backend_calls;
 static uint32_t watched[96];
 static struct rbos_event_queue events;
 
 static enum rbos_status pin_lookup(void *context, const char *label, uint32_t *pin)
 {
+  ++backend_calls;
   (void)context;
   const char *names[] = { "led0", "led1", "led2", "led3", "sw0", "sw1", "sw2", "sw3" };
   for (unsigned int i = 0; i < 8; ++i)
@@ -27,6 +29,7 @@ static enum rbos_status pin_lookup(void *context, const char *label, uint32_t *p
 
 static enum rbos_status pin_validate(void *context, uint32_t pin)
 {
+  ++backend_calls;
   (void)context;
   const uint8_t count[] = { 7, 16, 11 };
   if (pin / 32 >= 3 || pin % 32 >= count[pin / 32]) return RBOS_INVALID_PIN;
@@ -37,6 +40,7 @@ static enum rbos_status pin_validate(void *context, uint32_t pin)
 
 static enum rbos_status gpio_configure(void *context, uint32_t pin, uint32_t mode)
 {
+  ++backend_calls;
   enum rbos_status status = pin_validate(context, pin);
   if (status != RBOS_OK) return status;
   if (watched[pin]) return RBOS_BUSY;
@@ -50,6 +54,7 @@ static enum rbos_status gpio_configure(void *context, uint32_t pin, uint32_t mod
 
 static enum rbos_status gpio_read(void *context, uint32_t pin, uint32_t *level)
 {
+  ++backend_calls;
   enum rbos_status status = pin_validate(context, pin);
   if (status != RBOS_OK) return status;
   ++gpio_calls;
@@ -59,6 +64,7 @@ static enum rbos_status gpio_read(void *context, uint32_t pin, uint32_t *level)
 
 static enum rbos_status gpio_write(void *context, uint32_t pin, uint32_t level)
 {
+  ++backend_calls;
   enum rbos_status status = pin_validate(context, pin);
   if (status != RBOS_OK) return status;
   if (watched[pin]) return RBOS_BUSY;
@@ -74,6 +80,7 @@ uint32_t rbos_wasm_gpio_mode(uint32_t pin) { return pin < 96 ? gpio[pin].mode : 
 
 static enum rbos_status button_watch(void *context, uint32_t pin, uint32_t generation)
 {
+  ++backend_calls;
   enum rbos_status status = pin_validate(context, pin);
   if (status != RBOS_OK) return status;
   bool button = false;
@@ -89,6 +96,7 @@ static enum rbos_status button_watch(void *context, uint32_t pin, uint32_t gener
 
 static enum rbos_status button_unwatch(void *context, uint32_t pin, uint32_t generation)
 {
+  ++backend_calls;
   (void)context;
   if (pin >= 96 || watched[pin] != generation) return RBOS_IO_ERROR;
   if (gpio_status != RBOS_OK) return gpio_status;
@@ -99,12 +107,14 @@ static enum rbos_status button_unwatch(void *context, uint32_t pin, uint32_t gen
 
 static bool event_take(void *context, struct rbos_event *event)
 {
+  ++backend_calls;
   (void)context;
   return rbos_event_queue_pop(&events, event);
 }
 
 static void event_stats(void *context, struct rbos_event_stats *stats)
 {
+  ++backend_calls;
   (void)context;
   *stats = (struct rbos_event_stats){ events.size, events.overflow, events.coalesced };
 }
@@ -135,6 +145,7 @@ static struct {
 
 static enum rbos_status temperature_read(void *context, int32_t *quarter_celsius)
 {
+  ++backend_calls;
   (void)context;
   ++temperature.calls;
   if (temperature.status == RBOS_OK) *quarter_celsius = temperature.quarter_celsius;
@@ -152,12 +163,14 @@ static struct {
 
 static uint32_t uptime_ms(void *context)
 {
+  ++backend_calls;
   (void)context;
   return (uint32_t)emscripten_get_now();
 }
 
 static enum rbos_status adc_start(void *context, enum rbos_adc_input input, uint32_t token)
 {
+  ++backend_calls;
   if (adc.active) return RBOS_BUSY;
   adc.active = 1;
   adc.cancelling = 0;
@@ -170,6 +183,7 @@ static enum rbos_status adc_start(void *context, enum rbos_adc_input input, uint
 
 static enum rbos_status adc_poll(void *context, uint32_t token, struct rbos_adc_sample *sample)
 {
+  ++backend_calls;
   if (!adc.active || adc.token != token) return RBOS_IO_ERROR;
   if (adc.cancelling) {
     if ((uint32_t)(uptime_ms(context) - adc.stopped) < adc.stop_ms) return RBOS_PENDING;
@@ -185,6 +199,7 @@ static enum rbos_status adc_poll(void *context, uint32_t token, struct rbos_adc_
 
 static void adc_cancel(void *context, uint32_t token)
 {
+  ++backend_calls;
   if (adc.active && adc.token == token && !adc.cancelling) {
     adc.cancelling = 1;
     adc.stopped = uptime_ms(context);
@@ -232,3 +247,5 @@ unsigned int rbos_wasm_temperature_calls(void)
 {
   return temperature.calls;
 }
+
+unsigned int rbos_wasm_backend_calls(void) { return backend_calls; }

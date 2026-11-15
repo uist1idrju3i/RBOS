@@ -473,6 +473,15 @@
         "PASS: P2 diagnostic task repeated samples and cleanup",
         "PASS: P2 native setup"
       ]
+    },
+    {
+      "name": "argument_matrix",
+      "bytecode": [
+        "argument_matrix"
+      ],
+      "required_pass": [
+        "PASS: native argument matrix"
+      ]
     }
   ]
 }

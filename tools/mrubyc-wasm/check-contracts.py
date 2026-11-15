@@ -10,6 +10,8 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 INVENTORY = ROOT / "research/implementation/api-contracts.json"
 FIELDS = ("arguments", "returns", "keywords", "effects", "waiting", "busy", "cancellation", "cleanup", "reuse")
+ARGUMENTS = ("missing", "excess", "nil", "wrong_type", "lower", "upper", "keyword", "backend")
+MATRIX = ROOT / "tools/mrubyc-wasm/argument-cases.json"
 
 
 def require(condition, message):
@@ -32,6 +34,40 @@ def public_surface(root):
             if match:
                 methods.add(klass + "#" + match[1])
     return methods
+
+
+def validate_arguments(table, methods, root=ROOT):
+    require(table["schema"] == 1, "Unknown argument table schema")
+    require(set(table["categories"]) == set(ARGUMENTS), "Missing argument categories")
+    require(set(table["methods"]) == methods, "Argument method coverage mismatch")
+    source = (root / table["file"]).read_text()
+    receivers = dict(re.findall(r'^(\w+) = (\w+)\.\w+\(', source, re.M))
+    used = set()
+    for method, row in table["methods"].items():
+        require(set(row) == set(ARGUMENTS), "Incomplete argument categories: " + method)
+        for category, entry in row.items():
+            if set(entry) == {"reason"}:
+                require(isinstance(entry["reason"], str) and entry["reason"].strip(),
+                        "Empty argument exception: " + method)
+                require(category != "backend", "Backend rejection must be tested: " + method)
+                continue
+            require(set(entry) in ({"case"}, {"cases"}), "Invalid argument entry: " + method)
+            ids = entry.get("cases", [entry.get("case")])
+            require(isinstance(ids, list) and ids, "Empty argument cases: " + method)
+            for case in ids:
+                require(case in table["cases"] and table["cases"][case]["method"] == method,
+                        "Wrong argument case: " + method)
+                assertion = re.search(r'^host_argument_case\("' + re.escape(case) +
+                                      r'", \w+, (true|false)\) \{ (\w+)\.([^ (]+)\(', source, re.M)
+                klass, name = re.split(r"[.#]", method)
+                require(assertion and assertion[3] == name,
+                        "Missing argument assertion: " + str(case))
+                receiver = assertion[2] if "." in method else receivers.get(assertion[2])
+                require(receiver == klass, "Wrong argument receiver: " + str(case))
+                if category == "backend":
+                    require(assertion[1] == "true", "Missing backend counter assertion: " + method)
+                used.add(case)
+    require(used == set(table["cases"]), "Unreferenced argument case")
 
 
 def validate(inventory, root=ROOT, surface=None):
@@ -73,6 +109,7 @@ def validate(inventory, root=ROOT, surface=None):
     public_names = {method.replace(".", "#") for method in surface}
     public_classes = {method.split("#")[0] for method in public_names}
     internal = inventory["internal_classes"]
+    native_methods = set()
     require(all(internal.values()) and all(inventory["internal_methods"].values()),
             "Internal classes/methods need a rationale")
     for path in (root / "src/rbos").glob("*.c"):
@@ -86,6 +123,8 @@ def validate(inventory, root=ROOT, surface=None):
             name = klass + "#" + method
             require(klass in internal or name in public_names or name in inventory["internal_methods"],
                     "Binding missing RBS/contract: " + name)
+            if klass in internal:
+                native_methods.add(klass + ("." if method == "new" else "#") + method)
     for path in (root / "src/rbos").glob("*.rb"):
         source = path.read_text()
         klass = re.search(r"^class (\w+)", source, re.M)
@@ -95,6 +134,9 @@ def validate(inventory, root=ROOT, surface=None):
         for method in re.findall(r"^\s*(?:def|alias) ([\w!?]+)", source, re.M):
             name = klass[1] + "#" + method
             require(name in public_names or name in inventory["internal_methods"], "Ruby method missing contract: " + name)
+    methods = surface | set(inventory["internal_methods"]) | native_methods
+    methods |= {name + ".new" for name in inventory["internal_classes"]}
+    validate_arguments(json.loads(MATRIX.read_text()), methods, root)
     return len(documented)
 
 

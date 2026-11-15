@@ -39,7 +39,13 @@ class ContractInventoryTests(unittest.TestCase):
             path.write_text(path.read_text() + '\nmrbc_define_method(NULL, gpio_class, "undocumented", callback);\n')
             with self.assertRaisesRegex(ValueError, "Binding missing RBS/contract"):
                 checker.validate(self.inventory, root)
+            internal = root / "src/rbos/adc_binding.c"
+            internal.write_text(internal.read_text() +
+                                '\nmrbc_define_method(NULL, request_class, "undocumented", callback);\n')
             path.write_text((ROOT / "src/rbos/gpio_binding.c").read_text())
+            with self.assertRaisesRegex(ValueError, "Argument method coverage mismatch"):
+                checker.validate(self.inventory, root)
+            internal.write_text((ROOT / "src/rbos/adc_binding.c").read_text())
             wrapper = root / "src/rbos/adc.rb"
             wrapper.write_text(wrapper.read_text() + "\n  alias undocumented read_raw\n")
             with self.assertRaisesRegex(ValueError, "Ruby method missing contract"):
@@ -78,3 +84,39 @@ class ContractInventoryTests(unittest.TestCase):
                         run.return_value = result
                     reports = checker.run_suites(inventory, Path(directory))
                     self.assertEqual(reports["native_helpers"]["status"], "FAIL")
+
+    def test_each_method_requires_all_argument_categories(self):
+        original = json.loads(checker.MATRIX.read_text())
+        methods = set(original['methods'])
+        checker.validate_arguments(original, methods)
+        for method in methods:
+            for category in checker.ARGUMENTS:
+                table = copy.deepcopy(original)
+                del table['methods'][method][category]
+                with self.subTest(method=method, category=category), self.assertRaises(ValueError):
+                    checker.validate_arguments(table, methods)
+
+    def test_argument_cases_cannot_be_missing_or_substituted(self):
+        original = json.loads(checker.MATRIX.read_text())
+        methods = set(original['methods'])
+        for mutation in ('method', 'case', 'reason', 'marker', 'backend'):
+            table = copy.deepcopy(original)
+            row = table['methods']['Temperature.read']
+            if mutation == 'method':
+                del table['methods']['Temperature.read']
+            elif mutation == 'case':
+                del table['cases'][row['nil']['case']]
+            elif mutation == 'reason':
+                row['missing'] = {'reason': '   '}
+            elif mutation == 'marker':
+                row['nil'] = {'case': 'missing-marker'}
+                table['cases']['missing-marker'] = {'method': 'Temperature.read'}
+            else:
+                row['backend'] = {'reason': 'not tested'}
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                checker.validate_arguments(table, methods)
+        source = (ROOT / original['file']).read_text()
+        for before, after in (('Temperature.read(', 'ADC.read('), ('adc.read(', 'gpio.read(')):
+            with self.subTest(receiver=after), mock.patch.object(Path, 'read_text', return_value=source.replace(before, after)):
+                with self.assertRaisesRegex(ValueError, 'Wrong argument receiver'):
+                    checker.validate_arguments(original, methods)

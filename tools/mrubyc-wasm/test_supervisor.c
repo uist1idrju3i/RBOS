@@ -7,6 +7,12 @@
 #include "c_sleep_code.c"
 #include "c_error_code.c"
 #include "c_empty_code.c"
+#ifdef RBOS_BOUNDARY_TEST
+#include "rbos/bindings.h"
+#include "backend.h"
+#include "management_boundary.c"
+static unsigned boundary_reports, boundary_first_poll;
+#endif
 
 #define NOINSTR __attribute__((no_instrument_function))
 static uint8_t pool[1024 * 1024];
@@ -57,6 +63,14 @@ void NOINSTR rbos_maintenance(bool idle)
   rbos_supervisor_poll(!idle);
   assert(calls == before && rbos_wasm_wdt_feeds == feeds);
   --depth;
+#ifdef RBOS_BOUNDARY_TEST
+  if (!strcmp(mode, "boundary") && boundary_reports && calls >= boundary_first_poll + 30) {
+    assert(boundary_reports == 1 && rbos_wasm_gpio_calls() == 0);
+    assert(rbos_wasm_button_generation(73) == 0 && rbos_wasm_adc_active() == 0);
+    puts("PASS supervisor: Ruby management redefinition gains no permission; native owner progresses");
+    exit(0);
+  }
+#endif
   if (!strcmp(mode, "spin") && calls >= 30) {
     assert(idle_calls == 0);
     puts("PASS supervisor: always-ready user loop reaches 30 native polls without reentry");
@@ -82,7 +96,14 @@ int mrbc_hal_flush(int fd) { return fflush(fd == 2 ? stderr : stdout); }
 _Noreturn void mrbc_hal_abort(const char *message)
 { fprintf(stderr, "ABORT %s\n", message); exit(90); }
 static void report(mrbc_vm *vm, mrbc_value v[], int argc)
-{ (void)vm; (void)argc; SET_NIL_RETURN(); }
+{
+  (void)vm; (void)argc;
+#ifdef RBOS_BOUNDARY_TEST
+  ++boundary_reports;
+  boundary_first_poll = calls;
+#endif
+  SET_NIL_RETURN();
+}
 
 int main(int argc, char **argv)
 {
@@ -107,11 +128,18 @@ int main(int argc, char **argv)
     return 0;
   }
   const void *code;
+#ifdef RBOS_BOUNDARY_TEST
+  if (!strcmp(mode, "boundary")) code = management_boundary;
+  else
+#endif
   if (!strcmp(mode, "spin")) code = c_spin_code;
   else if (!strcmp(mode, "sleep")) code = c_sleep_code;
   else if (!strcmp(mode, "error")) code = c_error_code;
   else { assert(!strcmp(mode, "empty")); code = c_empty_code; }
   mrbc_init(pool, sizeof(pool));
+#ifdef RBOS_BOUNDARY_TEST
+  rbos_define_classes(rbos_wasm_backend());
+#endif
   rbos_supervisor_poll(true);
   assert(calls == 0);
   mrbc_class *cls = mrbc_define_class(NULL, "Probe", NULL);
