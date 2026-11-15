@@ -14,7 +14,7 @@ title: 開発・参加
 
 mruby-wasm CI は、固定した mruby 4.0.0 の mrbc と mruby/c の emscripten HAL を使います。複数 task、sleep_ms、priority、pass、Mutex、join/value、例外を smoke test で実行します。未捕捉例外や読み込み失敗を成功扱いしないことも確認します。
 
-emsdk 6.0.12 の環境と必要な host tools を用意し、RBOS のルートで実行します。
+emsdk 7.0.0 の環境と必要な host tools を用意し、RBOS のルートで実行します。
 
 ```sh
 git submodule update --init --depth 1 vendor/mruby vendor/mrubyc

@@ -12,12 +12,12 @@ P2 の正常 suite と必須 PASS は [API 契約・試験在庫](../../research
 ## ローカル実行
 
 Ruby、C compiler、Make、Python 3、Git、Node.js、GNU timeout が必要です。
-emsdk は公式 repository の tag `6.0.12` に固定します。任意の作業領域で次を実行し、環境を読み込んでください。
+emsdk は公式 repository の tag `7.0.0` に固定します。任意の作業領域で次を実行し、環境を読み込んでください。
 
 ```sh
-git clone --depth 1 --branch 6.0.12 https://github.com/emscripten-core/emsdk.git emsdk
-./emsdk/emsdk install 6.0.12
-./emsdk/emsdk activate 6.0.12
+git clone --depth 1 --branch 7.0.0 https://github.com/emscripten-core/emsdk.git emsdk
+./emsdk/emsdk install 7.0.0
+./emsdk/emsdk activate 7.0.0
 source ./emsdk/emsdk_env.sh
 ```
 
@@ -73,6 +73,6 @@ class/method の登録、引数・所有権・権限の検査、fake と Ruby te
 
 ブラウザー playground と `/docs` の GitHub Pages ファイルは後続作業です。この runner は Node 用で、今回その browser build は行いません。
 
-emsdk の上流: [emscripten-core/emsdk](https://github.com/emscripten-core/emsdk/tree/6.0.12)（MIT）。新規の検査用依存であり、旧版からの更新ではありません。ASYNCIFY と Node filesystem を採用し、ブラウザー配信・BM HAL の emulation は対象外です。
+emsdk の上流: [emscripten-core/emsdk](https://github.com/emscripten-core/emsdk/tree/7.0.0)（MIT）。[更新評価](../../research/mrubyc/emsdk-7-update.md)に中間版を含む変更履歴の採否、旧版との差、mutation 試験を記録しています。ASYNCIFY と Node filesystem を採用し、ブラウザー配信・BM HAL の emulation は対象外です。
 
 [リポジトリ README へ戻る](../../README.md)

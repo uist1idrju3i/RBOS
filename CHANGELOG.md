@@ -6,6 +6,8 @@
 
 ### Added
 
+- Wasm 検査の固定 emsdk を 7.0.0 に更新しました。中間版の変更履歴を確認し、既存の全試験と bytecode の mutation 試験を再実行しています。製品 mrbc・firmware・public API は変更しません。
+
 - 四 profile の bytecode manifest を BM evidence に追加しました。入力 Ruby、固定 mrbc の版・実体 hash・正規化した引数、生成 C と bytecode の hash・長さ、task 対応を記録し、収集後にも検証します。ADC/Button と vendor mrblib も対象です。製品 bytecode の生成オプション・API・firmware 版は変更しません。ELF/map の配置 gate は含みません。
 
 - const bytecode の空 Ruby・String 変更時の不変・task 削除後の symbol/method 寿命、header 不正と VM ID 枯渇の拒否を Wasm で検査します。既存 OOM fault task の runtime 検査も追加しました。製品 API・bytecode 生成オプション・firmware 版は変更しません。RRAM 配置や実機の受け入れは未確認です。
