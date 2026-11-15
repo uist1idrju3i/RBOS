@@ -6,6 +6,8 @@
 
 ### Added
 
+- app 更新・初期導入の配布 evidence に、map を根拠とする第三者 inventory と `THIRD_PARTY_NOTICES` を追加しました。MCUboot NOTICE、S115 の agreement・ARM attribution、picolibc と libgcc の本文を各 build 後に収集し、必須 license の欠落を検査します。Mbed TLS と Oberon の Mbed TLS 由来部分は Apache-2.0 を選択します。全 object の最終的な license 適合は未確認です。API と image version の契約は変わらず、VERSION は未公開の0.2.0のままです。
+
 - 未公開の0.2.0に、app の BLE MCUmgr OS reset 専用入口を追加しました。boot mode 設定、応答通知、切断、warm reboot の順に C maintenance で進め、loader 名を `RBOS_DFU` に固定します。UUID は31 Bの制約から scan response に載せます。security は OPEN で、第三者にも reboot される可能性があります。image の署名は loader が検証し、command 認証は将来の課題です。SoftDevice RAM は SDK sample・loader の設定への包含による推論を根拠とし、実機の RAM 使用量 log での確認は Phase Bです。VERSION は0.2.0のままです。
 
 ### Changed

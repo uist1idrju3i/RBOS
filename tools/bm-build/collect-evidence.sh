@@ -75,6 +75,7 @@ python3 "$script_dir/bytecode-manifest.py" collect "$build/firmware/bytecode" "$
 python3 "$script_dir/bytecode-layout.py" "$build/firmware/zephyr" "$out/firmware/bytecode" "$out/firmware/bytecode-layout.json"
 python3 "$script_dir/check-supervisor.py" "$build/firmware" "$out/firmware/supervisor-link.json"
 python3 "$script_dir/check-watchdog.py" "$build/firmware" "$out/firmware/watchdog.json"
+python3 "$script_dir/third-party-notices.py" "$repo" "$workspace" "$build" "$out" "$(command -v arm-zephyr-eabi-gcc)"
 (
   cd -- "$workspace"
   # Inactive internal projects are not cloned in the public BM workspace.
