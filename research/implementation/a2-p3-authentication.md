@@ -48,7 +48,7 @@ symbol は共通表に登録され `Symbol.all_symbols` で列挙できます（
 
 ```ruby
 challenge = RBOS::Authorization.challenge(:reboot)
-# 端末の外にいる管理者が challenge に MAC を付ける
+# An external administrator returns the challenge with an HMAC
 RBOS::System.reboot(authorization: response)
 ```
 
