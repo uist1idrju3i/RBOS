@@ -71,6 +71,7 @@ with (out / 'cmake-commands.txt').open('w') as target:
             if 'command =' in line and '--regenerate-during-build' in line:
                 target.write(f'{source.relative_to(build)}: {line.strip()}\n')
 PY
+python3 "$script_dir/bytecode-manifest.py" collect "$build/firmware/bytecode" "$out/firmware/bytecode"
 (
   cd -- "$workspace"
   # Inactive internal projects are not cloned in the public BM workspace.

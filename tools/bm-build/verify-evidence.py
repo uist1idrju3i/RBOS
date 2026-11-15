@@ -5,9 +5,11 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import runpy
 import struct
 
 HERE = Path(__file__).resolve().parent
+verify_bytecode = runpy.run_path(str(HERE / 'bytecode-manifest.py'))['verify']
 PROFILES = ("debug", "release", "stress", "oom")
 IRQS = {213: "saadc_irq", 218: "button_irq20", 268: "button_irq30"}
 HEX = r"0x[0-9a-fA-F]+"
@@ -151,6 +153,7 @@ def verify(root, revision, version, profile, expected_modules, baseline=None, ex
     actual = modules((root / "west-list.txt").read_text(), (root / "manifest-head.txt").read_text().strip())
     require(actual == expected_modules, "Fixed west module paths/revisions mismatch")
     app = root / "firmware/zephyr"
+    bytecode = verify_bytecode(root / "firmware/bytecode", revision, profile)
     configuration((app / ".config").read_text(), profile)
     mapping = (app / "zephyr.map").read_text()
     sizes = map_sizes(mapping)
@@ -178,7 +181,8 @@ def verify(root, revision, version, profile, expected_modules, baseline=None, ex
                  if value is not None and before[key] is not None}
     return {"revision": revision, "image_version": list(version), "profile": profile,
             "sha256": hashlib.sha256(image).hexdigest(), "checksummed_files": count,
-            "vectors": vectors, "map": sizes, "build_log": used, "map_delta": delta}
+            "vectors": vectors, "map": sizes, "build_log": used, "map_delta": delta,
+            "bytecode": bytecode}
 
 
 def version_tuple(text):

@@ -8,6 +8,8 @@ import struct
 import tempfile
 import unittest
 
+from bytecode_fixture import make_bytecode_bundle
+
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location("verify_evidence", ROOT / "tools/bm-build/verify-evidence.py")
 verifier = importlib.util.module_from_spec(spec)
@@ -81,6 +83,7 @@ def fixture(root, profile="debug"):
     (root / "west-list.txt").write_text("manifest nrf-bm N/A\n")
     (root / "manifest-head.txt").write_text("b" * 40 + "\n")
     (root / "build.log").write_text(LOG)
+    make_bytecode_bundle(root / 'firmware/bytecode', REVISION, profile)
     rehash(root)
 
 
@@ -100,6 +103,20 @@ class VerifyEvidenceTests(unittest.TestCase):
                                             data=256, bss=1280, noinit=512))
         self.assertNotEqual(report["map"]["ram"], 0x3b400)
         self.assertEqual(report["build_log"], dict(flash=4096, ram=2048))
+
+    def test_bytecode_manifest_missing_and_tampered_after_rehash(self):
+        path = self.root / 'firmware/bytecode/manifest.json'
+        original = path.read_bytes()
+        path.unlink()
+        rehash(self.root)
+        with self.assertRaises(OSError):
+            self.verify()
+        changed = json.loads(original)
+        changed['blobs'][0]['bytecode']['length'] += 1
+        path.write_text(json.dumps(changed))
+        rehash(self.root)
+        with self.assertRaisesRegex(ValueError, 'hash/length mismatch'):
+            self.verify()
 
     def test_wrapped_output_section(self):
         sizes = verifier.map_sizes(MAP.replace("noinit 0x20004a00", "noinit\n  0x20004a00"))

@@ -6,6 +6,8 @@
 
 ### Added
 
+- 四 profile の bytecode manifest を BM evidence に追加しました。入力 Ruby、固定 mrbc の版・実体 hash・正規化した引数、生成 C と bytecode の hash・長さ、task 対応を記録し、収集後にも検証します。ADC/Button と vendor mrblib も対象です。製品 bytecode の生成オプション・API・firmware 版は変更しません。ELF/map の配置 gate は含みません。
+
 - const bytecode の空 Ruby・String 変更時の不変・task 削除後の symbol/method 寿命、header 不正と VM ID 枯渇の拒否を Wasm で検査します。既存 OOM fault task の runtime 検査も追加しました。製品 API・bytecode 生成オプション・firmware 版は変更しません。RRAM 配置や実機の受け入れは未確認です。
 
 - 開発時の BM preflight、公開 API と RBS・異常系・寿命試験の在庫検査、firmware 四構成の成果物 verifier を追加しました。source/SDK、image header、checksum、秘密鍵不在、IRQ vector、map と build log を CI で照合します。Wasm の完了待ちは条件と期限で判定し、必須 PASS の欠落を失敗にします。実装・host/Wasm・BM build・実機受け入れの状態を分離しました。Ruby API・board の契約と firmware 版は変更しません。

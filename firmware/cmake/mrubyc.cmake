@@ -27,11 +27,28 @@ if(NOT result EQUAL 0 OR NOT mrbc_version MATCHES "mruby 4.0.0")
 endif()
 
 set(vm "${CMAKE_CURRENT_BINARY_DIR}/mrubyc")
+set(bytecode_manifest "${RBOS_ROOT}/tools/bm-build/bytecode-manifest.py")
+set(bytecode_profile debug)
+if(CONFIG_RBOS_TEST_PROFILE_OOM)
+  set(bytecode_profile oom)
+elseif(CONFIG_RBOS_TEST_PROFILE_STRESS)
+  set(bytecode_profile stress)
+elseif(CONFIG_RBOS_VM_NDEBUG)
+  set(bytecode_profile release)
+endif()
+execute_process(COMMAND git -C "${RBOS_ROOT}" rev-parse HEAD OUTPUT_VARIABLE bytecode_revision OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+execute_process(COMMAND git -C "${RBOS_ROOT}" rev-parse --symbolic-full-name HEAD OUTPUT_VARIABLE bytecode_ref OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${RBOS_ROOT}/.git/HEAD")
+if(NOT bytecode_ref STREQUAL "HEAD")
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${RBOS_ROOT}/.git/${bytecode_ref}")
+endif()
+file(CONFIGURE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/bytecode-revision.txt" CONTENT "${bytecode_revision}\n")
+set(record_mrbc "\"${RBOS_PYTHON}\" \"${bytecode_manifest}\" compile --repo \"${RBOS_ROOT}\" --build \"${CMAKE_CURRENT_BINARY_DIR}\" --compiler \"${RBOS_MRBC}\" --profile ${bytecode_profile} --")
 foreach(dir src support mrblib)
   file(COPY "${RBOS_ROOT}/vendor/mrubyc/${dir}" DESTINATION "${vm}")
 endforeach()
 # Always regenerate the copied mrblib; symbol headers are absent in the vendor tree.
-execute_process(COMMAND ${RBOS_MAKE} -C "${vm}/mrblib" "MRBC=${RBOS_MRBC}" all
+execute_process(COMMAND ${RBOS_MAKE} -C "${vm}/mrblib" "MRBC=${record_mrbc}" all
   RESULT_VARIABLE result)
 if(NOT result EQUAL 0)
   message(FATAL_ERROR "mruby/c mrblib generation failed")
@@ -52,17 +69,22 @@ file(GLOB_RECURSE vm_inputs CONFIGURE_DEPENDS "${RBOS_ROOT}/vendor/mrubyc/src/*"
   "${RBOS_ROOT}/vendor/mruby/build_config/*" "${RBOS_ROOT}/vendor/mruby/src/*")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${vm_inputs})
 target_sources(app PRIVATE ${vm_sources} ${shared_sources})
+function(rbos_compile_bytecode symbol input output)
+  add_custom_command(OUTPUT "${output}" "${output}.record.json"
+    COMMAND "${RBOS_PYTHON}" "${bytecode_manifest}" compile --repo "${RBOS_ROOT}"
+      --build "${CMAKE_CURRENT_BINARY_DIR}" --compiler "${RBOS_MRBC}" --profile "${bytecode_profile}"
+      -- "-B${symbol}" -o "${output}" "${input}"
+    DEPENDS "${input}" "${RBOS_MRBC}" "${bytecode_manifest}"
+      "${RBOS_ROOT}/tools/bm-build/check-bytecode.py" "${CMAKE_CURRENT_BINARY_DIR}/bytecode-revision.txt"
+    VERBATIM)
+endfunction()
 set(adc_bytecode "${CMAKE_CURRENT_BINARY_DIR}/rbos_adc_bytecode.c")
-add_custom_command(OUTPUT "${adc_bytecode}"
-  COMMAND "${RBOS_MRBC}" -Brbos_adc_bytecode -o "${adc_bytecode}" "${RBOS_ROOT}/src/rbos/adc.rb"
-  COMMAND "${RBOS_PYTHON}" "${RBOS_ROOT}/tools/bm-build/check-bytecode.py" "${adc_bytecode}"
-  DEPENDS "${RBOS_ROOT}/src/rbos/adc.rb" "${RBOS_MRBC}" VERBATIM)
+rbos_compile_bytecode(rbos_adc_bytecode "${RBOS_ROOT}/src/rbos/adc.rb" "${adc_bytecode}")
 target_sources(app PRIVATE "${adc_bytecode}")
 set(button_bytecode "${CMAKE_CURRENT_BINARY_DIR}/rbos_button_bytecode.c")
-add_custom_command(OUTPUT "${button_bytecode}"
-  COMMAND "${RBOS_MRBC}" -Brbos_button_bytecode -o "${button_bytecode}" "${RBOS_ROOT}/src/rbos/button.rb"
-  COMMAND "${RBOS_PYTHON}" "${RBOS_ROOT}/tools/bm-build/check-bytecode.py" "${button_bytecode}"
-  DEPENDS "${RBOS_ROOT}/src/rbos/button.rb" "${RBOS_MRBC}" VERBATIM)
+rbos_compile_bytecode(rbos_button_bytecode "${RBOS_ROOT}/src/rbos/button.rb" "${button_bytecode}")
+set(bytecode_records "${vm}/src/mrblib.c.record.json" "${adc_bytecode}.record.json" "${button_bytecode}.record.json")
+set(bytecode_outputs "${vm}/src/mrblib.c" "${adc_bytecode}" "${button_bytecode}")
 target_sources(app PRIVATE "${button_bytecode}")
 target_include_directories(app BEFORE PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/hal")
 target_include_directories(app PRIVATE "${vm}/src" "${RBOS_ROOT}/include" "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -89,11 +111,9 @@ set(index 0)
 foreach(source ${task_sources})
   set(symbol "rbos_task_${index}")
   set(output "${CMAKE_CURRENT_BINARY_DIR}/${symbol}.c")
-  add_custom_command(OUTPUT "${output}"
-    COMMAND "${RBOS_MRBC}" "-B${symbol}" -o "${output}" "${CMAKE_CURRENT_SOURCE_DIR}/ruby/${source}"
-    COMMAND "${RBOS_PYTHON}" "${RBOS_ROOT}/tools/bm-build/check-bytecode.py" "${output}"
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/ruby/${source}" "${RBOS_MRBC}"
-      "${RBOS_ROOT}/tools/bm-build/check-bytecode.py" VERBATIM)
+  rbos_compile_bytecode("${symbol}" "${CMAKE_CURRENT_SOURCE_DIR}/ruby/${source}" "${output}")
+  list(APPEND bytecode_records "${output}.record.json")
+  list(APPEND bytecode_outputs "${output}")
   target_sources(app PRIVATE "${output}")
   string(APPEND table "extern const uint8_t ${symbol}[];\n")
   string(APPEND entries "  {\"${source}\", ${symbol}},\n")
@@ -102,3 +122,10 @@ endforeach()
 string(APPEND table "const struct rbos_embedded_task rbos_tasks[] = {\n${entries}};\nconst unsigned int rbos_task_count = ${index};\n")
 file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/embedded.c" CONTENT "${table}")
 target_sources(app PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/embedded.c")
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/bytecode/manifest.json"
+  COMMAND "${RBOS_PYTHON}" "${bytecode_manifest}" bundle --repo "${RBOS_ROOT}"
+    --build "${CMAKE_CURRENT_BINARY_DIR}" --output "${CMAKE_CURRENT_BINARY_DIR}/bytecode" ${bytecode_records}
+  DEPENDS ${bytecode_records} ${bytecode_outputs} "${bytecode_manifest}" "${RBOS_ROOT}/tools/bm-build/check-bytecode.py"
+  VERBATIM)
+add_custom_target(rbos_bytecode_manifest ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/bytecode/manifest.json")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${bytecode_manifest}" "${RBOS_ROOT}/tools/bm-build/check-bytecode.py")
