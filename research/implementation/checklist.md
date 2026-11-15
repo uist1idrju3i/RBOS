@@ -94,7 +94,12 @@ GPIO/Button・Temperature・三電源 ADC の binding/backend、固定 ring と 
 
 ## P4・P5: 埋め込みと firmware 更新
 
-- [ ] 固定 mrbc で const C 配列を生成し、入力と生成物 hash を記録する。
+[A1 の条件・試験・PR・証拠区分の対応表](p4-host-acceptance.md#p4-受け入れ条件と-checklist-の対応)を参照してください。複合項目の実機部分は未完了です。
+
+- [x] 固定 mrbc で const C 配列を生成し、入力と生成物 hash を記録する。PR #47/#48 の manifest と #50 の四 profile CI evidence で照合済み。
+- [x] host_wasm: const の正常・空・誤 header・VM ID 枯渇、OOM の期待する exit/診断、String 変更時の blob 不変、producer 削除後の symbol/method を検査する。PR #45/#46/#49 の suite を7.0.0で実行。
+- [x] bm_build: 四 profile の manifest 全 symbol を FLASH 内・非 writable section・生成 byte 一致で照合する。PR #50 の evidence は8/8/10/5 symbols、全て PASS。
+- [x] host_wasm: 空・製品 Button の IREP、symbol ID、register、TCB、String、allocator overhead、padding を6段階で計測する。[測定値と限界](p4-host-acceptance.md#wasm-の-ram-内訳)参照。ARM の high-water は未計測。
 - [ ] RRAM 配置、alignment、symbol 等を含む参照の寿命を確認する。
 - [ ] 全体 RAM コピーなしで正常・空・不正形式・OOM を検査する。
 - [ ] String 変更で const blob が書き換わらないことを確認する。

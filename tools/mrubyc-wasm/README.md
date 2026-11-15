@@ -13,13 +13,15 @@ P2 の正常 suite と必須 PASS は [API 契約・試験在庫](../../research
 
 ### RAM の段階計測
 
-`test_ram.c` は test 専用です。空 Ruby の const 配列を使い、初期化、TCB 確保、load、begin、String 生成、String の32 byte追記の6段階を `mrbc_alloc_statistics` で計測します。`RAM: Wasm` 行はこの Wasm build の観測値であり、ARM の値ではありません。
+`test_ram.c` は test 専用です。空 Ruby と製品の `src/rbos/button.rb` の const 配列を別々のプロセスで load し、初期化、TCB 確保、load、begin、String 生成、String の32 byte追記の6段階を `mrbc_alloc_statistics` で計測します。`RAM: Wasm` 行の `fixture=empty/button` で入力を区別します。値はこの Wasm build の観測値であり、ARM の値ではありません。
 
-`IREP_payload` は RAM 上の IREP 管理構造体、`register` と `TCB` は確保時の要求サイズです。この空 fixture では IREP の子・symbol ID table は0件なので `symbol_table_pool=0` です。命令・pool は const blob を参照します。`symbol_table_static` は pool 外の symbol index 配列全体で、`used` には加算しません。
+`IREP_payload` は全ての子を含む IREP 管理構造体・pool offset table・子 pointer table の要求サイズです。symbol ID table は二重計上せず `symbol_table_pool` に分けます。`register` と `TCB` も確保時の要求サイズです。空 fixture の子・symbol ID table は0件、Button は複数 IREP と非空の symbol ID table を必須にします。命令・pool の const blob 内参照を再帰的に検査します。`symbol_table_static` は pool 外の symbol index 配列全体で、`used` には加算しません。
 
-`baseline` は初期化済み pool の使用量です。その後の増分を上記の要求サイズ、`other_payload`（begin の self instance と String 本体・終端込み buffer）、使用 block 数から求める allocator header、残りの `padding` に分けます。padding はこの限定 fixture の allocator の丸め・最小 block による余りであり、一般の Ruby task の未知の割当を推定分類した値ではありません。pool 管理構造体・全 static RAM を含む総 RAM 内訳でもありません。
+空 fixture は `seed`、Button は子 IREP の実際の String literal から `mrbc_string_new` で RAM の String を作り、32 byte追記します。内容・長さと元の blob 全体の不変を照合します。Button の Ruby 命令は実行せず、load と begin までの確保に String の生成・変更を加える限定計測です。native Button の状態、イベント待機中の確保や実時間は測りません。
 
-test の translation unit に既存の `alloc.c` / `symbol.c` を include して内部の header と static 配列を観測します。この2つは当該 executable の別 source 一覧から除き、vendor ファイル、製品 API、通常 runner の build は変更しません。実行が失敗した場合や必須6段階が出ない場合は `check.sh` が失敗します。
+`baseline` は初期化済み pool の使用量です。その後の増分を上記の要求サイズ、`other_payload`（begin の self instance と String 本体・終端込み buffer）、使用 block 数から求める allocator header、残りの `padding` に分けます。padding はこの限定 fixture の IREP 内 alignment と allocator の丸め・最小 block による余りです。一般の Ruby task の未知の割当を推定分類した値や、pool 管理構造体・全 static RAM を含む総 RAM 内訳ではありません。
+
+test の translation unit に既存の `alloc.c` / `symbol.c` を include して内部の header と static 配列を観測します。この2つは当該 executable の別 source 一覧から除き、vendor ファイル、製品 API、通常 runner の build は変更しません。実行が失敗した場合や、どちらかの fixture の必須6段階が出ない場合は `check.sh` が失敗します。不明な fixture の指定も exit 1 と診断で検査します。[A1 の受け入れ記録](../../research/implementation/p4-host-acceptance.md)に計測結果と限界をまとめています。
 
 Ruby、C compiler、Make、Python 3、Git、Node.js、GNU timeout が必要です。
 emsdk は公式 repository の tag `7.0.0` に固定します。任意の作業領域で次を実行し、環境を読み込んでください。

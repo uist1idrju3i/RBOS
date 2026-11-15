@@ -2,7 +2,7 @@
 
 ## 初期構成
 
-この文書は初期設計の記録です。現在は const 配列の生成・結合機構があり、未受け入れ条件は [2026-11-15 の照合](../implementation/session-plan-review.md)を参照してください。将来の ZMS 保存については[直接参照と寿命の再確認](zms-direct-execution.md)に分けました。初期の firmware DFU 方針は変更していません。
+この文書は初期設計の記録です。現在は const 配列の生成・結合機構があり、host/Wasm と四 profile の build による確認は [P4/A1 の受け入れ記録](../implementation/p4-host-acceptance.md)を参照してください。[2026-11-15 の照合](../implementation/session-plan-review.md)は当時の履歴です。将来の ZMS 保存については[直接参照と寿命の再確認](zms-direct-execution.md)に分けました。初期の firmware DFU 方針は変更していません。
 
 2026-11-08 JST の更新方針では、vendor/mruby の mrbc 4.0.0 で Ruby をコンパイルし、const 配列として firmware に結合します。storage へ保存せず、RAM への全体コピーも行いません。更新は firmware single-bank DFU のみです。BLE 転送・保存・reload は [将来計画](../openblink/future-support.md)へ移します。
 
@@ -40,6 +40,8 @@ loader は const 入力を読み、新規 IREP/補助表だけを書き換えま
 const 配列は RRAM の読み出し専用 section に配置し map で確認します。symbol/method を含む全ての参照がなくなるまで入力を保持します。初期は firmware と同じ寿命です。DFU は再起動して独立 loader で行い、旧 VM が参照中の blob を更新しません。
 
 ## 未実施の受け入れ条件
+
+以下は初期の未実施一覧です。現在は固定 compiler・const の正常/空/拒否/OOM 終了・String 不変を host_wasm、FLASH 内の非 writable section と byte 一致を bm_build で検査しています。IREP・symbol・String 等も空・製品 Button で Wasm 計測済みです。実機の pointer/alignment、RAM high-water、OOM 後の復旧、DFU と、FLASH `PT_LOAD` が RWE である点は [Phase B の残件](../implementation/p4-host-acceptance.md#phase-b-に残す確認)です。下記を実機まで完了したものとは扱いません。
 
 - 固定 compiler 生成の RITE0400 が対象 VM で動く。
 - map/debugger で RRAM 配置と全体コピーの不在を確認する。

@@ -2,6 +2,8 @@
 
 [調査索引](../README.md) / [checklist](checklist.md#p2-native-api-と資源) / [実機受け入れ](p2-acceptance.md)
 
+P4/A1 の [受け入れ条件・PR・証拠区分の対応表](p4-host-acceptance.md)も参照してください。PR #50 の evidence で四 profile の layout PASS を確認しました。空・製品 Button の RAM 分類は Wasm の限定計測で、実機の pointer、high-water、OOM 後の復旧、DFU、FLASH segment の RWE は Phase B に残します。
+
 P2 の振り返りを受け、SDK の事前照合、API 契約と試験在庫、成果物検査、時間依存試験の完了条件を CI に組み込みました。Ruby API・board の契約と firmware の版は変更しません。
 
 ## 1. SDK と BM の事前照合
