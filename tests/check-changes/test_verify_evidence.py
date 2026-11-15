@@ -8,7 +8,7 @@ import struct
 import tempfile
 import unittest
 
-from bytecode_fixture import make_bytecode_bundle
+from bytecode_fixture import make_bytecode_bundle, make_layout_fixture
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location("verify_evidence", ROOT / "tools/bm-build/verify-evidence.py")
@@ -84,6 +84,7 @@ def fixture(root, profile="debug"):
     (root / "manifest-head.txt").write_text("b" * 40 + "\n")
     (root / "build.log").write_text(LOG)
     make_bytecode_bundle(root / 'firmware/bytecode', REVISION, profile)
+    make_layout_fixture(root / 'firmware/bytecode', app)
     rehash(root)
 
 
