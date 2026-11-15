@@ -54,15 +54,11 @@ def bytecode(source, symbol):
     return bytes(int(token.strip(), 16) for token in arrays[0][1].split(',') if token.strip())
 
 
-def inventory(profile):
-    tasks = ['system.rb']
-    if profile == 'oom':
-        tasks += ['fault/oom.rb']
-    else:
-        tasks += ['selftest/coordinator.rb', 'selftest/worker_a.rb', 'selftest/worker_b.rb']
-        if profile == 'stress':
-            tasks += ['stress/spinner_a.rb', 'stress/spinner_b.rb']
-        tasks += ['peripherals.rb']
+def inventory(tasks):
+    require(isinstance(tasks, list) and all(isinstance(name, str) for name in tasks), 'invalid task list')
+    require(len(set(tasks)) == len(tasks), 'duplicate tasks')
+    for name in tasks:
+        relative(name)
     result = {'rbos_adc_bytecode': ('library', None, ['src/rbos/adc.rb']),
               'rbos_button_bytecode': ('library', None, ['src/rbos/button.rb']),
               'mrblib_bytecode': ('mrblib', None, [f'vendor/mrubyc/mrblib/{name}.rb' for name in MRBLIB])}
@@ -111,14 +107,15 @@ def compile_blob(args):
     subprocess.run([str(args.compiler), *argv], check=True)
     source = output.read_bytes()
     data = bytecode(source.decode(), symbol)
-    expected = inventory(args.profile)
+    tasks = json.loads(args.tasks_file.read_text())
+    expected = inventory(tasks)
     require(symbol in expected, 'unexpected symbol')
     role, task, names = expected[symbol]
     require([item['path'] for item in inputs] == names, 'unexpected inputs')
     revisions = {name: subprocess.check_output(['git', '-C', str(path), 'rev-parse', 'HEAD'], text=True).strip()
                  for name, path in [('rbos', repo), ('mruby', repo / 'vendor/mruby'), ('mrubyc', repo / 'vendor/mrubyc')]}
     compiler = compiler_path(args.compiler, repo, build)
-    record = {'schema': 1, 'profile': args.profile, 'revisions': revisions,
+    record = {'schema': 1, 'profile': args.profile, 'tasks': tasks, 'revisions': revisions,
               'compiler': {'path': compiler, 'version': version,
                            'sha256': digest(args.compiler.read_bytes())},
               'blob': {'symbol': symbol, 'role': role, 'task': task, 'inputs': inputs,
@@ -132,10 +129,10 @@ def compile_blob(args):
 def bundle(args):
     records = [json.loads(path.read_text()) for path in args.records]
     require(records, 'no compiler records')
-    manifest = {key: records[0][key] for key in ('schema', 'profile', 'revisions', 'compiler')}
+    manifest = {key: records[0][key] for key in ('schema', 'profile', 'tasks', 'revisions', 'compiler')}
     manifest['blobs'] = []
     for record in records:
-        require(all(record[key] == manifest[key] for key in ('schema', 'profile', 'revisions', 'compiler')),
+        require(all(record[key] == manifest[key] for key in ('schema', 'profile', 'tasks', 'revisions', 'compiler')),
                 'inconsistent compiler records; rebuild all bytecode')
         blob = record['blob']
         source = (args.build / blob['build_output']).read_bytes()
@@ -153,7 +150,7 @@ def bundle(args):
 
 def verify(root, revision, profile):
     manifest = json.loads((root / 'manifest.json').read_text())
-    require(isinstance(manifest, dict) and set(manifest) == {'schema', 'profile', 'revisions', 'compiler', 'blobs'},
+    require(isinstance(manifest, dict) and set(manifest) == {'schema', 'profile', 'tasks', 'revisions', 'compiler', 'blobs'},
             'missing/unknown manifest fields')
     require(type(manifest['schema']) is int and manifest['schema'] == 1, 'unknown schema')
     require(profile in PROFILES and manifest['profile'] == profile, 'profile mismatch')
@@ -181,7 +178,7 @@ def verify(root, revision, profile):
         files.add(name)
         return data
 
-    expected = inventory(profile)
+    expected = inventory(manifest['tasks'])
     require(isinstance(manifest['blobs'], list) and len(manifest['blobs']) == len(expected), 'missing/duplicate blobs')
     seen = set()
     for blob in manifest['blobs']:
@@ -220,6 +217,7 @@ def main():
     for name in ('repo', 'build', 'compiler'):
         compile_parser.add_argument('--' + name, type=Path, required=True)
     compile_parser.add_argument('--profile', choices=PROFILES, required=True)
+    compile_parser.add_argument('--tasks-file', type=Path, required=True)
     compile_parser.add_argument('argv', nargs=argparse.REMAINDER)
     merge = sub.add_parser('bundle')
     for name in ('repo', 'build', 'output'):

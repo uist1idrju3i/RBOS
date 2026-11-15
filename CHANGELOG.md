@@ -34,6 +34,8 @@
 
 ### Fixed
 
+- bytecode manifest の task 在庫を CMake の生成対象から記録するようにし、周辺機器の診断 task を無効にした build の失敗を修正しました。
+
 - 0.1.2 向けに `Temperature.read` の keyword 引数の見落としを修正しました。位置引数とは別に検査し、取得前に ArgumentError とします。空の `**{}` は引数なしとして扱います。Wasm と Float 無効 guard の host 検査を追加し、宣言済みの「引数なし」契約に実装を合わせました。実機での温度検証は未完了です。
 - BLE の PHY・data length・ATT MTU 要求に SDK の connection-parameters library で応答し、未保存の system attributes を初期化します。切断 reason と手順の要求・結果を低頻度で記録し、pairing は非対応として応答します。修正後の DK では400秒超の接続中に切断なしを確認しました。
 - stress checker の既定条件を spinner 負荷中の完全接続 stats 窓300秒にし、100万で巡回する counter の差分 rate、a/b 比と2倍超の偏りの FAIL を追加しました。利用者の stress/OOM capture を fixture と実機証拠に記録しました。vendor scheduler は変更していません。

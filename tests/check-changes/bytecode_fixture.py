@@ -6,13 +6,17 @@ ROOT = Path(__file__).resolve().parents[2]
 manifest_tool = runpy.run_path(str(ROOT / 'tools/bm-build/bytecode-manifest.py'))
 
 
-def make_bytecode_bundle(root, revision, profile='debug'):
+def make_bytecode_bundle(root, revision, profile='debug', tasks=None):
     root.mkdir(parents=True, exist_ok=True)
-    manifest = {'schema': 1, 'profile': profile,
+    if tasks is None:
+        tasks = ['system.rb', 'fault/oom.rb'] if profile == 'oom' else [
+            'system.rb', 'selftest/coordinator.rb', 'selftest/worker_a.rb', 'selftest/worker_b.rb',
+            *(['stress/spinner_a.rb', 'stress/spinner_b.rb'] if profile == 'stress' else []), 'peripherals.rb']
+    manifest = {'schema': 1, 'profile': profile, 'tasks': tasks,
                 'revisions': {'rbos': revision, 'mruby': 'b' * 40, 'mrubyc': 'c' * 40},
                 'compiler': {'path': 'vendor/mruby/build/host/bin/mrbc', 'version': 'mruby 4.0.0 (2026-04-20)',
                              'sha256': 'd' * 64}, 'blobs': []}
-    for symbol, (role, task, inputs) in manifest_tool['inventory'](profile).items():
+    for symbol, (role, task, inputs) in manifest_tool['inventory'](tasks).items():
         def store(name, data):
             path = root / name
             path.parent.mkdir(parents=True, exist_ok=True)

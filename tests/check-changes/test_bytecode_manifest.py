@@ -29,6 +29,20 @@ class BytecodeManifestTests(unittest.TestCase):
             make_bytecode_bundle(root, REVISION, profile)
             self.assertEqual(manifest_tool['verify'](root, REVISION, profile)['blobs'], count)
 
+    def test_actual_cmake_task_inventory(self):
+        for tasks in [[], ['system.rb'], self.manifest['tasks'][:-1], ['custom/diagnostic.rb', 'system.rb']]:
+            with self.subTest(tasks=tasks), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                manifest = make_bytecode_bundle(root, REVISION, tasks=tasks)
+                self.assertEqual(manifest_tool['verify'](root, REVISION, 'debug')['blobs'], len(tasks) + 3)
+                manifest['blobs'].pop()
+                (root / 'manifest.json').write_text(json.dumps(manifest))
+                with self.assertRaisesRegex(ValueError, 'missing/duplicate blobs'):
+                    manifest_tool['verify'](root, REVISION, 'debug')
+        for tasks in [None, 'system.rb', [1], ['../escape.rb'], ['system.rb', 'system.rb']]:
+            with self.subTest(tasks=tasks), self.assertRaises(ValueError):
+                manifest_tool['inventory'](tasks)
+
     def test_every_required_field(self):
         for section in [(), ('compiler',), ('revisions',), ('blobs', 0),
                         ('blobs', 0, 'generated_c'), ('blobs', 0, 'bytecode'), ('blobs', 0, 'inputs', 0)]:
@@ -138,9 +152,11 @@ class BytecodeManifestTests(unittest.TestCase):
                             f'else: Path(sys.argv[sys.argv.index("-o") + 1]).write_text({c_source!r})\n')
         compiler.chmod(0o755)
         output = build / 'rbos_adc_bytecode.c'
+        tasks = build / 'tasks.json'
+        tasks.write_text(json.dumps(self.manifest['tasks']))
         command = [sys.executable, str(ROOT / 'tools/bm-build/bytecode-manifest.py'), 'compile',
                    '--repo', str(repo), '--build', str(build), '--compiler', str(compiler), '--profile', 'debug',
-                   '--', '-Brbos_adc_bytecode', '-o', str(output), str(source)]
+                   '--tasks-file', str(tasks), '--', '-Brbos_adc_bytecode', '-o', str(output), str(source)]
         subprocess.run(command, check=True, capture_output=True)
         record = json.loads(Path(str(output) + '.record.json').read_text())
         self.assertEqual(record['blob']['inputs'][0]['length'], 0)
