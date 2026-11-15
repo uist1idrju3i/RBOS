@@ -89,6 +89,12 @@ def fixture(root, profile="debug"):
 
 
 class VerifyEvidenceTests(unittest.TestCase):
+    def test_watchdog_gate_is_required(self):
+        (self.root / 'firmware/watchdog.json').unlink()
+        rehash(self.root)
+        with self.assertRaises(FileNotFoundError):
+            self.verify()
+
     def test_supervisor_gate_is_required(self):
         (self.root / 'firmware/supervisor-link.json').unlink()
         rehash(self.root)

@@ -3,6 +3,31 @@ config NRFX_RESERVED_RESOURCES_HEADER
 
 menu "RBOS application"
 
+config RBOS_WDT
+	bool "Foreground progress watchdog"
+	default y
+	select NRFX_WDT
+
+config RBOS_WDT_TIMEOUT_MS
+	int "Watchdog timeout (ms)"
+	range 100 60000
+	default 2000
+
+config RBOS_FATAL_REBOOT
+	bool "Reboot after fatal instead of halting"
+	select REBOOT
+	depends on RBOS_WDT
+
+config RBOS_FATAL_FLUSH_MS
+	int "Fatal log flush deadline (ms)"
+	range 1 1000
+	default 100
+
+config RBOS_FAULT_WDT
+	bool "Stall native supervisor to exercise watchdog reset"
+	depends on RBOS_WDT && DEBUG_OPTIMIZATIONS && !RBOS_FATAL_REBOOT
+	default n
+
 config RBOS_GPIO
 	bool "RBOS board GPIO and Button API"
 	default y
