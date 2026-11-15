@@ -27,7 +27,7 @@ if(NOT result EQUAL 0 OR NOT mrbc_version MATCHES "mruby 4.0.0")
 endif()
 
 set(vm "${CMAKE_CURRENT_BINARY_DIR}/mrubyc")
-set(task_sources system.rb)
+set(task_sources)
 if(CONFIG_RBOS_TEST_PROFILE_OOM)
   list(APPEND task_sources fault/oom.rb)
 else()

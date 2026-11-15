@@ -89,6 +89,12 @@ def fixture(root, profile="debug"):
 
 
 class VerifyEvidenceTests(unittest.TestCase):
+    def test_supervisor_gate_is_required(self):
+        (self.root / 'firmware/supervisor-link.json').unlink()
+        rehash(self.root)
+        with self.assertRaises(FileNotFoundError):
+            self.verify()
+
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)

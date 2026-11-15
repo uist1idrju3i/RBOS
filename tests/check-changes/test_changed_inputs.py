@@ -67,7 +67,8 @@ class ChangedInputsTests(unittest.TestCase):
                   'vendor/mruby', 'vendor/mrubyc', 'src/new\nfile.rb', 'include/space name.h',
                   'src/rbos/new.c', 'src/platform/nrf/backend.c', 'include/rbos/new.h',
                   'sig/temperature.rbs', 'research/implementation/api-contracts.json',
-                  'firmware/ruby/system.rb', 'firmware/ruby/selftest/coordinator.rb',
+                  'firmware/ruby/selftest/coordinator.rb', 'firmware/src/supervisor.c',
+                  'firmware/src/supervisor.h', 'firmware/src/runtime.h',
                   'firmware/ruby/stress/spinner_a.rb', 'firmware/ruby/fault/oom.rb']
         paths = {
             'firmware': ['firmware/src/main.c', 'firmware/stress.conf', 'firmware/oom.conf',
@@ -77,6 +78,7 @@ class ChangedInputsTests(unittest.TestCase):
                          '.github/workflows/firmware.yml',
                          '.github/workflows/firmware-release.yml', 'vendor/sdk-nrf-bm'],
             'mruby-wasm': ['tests/mruby/test.rb', 'tools/mrubyc-wasm/check.sh',
+                           'research/implementation/a2-p3-evidence/c_empty.rb',
                            '.github/workflows/mruby-wasm.yml'],
         }
         for kind, inputs in paths.items():

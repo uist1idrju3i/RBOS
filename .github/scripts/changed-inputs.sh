@@ -28,6 +28,8 @@ if [ "${PUSH_FORCED:-false}" != true ] &&
       firmware:vendor/mruby|firmware:vendor/mrubyc|firmware:src/*|firmware:include/*|\
       mruby-wasm:src/*|mruby-wasm:include/*|mruby-wasm:tests/mruby/*|mruby-wasm:tools/mrubyc-wasm/*|\
       mruby-wasm:firmware/ruby/*|\
+      mruby-wasm:firmware/src/supervisor.*|mruby-wasm:firmware/src/runtime.h|\
+      mruby-wasm:research/implementation/a2-p3-evidence/*|\
       mruby-wasm:vendor/mruby|mruby-wasm:vendor/mrubyc|mruby-wasm:.github/workflows/mruby-wasm.yml)
         changed=true
         break

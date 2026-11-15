@@ -1,4 +1,5 @@
 import json
+import hashlib
 from pathlib import Path
 import runpy
 import struct
@@ -10,8 +11,8 @@ manifest_tool = runpy.run_path(str(ROOT / 'tools/bm-build/bytecode-manifest.py')
 def make_bytecode_bundle(root, revision, profile='debug', tasks=None):
     root.mkdir(parents=True, exist_ok=True)
     if tasks is None:
-        tasks = ['system.rb', 'fault/oom.rb'] if profile == 'oom' else [
-            'system.rb', 'selftest/coordinator.rb', 'selftest/worker_a.rb', 'selftest/worker_b.rb',
+        tasks = ['fault/oom.rb'] if profile == 'oom' else [
+            'selftest/coordinator.rb', 'selftest/worker_a.rb', 'selftest/worker_b.rb',
             *(['stress/spinner_a.rb', 'stress/spinner_b.rb'] if profile == 'stress' else []), 'peripherals.rb']
     manifest = {'schema': 1, 'profile': profile, 'tasks': tasks,
                 'revisions': {'rbos': revision, 'mruby': 'b' * 40, 'mrubyc': 'c' * 40},
@@ -97,4 +98,15 @@ def make_layout_fixture(bundle, app, elf_class=64):
     tool = runpy.run_path(str(ROOT / 'tools/bm-build/bytecode-layout.py'))
     report = tool['collect'](bytes(elf), bundle, mapping, bytes(image))
     (app.parent / 'bytecode-layout.json').write_text(json.dumps(report))
+    functions = []
+    for index, (name, target) in enumerate([('mrbc_run', '__wrap_mrbc_vm_run'),
+                                           ('__wrap_mrbc_vm_run', 'mrbc_vm_run')]):
+        start = address + index * 8
+        functions.append({'name': name, 'address': start, 'size': 8,
+            'sha256': hashlib.sha256(image[start - 0xa000:start - 0xa000 + 8]).hexdigest(),
+            'disassembly': f'{start:08x} <{name}>:\n  {start:x}: bl ae10 <{target}>\n'})
+    link = {'schema': 1, 'elf_sha256': hashlib.sha256(elf).hexdigest(),
+            'rrt0_sha256': hashlib.sha256(b'rrt0 fixture').hexdigest(),
+            'rrt0_vm_relocations': ['00000000 R_ARM_THM_CALL mrbc_vm_run'], 'functions': functions}
+    (app.parent / 'supervisor-link.json').write_text(json.dumps(link))
     return report

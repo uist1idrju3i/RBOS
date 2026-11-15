@@ -67,7 +67,6 @@ done
 for source in "$root"/firmware/ruby/selftest/*.rb; do
   "$mrbc" -o "$build/p1-$(basename "${source%.rb}").mrb" "$source"
 done
-"$mrbc" -o "$build/p1-system.mrb" "$root/firmware/ruby/system.rb"
 
 if [[ "$mode" == --pool-min ]]; then
   mkdir -p "$build/pool-min"
@@ -102,7 +101,7 @@ if [[ "$mode" == --pool-min ]]; then
     if pool_trial "$mid"; then high=$mid; else low=$mid; fi
   done
   echo "PASS: P1 selftest minimum pool=$high KiB ($((high * 1024)) bytes), lower neighbor=$low KiB"
-  echo "POOL: total elapsed=$((SECONDS - started)) s (includes build and system.rb compile; system task not run)"
+  echo "POOL: total elapsed=$((SECONDS - started)) s (includes build; user tasks only)"
   exit 0
 fi
 
@@ -113,7 +112,32 @@ echo 'PASS: multiple tasks and empty Ruby program'
 timeout 30s node "$build/runner.js" "$build/p1-coordinator.mrb" \
   "$build/p1-worker_a.mrb" "$build/p1-worker_b.mrb" | tee "$build/p1-selftest.log"
 grep -Fxq 'PASS: P1 selftest' "$build/p1-selftest.log"
-echo 'PASS: compiled system task and ran P1 selftests'
+echo 'PASS: ran user-only P1 selftests'
+
+for fixture in spin sleep error empty; do
+  "$mrbc" -B"c_${fixture}_code" -o "$build/c_${fixture}_code.c" \
+    "$root/research/implementation/a2-p3-evidence/c_${fixture}.rb"
+done
+for variant in wrapped control; do
+  supervisor_flags=(-Wl,--wrap=mrbc_vm_run)
+  if [[ "$variant" == control ]]; then
+    supervisor_flags=(-DRBOS_SUPERVISOR_CONTROL)
+  fi
+  emcc -O1 -Wall -Wextra -Wno-unused-parameter -finstrument-functions \
+    -include "$root/research/implementation/a2-p3-evidence/c_system_config.h" \
+    -DCONFIG_RBOS_SERVICE_INTERVAL_MS=10 -DMAX_VM_COUNT=32 \
+    -I"$root/tools/mrubyc-wasm/supervisor_include" -I"$root/firmware/src" \
+    -I"$root/include" -I"$root/research/implementation/a2-p3-evidence" \
+    -I"$build" -I"$build/mrubyc/src" \
+    -sSINGLE_FILE=1 -sENVIRONMENT=node -sEXIT_RUNTIME=1 -sASSERTIONS=1 \
+    -sSTACK_OVERFLOW_CHECK=1 -sSTACK_SIZE=1048576 "${supervisor_flags[@]}" \
+    "$root/tools/mrubyc-wasm/test_supervisor.c" "$root/firmware/src/supervisor.c" \
+    "${sources[@]}" -o "$build/supervisor-$variant.js"
+  timeout 15s node "$build/supervisor-$variant.js" spin
+done
+for fixture in empty error sleep; do
+  timeout 15s node "$build/supervisor-wrapped.js" "$fixture"
+done
 
 for profile in stress fault; do
   for source in "$root"/firmware/ruby/"$profile"/*.rb; do

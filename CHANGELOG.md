@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 0.2.0 向けに、Ruby の system task を C supervisor へ置き換えました。VM quantum 復帰と idle から期限付きで maintenance を実行し、全 user task が終了しても C の管理を続けます。統計の `service=` は `supervisor=` へ改名し、`idle=` とともに実際の maintenance 実行回数を数えます。LTO を拒否し、BM evidence で wrapper の実呼出しを照合します。Task API・LED0 の予約・WDT・fatal の挙動は変更しません。実機動作は未確認です。
+
+### Removed
+
+- firmware 専用の `RBOSSystem.service`、system task の登録 API、`system.rb` を削除しました。利用者の承認により非推奨 MINOR の猶予を置かず削除する例外とし、0.1.4 から非互換 MINOR の0.2.0へ進めます。Ruby 側で管理処理を呼ぶ必要はなくなります。TWEAK は新しい X.Y.Z の0とし、署名 image は `0.2.0+0` です。
+
 ### Added
 
 - mruby・mruby/c・sdk-nrf-bm を Dependabot の対象から外し、正式 release tag の固定確認と新版の検出を週1回行う CI を追加しました。新版は依存ごとの issue に通知し、gitlink は自動更新しません。yomiyasu は Dependabot に残します。

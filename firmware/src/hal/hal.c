@@ -6,6 +6,7 @@
 #include <zephyr/sys/printk.h>
 #include "mrubyc.h"
 #include "runtime.h"
+#include "supervisor.h"
 
 static struct bm_timer tick_timer;
 static uint64_t last_ms;
@@ -68,7 +69,7 @@ void mrbc_hal_enable_irq(void)
 
 void mrbc_hal_idle_cpu(void)
 {
-	rbos_maintenance(false);
+	rbos_supervisor_poll(true);
 	k_cpu_idle();
 }
 

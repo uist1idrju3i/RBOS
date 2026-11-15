@@ -17,7 +17,7 @@ choice RBOS_TEST_PROFILE
 	default RBOS_TEST_PROFILE_SELFTEST
 
 config RBOS_TEST_PROFILE_SELFTEST
-	bool "System task and selftests"
+	bool "User selftests"
 
 config RBOS_TEST_PROFILE_STRESS
 	bool "Selftests followed by always-ready spinners"
@@ -43,7 +43,7 @@ config RBOS_TIMESLICE_TICK_COUNT
 	default 1
 
 config RBOS_SERVICE_INTERVAL_MS
-	int "System service interval (ms)"
+	int "Native supervisor interval (ms)"
 	range 1 1000
 	default 10
 
