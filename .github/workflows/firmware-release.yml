@@ -15,6 +15,8 @@ jobs:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     environment: release
     runs-on: ubuntu-26.04
+    container:
+      image: ghcr.io/nrfconnect/sdk-nrf-toolchain@sha256:f24d8932ff081ebcd8da9c248f4449bdabe461c0620a7a4ac9e95eb577ba2276
     timeout-minutes: 60
     env:
       CCACHE_DISABLE: '1'
@@ -41,11 +43,9 @@ jobs:
       - name: 最小 BM application を先に検査する
         run: tools/bm-build/preflight.sh "$BM_WORKSPACE" "$RUNNER_TEMP/bm-preflight"
 
-      - name: Ruby VM の source と host build の依存を用意する
+      - name: Ruby VM の source と host build の版を確かめる
         run: |
           git submodule update --init --depth 1 vendor/mruby vendor/mrubyc
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -y build-essential ruby python3
           ruby --version
           cc --version
           make --version

@@ -10,47 +10,18 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: nrfutil と sdk-manager の固定版を用意する
-      shell: bash
-      run: |
-        set -euo pipefail
-        bin="$RUNNER_TEMP/nrfutil-bin"
-        mkdir -p "$bin"
-        curl --fail --location --retry 3 \
-          https://files.nordicsemi.com/artifactory/swtools/external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil-x86_64-unknown-linux-gnu-1.4.2-8a9090a \
-          --output "$bin/nrfutil"
-        echo "a14996288928a92081cadeefd2dd37fcb54ee99a568fd4eaa6fb9586a51fba57  $bin/nrfutil" | sha256sum --check
-        chmod +x "$bin/nrfutil"
-        "$bin/nrfutil" --version
-        "$bin/nrfutil" install sdk-manager=1.17.0
-        echo "$bin" >> "$GITHUB_PATH"
-
-    - name: toolchain bundle をキャッシュする
-      id: toolchain
-      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      with:
-        path: ${{ runner.temp }}/ncs/toolchains
-        key: ncs-bm-toolchain-v1-${{ runner.os }}-${{ runner.arch }}-911f4c5c26
-
-    - name: 固定した toolchain bundle を導入する
-      if: steps.toolchain.outputs.cache-hit != 'true'
-      shell: bash
-      run: |
-        set -euo pipefail
-        nrfutil sdk-manager toolchain install \
-          --toolchain-bundle-id 911f4c5c26 --for-ncs-version v3.3.0 \
-          --install-dir "$RUNNER_TEMP/ncs" --skip-cmake-registration
-
-    - name: toolchain の環境を後続の step へ渡す
+    - name: container の toolchain を Bash で読み込み後続の step へ渡す
       shell: bash
       run: |
         set -eo pipefail
-        nrfutil sdk-manager toolchain env --toolchain-bundle-id 911f4c5c26 \
-          --install-dir "$RUNNER_TEMP/ncs" --as-script sh > "$RUNNER_TEMP/ncs-env.sh"
-        # The generated script may reference unset host environment variables.
+        test -z "${ACCEPT_JLINK_LICENSE+x}"
+        test ! -x /usr/bin/JLinkExe
+        test "$BASH_ENV" = /opt/non-interactive-setup.sh
+        # The image script may reference unset host environment variables.
         # shellcheck source=/dev/null
-        source "$RUNNER_TEMP/ncs-env.sh"
-        python3 - "$RUNNER_TEMP/ncs-env.sh" <<'PY'
+        source /opt/toolchain-env.sh
+        test "$ZEPHYR_SDK_INSTALL_DIR" = /opt/ncs/toolchains/911f4c5c26/opt/zephyr-sdk
+        python3 - /opt/toolchain-env.sh <<'PY'
         import os
         import pathlib
         import re
@@ -66,6 +37,13 @@ runs:
             output.write(f"BM_WORKSPACE={os.environ['RUNNER_TEMP']}/ncs-bm\n")
         PY
 
+    - name: host build と cache 圧縮の依存を用意する
+      shell: bash
+      run: |
+        set -euo pipefail
+        apt-get update
+        apt-get install --no-install-recommends -y build-essential ruby python3 zstd
+
     - name: workspace の復元時間を測り始める
       if: inputs.cache-workspace == 'true'
       id: workspace-clock
@@ -78,7 +56,7 @@ runs:
       uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ runner.temp }}/ncs-bm
-        key: ncs-bm-workspace-v1-${{ runner.os }}-${{ runner.arch }}-v2.0.1-${{ hashFiles('tools/bm-build/modules.txt') }}
+        key: ncs-bm-workspace-v2-f24d8932ff08-${{ runner.os }}-${{ runner.arch }}-v2.0.1-${{ hashFiles('tools/bm-build/modules.txt') }}
 
     - name: BM workspace を更新し module の版と所要時間を検査する
       shell: bash

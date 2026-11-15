@@ -42,6 +42,11 @@ jobs:
     needs: changes
     if: needs.changes.outputs.changed == 'true'
     runs-on: ubuntu-26.04
+    container:
+      image: ghcr.io/nrfconnect/sdk-nrf-toolchain@sha256:f24d8932ff081ebcd8da9c248f4449bdabe461c0620a7a4ac9e95eb577ba2276
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -61,6 +66,8 @@ jobs:
       matrix:
         variant: [debug, release, stress, oom]
     runs-on: ubuntu-26.04
+    container:
+      image: ghcr.io/nrfconnect/sdk-nrf-toolchain@sha256:f24d8932ff081ebcd8da9c248f4449bdabe461c0620a7a4ac9e95eb577ba2276
     timeout-minutes: 60
     env:
       VARIANT: ${{ matrix.variant }}
@@ -79,11 +86,9 @@ jobs:
           cache-workspace: 'true'
           save-workspace: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.variant == 'debug' }}
 
-      - name: Ruby VM の source と host build の依存を用意する
+      - name: Ruby VM の source と host build の版を確かめる
         run: |
           git submodule update --init --depth 1 vendor/mruby vendor/mrubyc
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -y build-essential ruby python3
           ruby --version
           cc --version
           make --version
@@ -104,9 +109,9 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ccache-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.variant }}-911f4c5c26-${{ hashFiles('tools/bm-build/modules.txt') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: ccache-v2-f24d8932ff08-${{ runner.os }}-${{ runner.arch }}-${{ matrix.variant }}-911f4c5c26-${{ hashFiles('tools/bm-build/modules.txt') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            ccache-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.variant }}-911f4c5c26-${{ hashFiles('tools/bm-build/modules.txt') }}-
+            ccache-v2-f24d8932ff08-${{ runner.os }}-${{ runner.arch }}-${{ matrix.variant }}-911f4c5c26-${{ hashFiles('tools/bm-build/modules.txt') }}-
 
       - name: compiler cache の統計をリセットする
         run: ccache -z
