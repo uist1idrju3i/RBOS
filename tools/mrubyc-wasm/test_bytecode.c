@@ -35,15 +35,17 @@ static int inside(const void *pointer, size_t length, const uint8_t *blob, size_
   return address >= start && address - start <= size && length <= size - (address - start);
 }
 
-static void check_irep(const mrbc_irep *irep, const uint8_t *blob, size_t size)
+static unsigned int check_irep(const mrbc_irep *irep, const uint8_t *blob, size_t size)
 {
   require(irep != NULL, "missing IREP");
   require(inside(irep->inst, irep->ilen + sizeof(mrbc_irep_catch_handler) * irep->clen, blob, size),
           "IREP instructions/catch table outside const blob");
   require(inside(irep->pool, 2, blob, size), "IREP pool outside const blob");
+  unsigned int catch_handlers = irep->clen;
   for (unsigned int i = 0; i < irep->rlen; ++i) {
-    check_irep(mrbc_irep_child_irep(irep, i), blob, size);
+    catch_handlers += check_irep(mrbc_irep_child_irep(irep, i), blob, size);
   }
+  return catch_handlers;
 }
 
 static void check_unchanged(const uint8_t *blob, const uint8_t *before, size_t size)
@@ -54,20 +56,21 @@ static void check_unchanged(const uint8_t *blob, const uint8_t *before, size_t s
   }
 }
 
-static void run_fixture(const uint8_t *blob, size_t size)
+static unsigned int run_fixture(const uint8_t *blob, size_t size)
 {
   uint8_t *before = malloc(size);
   require(before != NULL, "snapshot allocation failed");
   memcpy(before, blob, size);
   mrbc_tcb *task = mrbc_create_task(blob, NULL);
   require(task != NULL, "const task creation failed");
-  check_irep(task->vm.top_irep, blob, size);
+  unsigned int catch_handlers = check_irep(task->vm.top_irep, blob, size);
   require(mrbc_run() == 0 && uncaught_exceptions == 0, "const task execution failed");
   check_unchanged(blob, before, size);
   require(task->state == TASKSTATE_DORMANT, "const task did not finish");
   require(mrbc_delete_task(task) == 0, "const task deletion failed");
   mrbc_raw_free(task);
   free(before);
+  return catch_handlers;
 }
 
 static void check_retained_symbol(void)
@@ -82,7 +85,9 @@ int main(void)
   mrbc_init(heap, sizeof(heap));
   run_fixture(bytecode_empty, sizeof(bytecode_empty));
   puts("PASS: const empty Ruby accepted");
-  run_fixture(bytecode_mutation, sizeof(bytecode_mutation));
+  require(run_fixture(bytecode_mutation, sizeof(bytecode_mutation)) > 0,
+          "const fixture has no catch table");
+  puts("PASS: const nonempty catch table inside blob");
   puts("PASS: const blob unchanged after String mutation");
 
   uint8_t before[sizeof(bytecode_lifetime)];
