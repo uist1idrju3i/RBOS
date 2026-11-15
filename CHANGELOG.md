@@ -34,6 +34,8 @@
 
 ### Fixed
 
+- bytecode bundle の出力先を生成時に作り直し、同じ build directory で profile を切り替えたときに古い task のファイルが残る問題を修正しました。
+
 - bytecode manifest の task 在庫を CMake の生成対象から記録するようにし、周辺機器の診断 task を無効にした build の失敗を修正しました。
 
 - 0.1.2 向けに `Temperature.read` の keyword 引数の見落としを修正しました。位置引数とは別に検査し、取得前に ArgumentError とします。空の `**{}` は引数なしとして扱います。Wasm と Float 無効 guard の host 検査を追加し、宣言済みの「引数なし」契約に実装を合わせました。実機での温度検証は未完了です。

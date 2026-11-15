@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 
 from bytecode_fixture import make_bytecode_bundle, manifest_tool, ROOT
@@ -57,6 +58,36 @@ class BytecodeManifestTests(unittest.TestCase):
                 del target[key]
                 with self.subTest(section=section, key=key), self.assertRaises(ValueError):
                     self.verify(changed)
+
+    def test_bundle_replaces_profile_output(self):
+        base = Path(self.directory.name)
+        build, repo, output = base / 'build', base / 'repo', base / 'output'
+        for profile, count in [('stress', 10), ('debug', 8), ('oom', 5)]:
+            with self.subTest(profile=profile):
+                stage = base / profile
+                manifest = make_bytecode_bundle(stage, REVISION, profile)
+                records = []
+                for blob in manifest['blobs']:
+                    target = build / blob['build_output']
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes((stage / blob['generated_c']['path']).read_bytes())
+                    for item in blob['inputs']:
+                        source = repo / item['path']
+                        source.parent.mkdir(parents=True, exist_ok=True)
+                        source.write_bytes((stage / 'inputs' / item['path']).read_bytes())
+                    record = {key: value for key, value in manifest.items() if key != 'blobs'}
+                    record['blob'] = blob
+                    path = Path(str(target) + '.record.json')
+                    path.write_text(json.dumps(record))
+                    records.append(path)
+                manifest_tool['bundle'](SimpleNamespace(records=records, build=build, repo=repo, output=output))
+                self.assertEqual(manifest_tool['verify'](output, REVISION, profile)['blobs'], count)
+                self.assertEqual({p.relative_to(output) for p in output.rglob('*') if p.is_file()},
+                                 {p.relative_to(stage) for p in stage.rglob('*') if p.is_file()})
+
+    def test_bundle_requires_records(self):
+        with self.assertRaisesRegex(ValueError, 'no compiler records'):
+            manifest_tool['bundle'](SimpleNamespace(records=[]))
 
     def test_empty_duplicate_wrong_profile_and_metadata(self):
         for field, value in [('schema', 2), ('schema', True), ('profile', 'oom'), ('blobs', []), ('blobs', None)]:

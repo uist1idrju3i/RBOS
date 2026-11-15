@@ -129,6 +129,8 @@ def compile_blob(args):
 def bundle(args):
     records = [json.loads(path.read_text()) for path in args.records]
     require(records, 'no compiler records')
+    if args.output.exists():
+        shutil.rmtree(args.output)
     manifest = {key: records[0][key] for key in ('schema', 'profile', 'tasks', 'revisions', 'compiler')}
     manifest['blobs'] = []
     for record in records:
