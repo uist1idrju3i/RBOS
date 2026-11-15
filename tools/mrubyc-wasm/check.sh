@@ -149,6 +149,8 @@ emcc -O1 -Wall -Wextra -Wno-unused-parameter \
 timeout 30s node "$build/test-bytecode.js" | tee "$build/bytecode.log"
 for marker in \
   'const empty Ruby accepted' 'bytecode String changed' \
+  'bytecode rescue executed' 'bytecode ensure executed' \
+  'const nonempty catch table inside blob' \
   'const blob unchanged after String mutation' 'bytecode lifetime producer' \
   'bytecode lifetime consumer' 'const symbol and method retained after producer deletion' \
   'const bad magic task rejected' 'const bad version task rejected' \
