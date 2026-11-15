@@ -47,13 +47,19 @@ def synthetic(profile="selftest", end=60, progress_end=None, connected=False):
     for second in range(10, end + 1, 10):
         lines.append(stamp(second) + " <inf> rbos_runtime: stats tick_us=930..1040 "
                      "catchups=0 ticks=10000 pool=11560/65536 main=688 isr=560 "
-                     "idle=%d service=%d drain_us=42" % (second * 1200, second * 91))
+                     "idle=%d supervisor=%d drain_us=42" % (second * 1200, second * 91))
         if profile == "stress" and (progress_end is None or second <= progress_end):
             lines += ["stress a=%d" % second, "stress b=%d" % second]
     return ("\n".join(lines) + "\n").encode()
 
 
 class LogTests(unittest.TestCase):
+    def test_supervisor_and_historical_service_stats(self):
+        for data in (synthetic(), synthetic().replace(b'supervisor=', b'service=')):
+            report = dk_log.analyze(data)
+            self.assertEqual(report['status'], 'PASS', report['errors'])
+            self.assertEqual(report['rates_per_s']['supervisor']['min'], 91)
+
     def event_log(self, suffix=" event_pending=2 event_overflow=0 event_coalesced=3"):
         return re.sub(rb"(drain_us=42)", lambda match: match[0] + suffix.encode(), synthetic())
 
@@ -276,7 +282,8 @@ class LogTests(unittest.TestCase):
         result = subprocess.run([sys.executable, str(CHECKER), str(path), "--profile", "stress"],
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout)
-        self.assertEqual(result.stdout, path.with_name("stress-final-report.txt").read_text())
+        self.assertEqual(result.stdout, path.with_name("stress-final-report.txt").read_text().replace(
+            "service / s", "supervisor / s"))
 
     def test_fairness_boundary(self):
         data = synthetic("stress")

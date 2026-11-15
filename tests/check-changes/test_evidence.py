@@ -37,6 +37,21 @@ class EvidenceTests(unittest.TestCase):
             (build / "linked.signed.bin").symlink_to(build / "secret.pem")
             bytecode = make_bytecode_bundle(build / 'firmware/bytecode', 'a' * 40)
             make_layout_fixture(build / 'firmware/bytecode', build / 'firmware/zephyr')
+            obj = build / 'firmware/CMakeFiles/app.dir/mrubyc/src/rrt0.c.obj'
+            obj.parent.mkdir(parents=True)
+            obj.write_bytes(b'rrt0 fixture')
+            (build / 'firmware/CMakeCache.txt').write_text(
+                f'CMAKE_OBJDUMP:FILEPATH={binaries}/objdump\nCMAKE_NM:FILEPATH={binaries}/nm\n')
+            commands = {
+                'nm': '0000ae00 00000008 T mrbc_run\n0000ae08 00000008 T __wrap_mrbc_vm_run\n0000ae10 00000008 T mrbc_vm_run\n',
+                'objdump': '0000ae00 <mrbc_run>:\n ae00: bl ae08 <__wrap_mrbc_vm_run>\n'
+                           '0000ae08 <__wrap_mrbc_vm_run>:\n ae08: bl ae10 <mrbc_vm_run>\n',
+            }
+            for name, text in commands.items():
+                path = binaries / name
+                path.write_text('#!/usr/bin/env python3\nimport sys\nprint(' + repr(text) +
+                    ' if "-r" not in sys.argv else "00000000 R_ARM_THM_CALL mrbc_vm_run")\n')
+                path.chmod(0o755)
             for blob in bytecode['blobs']:
                 target = build / 'firmware' / blob['build_output']
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -58,6 +73,7 @@ class EvidenceTests(unittest.TestCase):
             self.assertTrue((output / "firmware/zephyr/zephyr.map").is_file())
             self.assertTrue((output / 'firmware/bytecode/manifest.json').is_file())
             self.assertTrue((output / 'firmware/bytecode-layout.json').is_file())
+            self.assertTrue((output / 'firmware/supervisor-link.json').is_file())
             self.assertFalse((output / 'firmware/zephyr/zephyr.elf').exists())
             self.assertTrue((output / 'firmware/bytecode/generated/rbos_adc_bytecode.c').is_file())
             self.assertTrue((output / 'firmware/bytecode/inputs/src/rbos/adc.rb').is_file())

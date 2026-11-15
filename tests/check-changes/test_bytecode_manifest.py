@@ -25,7 +25,7 @@ class BytecodeManifestTests(unittest.TestCase):
         return manifest_tool['verify'](self.root, REVISION, 'debug')
 
     def test_all_profiles(self):
-        for profile, count in [('debug', 8), ('release', 8), ('stress', 10), ('oom', 5)]:
+        for profile, count in [('debug', 7), ('release', 7), ('stress', 9), ('oom', 4)]:
             root = Path(self.directory.name) / profile
             make_bytecode_bundle(root, REVISION, profile)
             self.assertEqual(manifest_tool['verify'](root, REVISION, profile)['blobs'], count)
@@ -62,7 +62,7 @@ class BytecodeManifestTests(unittest.TestCase):
     def test_bundle_replaces_profile_output(self):
         base = Path(self.directory.name)
         build, repo, output = base / 'build', base / 'repo', base / 'output'
-        for profile, count in [('stress', 10), ('debug', 8), ('oom', 5)]:
+        for profile, count in [('stress', 9), ('debug', 7), ('oom', 4)]:
             with self.subTest(profile=profile):
                 stage = base / profile
                 manifest = make_bytecode_bundle(stage, REVISION, profile)
@@ -198,7 +198,7 @@ class BytecodeManifestTests(unittest.TestCase):
         name = 'src/rbos/adc.rb'
         (self.root / 'inputs' / name).write_bytes(b'')
         changed['blobs'][0]['inputs'][0] = manifest_tool['descriptor'](name, b'')
-        self.assertEqual(self.verify(changed)['blobs'], 8)
+        self.assertEqual(self.verify(changed)['blobs'], 7)
 
     def test_compile_records_actual_arguments(self):
         base = Path(self.directory.name)

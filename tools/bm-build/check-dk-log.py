@@ -20,12 +20,12 @@ BOOT = re.compile(r"\*\*\* Booting My Application v([\w.+-]+?)-([0-9a-fA-F]{12})
 BOOT_START = re.compile(r"\*\*\* Booting (MCUboot|My Application)\b")
 STATS = re.compile(
     r"\bstats tick_us=(\d+)\.\.(\d+) catchups=(\d+) ticks=(\d+) "
-    r"pool=(\d+)/(\d+) main=(\d+) isr=(\d+) idle=(\d+) service=(\d+)"
+    r"pool=(\d+)/(\d+) main=(\d+) isr=(\d+) idle=(\d+) (?:supervisor|service)=(\d+)"
     r"(?: drain_us=(\d+))?"
     r"(?: event_pending=(\d+) event_overflow=(\d+) event_coalesced=(\d+))?\s*$"
 )
 FIELDS = ("tick_min", "tick_max", "catchups", "ticks", "pool", "pool_total",
-          "main", "isr", "idle", "service", "drain_us",
+          "main", "isr", "idle", "supervisor", "drain_us",
           "event_pending", "event_overflow", "event_coalesced")
 FATAL = re.compile(
     r"RBOS fatal|fatal error|assertion.*fail|assert.*fail|\bassert(?:ion)?(?:\s|:|\()|abort\(\)|Halting system|Kernel panic",
@@ -179,7 +179,7 @@ def analyze(data, profile="selftest", min_duration=0, stats_interval=10,
                 errors.append("Native event overflow at line %d" % row["line"])
     jitter = {key: {"windows": 0, "duration_s": 0, "tick_us_min": None, "tick_us_max": None}
               for key in ("disconnected", "connected")}
-    rates = {key: [] for key in ("idle", "service")}
+    rates = {key: [] for key in ("idle", "supervisor")}
     transitions = [event for event in events if event["kind"] in jitter]
     excluded = 0
     loaded_connected = 0
