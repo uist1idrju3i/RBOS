@@ -7,6 +7,8 @@ class FatalTests(unittest.TestCase):
 
     def test_halt_reboot_deadline_and_timer_failure(self):
         headers = {
+            'board-config.h': '#define BOARD_PIN_LED_0 71\n#define BOARD_LED_ACTIVE_STATE 0\n',
+            'hal/nrf_gpio.h': 'void nrf_gpio_cfg_output(unsigned);\nvoid nrf_gpio_pin_write(unsigned,unsigned);\n',
             'bm/bm_timer.h': '''#include <stddef.h>
 struct bm_timer { void (*handler)(void *); };
 #define BM_TIMER_MODE_SINGLE_SHOT 1
@@ -33,15 +35,18 @@ _Noreturn void k_fatal_halt(unsigned);
 static jmp_buf target;
 static int init_error, start_error, block_log, flushes, panics, stopped, rebooted, halted, armed;
 static struct bm_timer *deadline;
+static int led_configured, led_on;
+void nrf_gpio_cfg_output(unsigned pin) { assert(pin==71); led_configured=1; }
+void nrf_gpio_pin_write(unsigned pin,unsigned value) { assert(pin==71 && led_configured && value==0); led_on=1; }
 int bm_timer_init(struct bm_timer *timer,int mode,void (*handler)(void *)) {
-  assert(mode==1); timer->handler=handler; deadline=timer; return init_error;
+  assert(mode==1 && led_on); timer->handler=handler; deadline=timer; return init_error;
 }
 int bm_timer_start(struct bm_timer *timer,unsigned ticks,void *ctx) {
   assert(timer==deadline && ticks==100 && !ctx); armed=1; return start_error;
 }
 _Noreturn void sys_reboot(int type) { assert(type==0); ++rebooted; longjmp(target,1); }
 _Noreturn void k_fatal_halt(unsigned type) { assert(type==1 && stopped); ++halted; longjmp(target,1); }
-void rbos_wdt_stop(void) { ++stopped; }
+void rbos_wdt_stop(void) { assert(led_on); ++stopped; }
 int mrbc_hal_flush(int fd) { assert(fd==2); assert(CONFIG_RBOS_FATAL_REBOOT ? armed : stopped); ++flushes; return 0; }
 int printk(const char *fmt,...) { assert(fmt); return 0; }
 void test_panic(void) { ++panics; if (block_log) deadline->handler(NULL); }

@@ -135,6 +135,7 @@ def configuration(text, profile):
                 "Wrong profile configuration: " + key)
     require(values.get("CONFIG_SIZE_OPTIMIZATIONS" if profile == "release" else
                        "CONFIG_DEBUG_OPTIMIZATIONS") == "y", "Wrong optimization profile")
+    return values
 
 
 def log_sizes(text):
@@ -157,7 +158,7 @@ def verify(root, revision, version, profile, expected_modules, baseline=None, ex
     require(actual == expected_modules, "Fixed west module paths/revisions mismatch")
     app = root / "firmware/zephyr"
     bytecode = verify_bytecode(root / "firmware/bytecode", revision, profile)
-    configuration((app / ".config").read_text(), profile)
+    config = configuration((app / ".config").read_text(), profile)
     mapping = (app / "zephyr.map").read_text()
     sizes = map_sizes(mapping)
     image = (app / "zephyr.signed.bin").read_bytes()
@@ -176,6 +177,10 @@ def verify(root, revision, version, profile, expected_modules, baseline=None, ex
     supervisor = verify_supervisor(json.loads((root / 'firmware/supervisor-link.json').read_text()),
                                    mapping, image)
     watchdog = verify_watchdog(json.loads((root / 'firmware/watchdog.json').read_text()), mapping, image)
+    for key, value in watchdog['configuration'].items():
+        expected = ('y' if value else 'n') if key in {
+            'CONFIG_RBOS_WDT', 'CONFIG_NRFX_WDT', 'CONFIG_RBOS_FATAL_REBOOT', 'CONFIG_RBOS_FAULT_WDT'} else str(value)
+        require(config.get(key, 'n') == expected, 'Unexpected watchdog configuration: ' + key)
     used = log_sizes((root / "build.log").read_text())
     require(all(used[key] == sizes[key] for key in used), "Build-log/map memory mismatch")
     if expected_sizes is not None:

@@ -89,6 +89,13 @@ def fixture(root, profile="debug"):
 
 
 class VerifyEvidenceTests(unittest.TestCase):
+    def test_watchdog_configuration_must_match_elf_evidence(self):
+        path = self.root / 'firmware/zephyr/.config'
+        path.write_text(path.read_text().replace('CONFIG_RBOS_WDT_TIMEOUT_MS=2000', 'CONFIG_RBOS_WDT_TIMEOUT_MS=2100'))
+        rehash(self.root)
+        with self.assertRaisesRegex(ValueError, 'watchdog configuration'):
+            self.verify()
+
     def test_watchdog_gate_is_required(self):
         (self.root / 'firmware/watchdog.json').unlink()
         rehash(self.root)
