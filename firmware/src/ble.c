@@ -2,11 +2,13 @@
 #include <hal/nrf_ficr.h>
 #include <ble_gatts.h>
 #include <bm/bluetooth/ble_adv.h>
+#include <bm/bluetooth/services/ble_mcumgr.h>
 #include <bm/softdevice_handler/nrf_sdh.h>
 #include <bm/softdevice_handler/nrf_sdh_ble.h>
 #include <zephyr/logging/log.h>
 #include "runtime.h"
 #include "rbos/ble_name.h"
+#include "mcumgr_reset.h"
 
 LOG_MODULE_REGISTER(rbos_ble, CONFIG_RBOS_LOG_LEVEL);
 BLE_ADV_DEF(advertising);
@@ -18,9 +20,14 @@ static void on_ble_event(const ble_evt_t *evt, void *context)
 	switch (evt->header.evt_id) {
 	case BLE_GAP_EVT_CONNECTED:
 		LOG_INF("BLE connected");
+		rbos_mcumgr_connected(evt->evt.gap_evt.conn_handle);
 		break;
 	case BLE_GAP_EVT_DISCONNECTED:
 		LOG_INF("BLE disconnected reason=0x%02x", evt->evt.gap_evt.params.disconnected.reason);
+		rbos_mcumgr_disconnected(evt->evt.gap_evt.conn_handle);
+		break;
+	case BLE_GATTS_EVT_HVN_TX_COMPLETE:
+		rbos_mcumgr_notification_sent(evt->evt.gatts_evt.conn_handle);
 		break;
 	case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
 		LOG_INF("BLE PHY request tx=0x%02x rx=0x%02x",
@@ -88,6 +95,12 @@ int rbos_ble_init(void)
 	if (err) return err;
 	uint32_t result = sd_ble_gap_device_name_set(&security, name, strlen(name));
 	if (result) return -EIO;
+	err = rbos_mcumgr_init();
+	if (err) return err;
+	ble_uuid_t uuid = {
+		.uuid = BLE_MCUMGR_SERVICE_UUID_SUB,
+		.type = ble_mcumgr_service_uuid_type(),
+	};
 	struct ble_adv_config config = {
 		.conn_cfg_tag = CONFIG_NRF_SDH_BLE_CONN_TAG,
 		.evt_handler = on_adv_event,
@@ -95,6 +108,7 @@ int rbos_ble_init(void)
 			.name_type = BLE_ADV_DATA_FULL_NAME,
 			.flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE,
 		},
+		.sr_data.uuid_lists.complete = { .uuid = &uuid, .len = 1 },
 	};
 	result = ble_adv_init(&advertising, &config);
 	if (result) return -EIO;

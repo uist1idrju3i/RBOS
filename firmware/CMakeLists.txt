@@ -41,5 +41,6 @@ target_sources(app PRIVATE src/main.c src/runtime.c src/ble.c src/resources.c sr
 target_sources(app PRIVATE src/resource_probe.c)
 target_sources(app PRIVATE src/supervisor.c)
 target_sources(app PRIVATE src/ble_name.c)
+target_sources(app PRIVATE src/mcumgr_reset.c)
 target_sources(app PRIVATE src/fatal.c)
 target_sources(app PRIVATE ../src/platform/nrf/wdt.c)
