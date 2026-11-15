@@ -1,0 +1,2366 @@
+{
+  "schema": 1,
+  "base_rbos": "9caba615ef13a4a6ff5533eac55a0c50f6f5f017",
+  "emsdk": "7.0.0",
+  "node": "v24.22.3",
+  "ncs": "v3.3.0",
+  "real_hardware": "NOT_RUN",
+  "variants": {
+    "baseline": {
+      "wasm": {
+        "exit": 0,
+        "pass_lines": [
+          "PASS: event queue / FIFO / wrap / drop-newest / coalesce / saturation",
+          "PASS: rescued exception",
+          "PASS: scheduler / sleep_ms / priority / pass / Mutex / join / value",
+          "PASS: multiple tasks and empty Ruby program",
+          "PASS: concurrent workers",
+          "PASS: same-priority round robin",
+          "PASS: same-priority fairness",
+          "PASS: priority change",
+          "PASS: suspend",
+          "PASS: resume",
+          "PASS: mutex with sleeping owner",
+          "PASS: workers joined",
+          "PASS: idle wakeup",
+          "PASS: P1 selftest",
+          "PASS: compiled system task and ran P1 selftests",
+          "PASS: compiled stress spinners and OOM fault task (compile only)",
+          "PASS: const empty Ruby accepted",
+          "PASS: bytecode String changed",
+          "PASS: bytecode rescue executed",
+          "PASS: bytecode ensure executed",
+          "PASS: const nonempty catch table inside blob",
+          "PASS: const blob unchanged after String mutation",
+          "PASS: bytecode lifetime producer",
+          "PASS: bytecode lifetime consumer",
+          "PASS: const symbol and method retained after producer deletion",
+          "PASS: const bad magic task rejected",
+          "PASS: const bad version task rejected",
+          "PASS: task creation refused on VM ID exhaustion",
+          "PASS: Wasm RAM stages and accounting",
+          "PASS: Wasm RAM stages and accounting",
+          "PASS: Wasm RAM invalid fixture rejected",
+          "PASS: terminated owner holds lock",
+          "PASS: termination waiter blocked",
+          "PASS: terminated owner leaves mutex locked",
+          "PASS: terminated mutex waiter cannot acquire",
+          "PASS: terminated mutex waiter cleaned up",
+          "PASS: mutex owner termination",
+          "PASS: ensure owner holds lock",
+          "PASS: ensure waiter blocked",
+          "PASS: ensure unlock hands mutex to waiter",
+          "PASS: ensure mutex unlocked after waiter",
+          "PASS: mutex ensure release",
+          "PASS: inversion low owner holds lock",
+          "PASS: inversion tasks present",
+          "PASS: inversion high blocked with middle busy",
+          "PASS: inversion owner ready but not boosted",
+          "PASS: inversion high cannot acquire during middle work",
+          "PASS: inversion high acquires after middle stops",
+          "PASS: inversion mutex unlocked after high",
+          "PASS: mutex priority inversion",
+          "PASS: native helpers / validation / backend failures / ownership",
+          "PASS: Temperature.read arguments, signed scale, failures, recovery and lifetime",
+          "PASS: idiom collections / explicit blocks / matching count / empty inputs",
+          "PASS: idiom objects / naming / guards / keywords / blocks / Proc.new",
+          "PASS: idiom values / false cache / safe navigation / bytes / bounded integers",
+          "PASS: idiom resources / specific rescue / ensure / Mutex / task sleep",
+          "PASS: ADC input voltage errors cancellation and ownership",
+          "PASS: ADC cooperative waiting and concurrent busy",
+          "PASS: ADC termination VM-ID reuse and foreground recovery",
+          "PASS: GPIO pin modes physical levels errors and ownership",
+          "PASS: Button coalescing overflow generation and cleanup",
+          "PASS: Button reused VM received current edge",
+          "PASS: Button cooperative wait termination and VM-ID reuse",
+          "PASS: P2 native setup",
+          "PASS: P2 diagnostic task repeated samples and cleanup",
+          "PASS: concurrent workers",
+          "PASS: same-priority round robin",
+          "PASS: expected failure detected (exit 1 / P1 selftest: same-priority fairness)",
+          "PASS: expected failure detected (exit 1 / expected smoke failure)",
+          "PASS: non-owner unlock ready",
+          "PASS: expected failure detected (exit 1 / Mutex unlock error. not owner or not locked.)",
+          "PASS: mutex non-owner unlock assertion",
+          "PASS: expected failure detected (exit 1 / Unimplemented opcode (0x61) found (Exception))",
+          "PASS: expected failure detected (exit 1 / no block given (yield))",
+          "PASS: expected failure detected (exit 2 / Unsupported int64 (set MRBC_INT64 in vm_config))",
+          "PASS: expected failure detected (exit 2 / Usage:)",
+          "PASS: expected failure detected (exit 2 / Cannot open bytecode:)",
+          "PASS: expected failure detected (exit 2 / Invalid bytecode size:)",
+          "PASS: expected failure detected (exit 1 / Fatal error: Out of memory.)",
+          "PASS: expected failure detected (exit 2 / Failed to load bytecode:)",
+          "PASS: expected failure detected (exit 2 / Invalid bytecode header:)",
+          "PASS: expected failure detected (exit 2 / Invalid declared bytecode size:)",
+          "PASS: compiled 2 src Ruby files (zero is allowed)"
+        ],
+        "warning_counts": {
+          "[-Wsign-compare]": 30,
+          "[-Wunterminated-string-initialization]": 117
+        },
+        "ram_lines": [
+          "RAM: Wasm stage=init used=2824 baseline=2824 IREP_payload=0 register=0 symbol_table_pool=0 symbol_table_static=2040 TCB=0 other_payload=0 allocator_overhead=0 padding=0 fixture=empty",
+          "RAM: Wasm stage=tcb used=3444 baseline=2824 IREP_payload=0 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=104 other_payload=0 allocator_overhead=4 padding=0 fixture=empty",
+          "RAM: Wasm stage=load used=3488 baseline=2824 IREP_payload=32 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=104 other_payload=0 allocator_overhead=8 padding=8 fixture=empty",
+          "RAM: Wasm stage=begin used=3508 baseline=2824 IREP_payload=32 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=104 other_payload=16 allocator_overhead=12 padding=8 fixture=empty",
+          "RAM: Wasm stage=string_new used=3552 baseline=2824 IREP_payload=32 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=104 other_payload=33 allocator_overhead=20 padding=27 fixture=empty",
+          "RAM: Wasm stage=string_changed used=3592 baseline=2824 IREP_payload=32 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=104 other_payload=65 allocator_overhead=20 padding=35 fixture=empty",
+          "RAM: Wasm stage=init used=2824 baseline=2824 IREP_payload=0 register=0 symbol_table_pool=0 symbol_table_static=2040 TCB=0 other_payload=0 allocator_overhead=0 padding=0 fixture=button",
+          "RAM: Wasm stage=tcb used=3444 baseline=2824 IREP_payload=0 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=104 other_payload=0 allocator_overhead=4 padding=0 fixture=button",
+          "RAM: Wasm stage=load used=3728 baseline=2824 IREP_payload=214 register=512 symbol_table_pool=22 symbol_table_static=2040 TCB=104 other_payload=0 allocator_overhead=28 padding=24 fixture=button",
+          "RAM: Wasm stage=begin used=3748 baseline=2824 IREP_payload=214 register=512 symbol_table_pool=22 symbol_table_static=2040 TCB=104 other_payload=16 allocator_overhead=32 padding=24 fixture=button",
+          "RAM: Wasm stage=string_new used=3808 baseline=2824 IREP_payload=214 register=512 symbol_table_pool=22 symbol_table_static=2040 TCB=104 other_payload=63 allocator_overhead=40 padding=29 fixture=button",
+          "RAM: Wasm stage=string_changed used=3840 baseline=2824 IREP_payload=214 register=512 symbol_table_pool=22 symbol_table_static=2040 TCB=104 other_payload=95 allocator_overhead=40 padding=29 fixture=button"
+        ],
+        "pass_count": 83
+      },
+      "bm": {
+        "debug": {
+          "build_exit": 0,
+          "collect_exit": 0,
+          "verify_exit": 0,
+          "verifier": {
+            "status": "PASS",
+            "profiles": {
+              "debug": {
+                "revision": "9caba615ef13a4a6ff5533eac55a0c50f6f5f017",
+                "image_version": [
+                  0,
+                  1,
+                  4,
+                  0
+                ],
+                "profile": "debug",
+                "sha256": "6d6f4e340e628c43e49a100201c423868acca7ff28c93a1a310ee3f74bf307c7",
+                "checksummed_files": 68,
+                "vectors": {
+                  "213": "saadc_irq",
+                  "218": "button_irq20",
+                  "268": "button_irq30"
+                },
+                "map": {
+                  "flash": 140036,
+                  "ram": 85536,
+                  "text": 109432,
+                  "rodata": 25396,
+                  "data": 1448,
+                  "bss": 73248,
+                  "noinit": 10752
+                },
+                "build_log": {
+                  "flash": 140036,
+                  "ram": 85536
+                },
+                "map_delta": null,
+                "bytecode": {
+                  "schema": 1,
+                  "blobs": 8,
+                  "profile": "debug"
+                },
+                "layout": {
+                  "schema": 1,
+                  "symbols": 8,
+                  "status": "PASS"
+                }
+              }
+            },
+            "completion": {
+              "implementation": "NOT_EVALUATED",
+              "host_wasm": "NOT_EVALUATED",
+              "bm_build": "PASS",
+              "real_hardware": "NOT_RUN"
+            },
+            "profile_delta_from_debug": {
+              "debug": {
+                "flash": 0,
+                "ram": 0,
+                "text": 0,
+                "rodata": 0,
+                "data": 0,
+                "bss": 0,
+                "noinit": 0
+              }
+            }
+          }
+        },
+        "release": {
+          "build_exit": 0,
+          "collect_exit": 0,
+          "verify_exit": 0,
+          "verifier": {
+            "status": "PASS",
+            "profiles": {
+              "release": {
+                "revision": "9caba615ef13a4a6ff5533eac55a0c50f6f5f017",
+                "image_version": [
+                  0,
+                  1,
+                  4,
+                  0
+                ],
+                "profile": "release",
+                "sha256": "98e545b07f06e1ec20c2986afff7ba27eb1690b765a537751bca0bb148f4b43b",
+                "checksummed_files": 68,
+                "vectors": {
+                  "213": "saadc_irq",
+                  "218": "button_irq20",
+                  "268": "button_irq30"
+                },
+                "map": {
+                  "flash": 120280,
+                  "ram": 85288,
+                  "text": 91824,
+                  "rodata": 23492,
+                  "data": 1209,
+                  "bss": 73238,
+                  "noinit": 10752
+                },
+                "build_log": {
+                  "flash": 120280,
+                  "ram": 85288
+                },
+                "map_delta": null,
+                "bytecode": {
+                  "schema": 1,
+                  "blobs": 8,
+                  "profile": "release"
+                },
+                "layout": {
+                  "schema": 1,
+                  "symbols": 8,
+                  "status": "PASS"
+                }
+              }
+            },
+            "completion": {
+              "implementation": "NOT_EVALUATED",
+              "host_wasm": "NOT_EVALUATED",
+              "bm_build": "PASS",
+              "real_hardware": "NOT_RUN"
+            }
+          }
+        },
+        "stress": {
+          "build_exit": 0,
+          "collect_exit": 0,
+          "verify_exit": 0,
+          "verifier": {
+            "status": "PASS",
+            "profiles": {
+              "stress": {
+                "revision": "9caba615ef13a4a6ff5533eac55a0c50f6f5f017",
+                "image_version": [
+                  0,
+                  1,
+                  4,
+                  0
+                ],
+                "profile": "stress",
+                "sha256": "6764500c962f16a7eaf4b157e50b41c829d13e4bc5a1bed61289fbd21810bd0f",
+                "checksummed_files": 74,
+                "vectors": {
+                  "213": "saadc_irq",
+                  "218": "button_irq20",
+                  "268": "button_irq30"
+                },
+                "map": {
+                  "flash": 140836,
+                  "ram": 85536,
+                  "text": 109432,
+                  "rodata": 26196,
+                  "data": 1448,
+                  "bss": 73248,
+                  "noinit": 10752
+                },
+                "build_log": {
+                  "flash": 140836,
+                  "ram": 85536
+                },
+                "map_delta": null,
+                "bytecode": {
+                  "schema": 1,
+                  "blobs": 10,
+                  "profile": "stress"
+                },
+                "layout": {
+                  "schema": 1,
+                  "symbols": 10,
+                  "status": "PASS"
+                }
+              }
+            },
+            "completion": {
+              "implementation": "NOT_EVALUATED",
+              "host_wasm": "NOT_EVALUATED",
+              "bm_build": "PASS",
+              "real_hardware": "NOT_RUN"
+            }
+          }
+        },
+        "oom": {
+          "build_exit": 0,
+          "collect_exit": 0,
+          "verify_exit": 0,
+          "verifier": {
+            "status": "PASS",
+            "profiles": {
+              "oom": {
+                "revision": "9caba615ef13a4a6ff5533eac55a0c50f6f5f017",
+                "image_version": [
+                  0,
+                  1,
+                  4,
+                  0
+                ],
+                "profile": "oom",
+                "sha256": "6ab0e01ae79d74f5f0a44efa985a96dd6eb202bfc7c80be28d4e09f80c10cfed",
+                "checksummed_files": 59,
+                "vectors": {
+                  "213": "saadc_irq",
+                  "218": "button_irq20",
+                  "268": "button_irq30"
+                },
+                "map": {
+                  "flash": 136412,
+                  "ram": 85536,
+                  "text": 109432,
+                  "rodata": 21772,
+                  "data": 1448,
+                  "bss": 73248,
+                  "noinit": 10752
+                },
+                "build_log": {
+                  "flash": 136412,
+                  "ram": 85536
+                },
+                "map_delta": null,
+                "bytecode": {
+                  "schema": 1,
+                  "blobs": 5,
+                  "profile": "oom"
+                },
+                "layout": {
+                  "schema": 1,
+                  "symbols": 5,
+                  "status": "PASS"
+                }
+              }
+            },
+            "completion": {
+              "implementation": "NOT_EVALUATED",
+              "host_wasm": "NOT_EVALUATED",
+              "bm_build": "PASS",
+              "real_hardware": "NOT_RUN"
+            }
+          }
+        }
+      },
+      "checks": {
+        "unit": {
+          "outcome": "PASS",
+          "tail": [
+            "----------------------------------------------------------------------",
+            "Ran 110 tests in 7.761s",
+            "",
+            "OK"
+          ]
+        },
+        "skills": {
+          "outcome": "PASS",
+          "tail": [
+            "Skill inventory: 0 error(s)"
+          ]
+        },
+        "skill-tests": {
+          "outcome": "PASS",
+          "tail": [
+            "----------------------------------------------------------------------",
+            "Ran 7 tests in 0.009s",
+            "",
+            "OK"
+          ]
+        },
+        "research": {
+          "outcome": "PASS",
+          "tail": [
+            "Research inventory: 0 error(s)",
+            "PASS: research links, vendor citation ranges, 400-line limits, index/backlinks, private paths"
+          ]
+        }
+      },
+      "revision": "9caba615ef13a4a6ff5533eac55a0c50f6f5f017"
+    },
+    "sdk": {
+      "wasm": {
+        "exit": 0,
+        "pass_lines": [
+          "PASS: event queue / FIFO / wrap / drop-newest / coalesce / saturation",
+          "PASS: rescued exception",
+          "PASS: scheduler / sleep_ms / priority / pass / Mutex / join / value",
+          "PASS: multiple tasks and empty Ruby program",
+          "PASS: concurrent workers",
+          "PASS: same-priority round robin",
+          "PASS: same-priority fairness",
+          "PASS: priority change",
+          "PASS: suspend",
+          "PASS: resume",
+          "PASS: mutex with sleeping owner",
+          "PASS: workers joined",
+          "PASS: idle wakeup",
+          "PASS: P1 selftest",
+          "PASS: compiled system task and ran P1 selftests",
+          "PASS: compiled stress spinners and OOM fault task (compile only)",
+          "PASS: const empty Ruby accepted",
+          "PASS: bytecode String changed",
+          "PASS: bytecode rescue executed",
+          "PASS: bytecode ensure executed",
+          "PASS: const nonempty catch table inside blob",
+          "PASS: const blob unchanged after String mutation",
+          "PASS: bytecode lifetime producer",
+          "PASS: bytecode lifetime consumer",
+          "PASS: const symbol and method retained after producer deletion",
+          "PASS: const bad magic task rejected",
+          "PASS: const bad version task rejected",
+          "PASS: task creation refused on VM ID exhaustion",
+          "PASS: Wasm RAM stages and accounting",
+          "PASS: Wasm RAM stages and accounting",
+          "PASS: Wasm RAM invalid fixture rejected",
+          "PASS: terminated owner holds lock",
+          "PASS: termination waiter blocked",
+          "PASS: terminated owner leaves mutex locked",
+          "PASS: terminated mutex waiter cannot acquire",
+          "PASS: terminated mutex waiter cleaned up",
+          "PASS: mutex owner termination",
+          "PASS: ensure owner holds lock",
+          "PASS: ensure waiter blocked",
+          "PASS: ensure unlock hands mutex to waiter",
+          "PASS: ensure mutex unlocked after waiter",
+          "PASS: mutex ensure release",
+          "PASS: inversion low owner holds lock",
+          "PASS: inversion tasks present",
+          "PASS: inversion high blocked with middle busy",
+          "PASS: inversion owner ready but not boosted",
+          "PASS: inversion high cannot acquire during middle work",
+          "PASS: inversion high acquires after middle stops",
+          "PASS: inversion mutex unlocked after high",
+          "PASS: mutex priority inversion",
+          "PASS: native helpers / validation / backend failures / ownership",
+          "PASS: Temperature.read arguments, signed scale, failures, recovery and lifetime",
+          "PASS: idiom collections / explicit blocks / matching count / empty inputs",
+          "PASS: idiom objects / naming / guards / keywords / blocks / Proc.new",
+          "PASS: idiom values / false cache / safe navigation / bytes / bounded integers",
+          "PASS: idiom resources / specific rescue / ensure / Mutex / task sleep",
+          "PASS: ADC input voltage errors cancellation and ownership",
+          "PASS: ADC cooperative waiting and concurrent busy",
+          "PASS: ADC termination VM-ID reuse and foreground recovery",
+          "PASS: GPIO pin modes physical levels errors and ownership",
+          "PASS: Button coalescing overflow generation and cleanup",
+          "PASS: Button reused VM received current edge",
+          "PASS: Button cooperative wait termination and VM-ID reuse",
+          "PASS: P2 native setup",
+          "PASS: P2 diagnostic task repeated samples and cleanup",
+          "PASS: concurrent workers",
+          "PASS: same-priority round robin",
+          "PASS: expected failure detected (exit 1 / P1 selftest: same-priority fairness)",
+          "PASS: expected failure detected (exit 1 / expected smoke failure)",
+          "PASS: non-owner unlock ready",
+          "PASS: expected failure detected (exit 1 / Mutex unlock error. not owner or not locked.)",
+          "PASS: mutex non-owner unlock assertion",
+          "PASS: expected failure detected (exit 1 / Unimplemented opcode (0x61) found (Exception))",
+          "PASS: expected failure detected (exit 1 / no block given (yield))",
+          "PASS: expected failure detected (exit 2 / Unsupported int64 (set MRBC_INT64 in vm_config))",
+          "PASS: expected failure detected (exit 2 / Usage:)",
+          "PASS: expected failure detected (exit 2 / Cannot open bytecode:)",
+          "PASS: expected failure detected (exit 2 / Invalid bytecode size:)",
+          "PASS: expected failure detected (exit 1 / Fatal error: Out of memory.)",
+          "PASS: expected failure detected (exit 2 / Failed to load bytecode:)",
+          "PASS: expected failure detected (exit 2 / Invalid bytecode header:)",
+          "PASS: expected failure detected (exit 2 / Invalid declared bytecode size:)",
+          "PASS: compiled 2 src Ruby files (zero is allowed)"
+        ],
+        "warning_counts": {
+          "[-Wsign-compare]": 30,
+          "[-Wunterminated-string-initialization]": 117
+        },
+        "ram_lines": [
+          "RAM: Wasm stage=init used=2824 baseline=2824 IREP_payload=0 register=0 symbol_table_pool=0 symbol_table_static=2040 TCB=0 other_payload=0 allocator_overhead=0 padding=0 fixture=empty",
+          "RAM: Wasm stage=tcb used=3444 baseline=2824 IREP_payload=0 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=104 other_payload=0 allocator_overhead=4 padding=0 fixture=empty",
+          "RAM: Wasm stage=load used=3488 baseline=2824 IREP_payload=32 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=104 other_payload=0 allocator_overhead=8 padding=8 fixture=empty",
+          "RAM: Wasm stage=begin used=3508 baseline=2824 IREP_payload=32 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=104 other_payload=16 allocator_overhead=12 padding=8 fixture=empty",
+          "RAM: Wasm stage=string_new used=3552 baseline=2824 IREP_payload=32 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=104 other_payload=33 allocator_overhead=20 padding=27 fixture=empty",
+          "RAM: Wasm stage=string_changed used=3592 baseline=2824 IREP_payload=32 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=104 other_payload=65 allocator_overhead=20 padding=35 fixture=empty",
+          "RAM: Wasm stage=init used=2824 baseline=2824 IREP_payload=0 register=0 symbol_table_pool=0 symbol_table_static=2040 TCB=0 other_payload=0 allocator_overhead=0 padding=0 fixture=button",
+          "RAM: Wasm stage=tcb used=3444 baseline=2824 IREP_payload=0 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=104 other_payload=0 allocator_overhead=4 padding=0 fixture=button",
+          "RAM: Wasm stage=load used=3728 baseline=2824 IREP_payload=214 register=512 symbol_table_pool=22 symbol_table_static=2040 TCB=104 other_payload=0 allocator_overhead=28 padding=24 fixture=button",
+          "RAM: Wasm stage=begin used=3748 baseline=2824 IREP_payload=214 register=512 symbol_table_pool=22 symbol_table_static=2040 TCB=104 other_payload=16 allocator_overhead=32 padding=24 fixture=button",
+          "RAM: Wasm stage=string_new used=3808 baseline=2824 IREP_payload=214 register=512 symbol_table_pool=22 symbol_table_static=2040 TCB=104 other_payload=63 allocator_overhead=40 padding=29 fixture=button",
+          "RAM: Wasm stage=string_changed used=3840 baseline=2824 IREP_payload=214 register=512 symbol_table_pool=22 symbol_table_static=2040 TCB=104 other_payload=95 allocator_overhead=40 padding=29 fixture=button"
+        ],
+        "pass_count": 83
+      },
+      "bm": {
+        "debug": {
+          "build_exit": 0,
+          "collect_exit": 0,
+          "verify_exit": 0,
+          "verifier": {
+            "status": "PASS",
+            "profiles": {
+              "debug": {
+                "revision": "1c98161c1a22b3fd43b6a5b998e5befe7c7f2ec6",
+                "image_version": [
+                  0,
+                  1,
+                  4,
+                  0
+                ],
+                "profile": "debug",
+                "sha256": "b03f06d846a96519157e42c9f7985931b58036c6c493c39fe30341f77281cac7",
+                "checksummed_files": 68,
+                "vectors": {
+                  "213": "saadc_irq",
+                  "218": "button_irq20",
+                  "268": "button_irq30"
+                },
+                "map": {
+                  "flash": 140036,
+                  "ram": 85536,
+                  "text": 109432,
+                  "rodata": 25396,
+                  "data": 1448,
+                  "bss": 73248,
+                  "noinit": 10752
+                },
+                "build_log": {
+                  "flash": 140036,
+                  "ram": 85536
+                },
+                "map_delta": null,
+                "bytecode": {
+                  "schema": 1,
+                  "blobs": 8,
+                  "profile": "debug"
+                },
+                "layout": {
+                  "schema": 1,
+                  "symbols": 8,
+                  "status": "PASS"
+                }
+              }
+            },
+            "completion": {
+              "implementation": "NOT_EVALUATED",
+              "host_wasm": "NOT_EVALUATED",
+              "bm_build": "PASS",
+              "real_hardware": "NOT_RUN"
+            },
+            "profile_delta_from_debug": {
+              "debug": {
+                "flash": 0,
+                "ram": 0,
+                "text": 0,
+                "rodata": 0,
+                "data": 0,
+                "bss": 0,
+                "noinit": 0
+              }
+            }
+          }
+        },
+        "release": {
+          "build_exit": 0,
+          "collect_exit": 0,
+          "verify_exit": 0,
+          "verifier": {
+            "status": "PASS",
+            "profiles": {
+              "release": {
+                "revision": "1c98161c1a22b3fd43b6a5b998e5befe7c7f2ec6",
+                "image_version": [
+                  0,
+                  1,
+                  4,
+                  0
+                ],
+                "profile": "release",
+                "sha256": "1aee975dbb22c12704e27d260cbc6a16859662cd647b191a03a87990f258dc89",
+                "checksummed_files": 68,
+                "vectors": {
+                  "213": "saadc_irq",
+                  "218": "button_irq20",
+                  "268": "button_irq30"
+                },
+                "map": {
+                  "flash": 120280,
+                  "ram": 85288,
+                  "text": 91824,
+                  "rodata": 23492,
+                  "data": 1209,
+                  "bss": 73238,
+                  "noinit": 10752
+                },
+                "build_log": {
+                  "flash": 120280,
+                  "ram": 85288
+                },
+                "map_delta": null,
+                "bytecode": {
+                  "schema": 1,
+                  "blobs": 8,
+                  "profile": "release"
+                },
+                "layout": {
+                  "schema": 1,
+                  "symbols": 8,
+                  "status": "PASS"
+                }
+              }
+            },
+            "completion": {
+              "implementation": "NOT_EVALUATED",
+              "host_wasm": "NOT_EVALUATED",
+              "bm_build": "PASS",
+              "real_hardware": "NOT_RUN"
+            }
+          }
+        },
+        "stress": {
+          "build_exit": 0,
+          "collect_exit": 0,
+          "verify_exit": 0,
+          "verifier": {
+            "status": "PASS",
+            "profiles": {
+              "stress": {
+                "revision": "1c98161c1a22b3fd43b6a5b998e5befe7c7f2ec6",
+                "image_version": [
+                  0,
+                  1,
+                  4,
+                  0
+                ],
+                "profile": "stress",
+                "sha256": "d1f8a33ed2552a2939e4a4de4bb941496ec8f13c3f4688165cc3d80b4ec62269",
+                "checksummed_files": 74,
+                "vectors": {
+                  "213": "saadc_irq",
+                  "218": "button_irq20",
+                  "268": "button_irq30"
+                },
+                "map": {
+                  "flash": 140836,
+                  "ram": 85536,
+                  "text": 109432,
+                  "rodata": 26196,
+                  "data": 1448,
+                  "bss": 73248,
+                  "noinit": 10752
+                },
+                "build_log": {
+                  "flash": 140836,
+                  "ram": 85536
+                },
+                "map_delta": null,
+                "bytecode": {
+                  "schema": 1,
+                  "blobs": 10,
+                  "profile": "stress"
+                },
+                "layout": {
+                  "schema": 1,
+                  "symbols": 10,
+                  "status": "PASS"
+                }
+              }
+            },
+            "completion": {
+              "implementation": "NOT_EVALUATED",
+              "host_wasm": "NOT_EVALUATED",
+              "bm_build": "PASS",
+              "real_hardware": "NOT_RUN"
+            }
+          }
+        },
+        "oom": {
+          "build_exit": 0,
+          "collect_exit": 0,
+          "verify_exit": 0,
+          "verifier": {
+            "status": "PASS",
+            "profiles": {
+              "oom": {
+                "revision": "1c98161c1a22b3fd43b6a5b998e5befe7c7f2ec6",
+                "image_version": [
+                  0,
+                  1,
+                  4,
+                  0
+                ],
+                "profile": "oom",
+                "sha256": "7e7e9eaae659c928c1e4b6ad116deb0c569baa4e57d524e9f3da75f263157263",
+                "checksummed_files": 59,
+                "vectors": {
+                  "213": "saadc_irq",
+                  "218": "button_irq20",
+                  "268": "button_irq30"
+                },
+                "map": {
+                  "flash": 136412,
+                  "ram": 85536,
+                  "text": 109432,
+                  "rodata": 21772,
+                  "data": 1448,
+                  "bss": 73248,
+                  "noinit": 10752
+                },
+                "build_log": {
+                  "flash": 136412,
+                  "ram": 85536
+                },
+                "map_delta": null,
+                "bytecode": {
+                  "schema": 1,
+                  "blobs": 5,
+                  "profile": "oom"
+                },
+                "layout": {
+                  "schema": 1,
+                  "symbols": 5,
+                  "status": "PASS"
+                }
+              }
+            },
+            "completion": {
+              "implementation": "NOT_EVALUATED",
+              "host_wasm": "NOT_EVALUATED",
+              "bm_build": "PASS",
+              "real_hardware": "NOT_RUN"
+            }
+          }
+        }
+      },
+      "checks": {
+        "unit": {
+          "outcome": "PASS",
+          "tail": [
+            "----------------------------------------------------------------------",
+            "Ran 110 tests in 24.593s",
+            "",
+            "OK"
+          ]
+        },
+        "skills": {
+          "outcome": "PASS",
+          "tail": [
+            "Skill inventory: 0 error(s)"
+          ]
+        },
+        "skill-tests": {
+          "outcome": "PASS",
+          "tail": [
+            "----------------------------------------------------------------------",
+            "Ran 7 tests in 0.039s",
+            "",
+            "OK"
+          ]
+        },
+        "research": {
+          "outcome": "FAIL",
+          "tail": [
+            "error: research/nrf-bm/softdevice-and-interrupts.md: missing or escaping citation source: vendor/sdk-nrf-bm/components/softdevice/nrf54l/s115/doc/s115_10.0.1_release-notes.rst",
+            "error: research/nrf-bm/softdevice-and-interrupts.md: missing or escaping citation source: vendor/sdk-nrf-bm/components/softdevice/nrf54l/s145/doc/s145_10.0.1_release-notes.rst",
+            "error: research/nrf-bm/softdevice-and-interrupts.md: invalid citation range: vendor/sdk-nrf-bm/subsys/softdevice_handler/nrf_sdh.c:351-405 (file has 402 lines)",
+            "Research inventory: 12 error(s)"
+          ]
+        }
+      },
+      "trial": {
+        "temporary": true,
+        "pushed": false,
+        "sha": "1c98161c1a22b3fd43b6a5b998e5befe7c7f2ec6",
+        "diff": "diff --git a/vendor/sdk-nrf-bm b/vendor/sdk-nrf-bm\nindex 5148414..e9041d7 160000\n--- a/vendor/sdk-nrf-bm\n+++ b/vendor/sdk-nrf-bm\n@@ -1 +1 @@\n-Subproject commit 51484143c09199e19bccc16fa3b437f7a502a72b\n+Subproject commit e9041d77ec4cb17c383252b868ffb7e2685a9975\n",
+        "parent": "9caba615ef13a4a6ff5533eac55a0c50f6f5f017",
+        "source_status": "clean"
+      }
+    },
+    "mrubyc": {
+      "wasm": {
+        "exit": 1,
+        "pass_lines": [
+          "PASS: event queue / FIFO / wrap / drop-newest / coalesce / saturation",
+          "PASS: rescued exception",
+          "PASS: scheduler / sleep_ms / priority / pass / Mutex / join / value",
+          "PASS: multiple tasks and empty Ruby program",
+          "PASS: concurrent workers",
+          "PASS: same-priority round robin",
+          "PASS: same-priority fairness",
+          "PASS: priority change",
+          "PASS: suspend",
+          "PASS: resume",
+          "PASS: mutex with sleeping owner",
+          "PASS: workers joined",
+          "PASS: idle wakeup",
+          "PASS: P1 selftest",
+          "PASS: compiled system task and ran P1 selftests",
+          "PASS: compiled stress spinners and OOM fault task (compile only)",
+          "PASS: const empty Ruby accepted",
+          "PASS: bytecode String changed",
+          "PASS: bytecode rescue executed",
+          "PASS: bytecode ensure executed",
+          "PASS: const nonempty catch table inside blob",
+          "PASS: const blob unchanged after String mutation",
+          "PASS: bytecode lifetime producer",
+          "PASS: bytecode lifetime consumer",
+          "PASS: const symbol and method retained after producer deletion",
+          "PASS: const bad magic task rejected",
+          "PASS: const bad version task rejected",
+          "PASS: task creation refused on VM ID exhaustion",
+          "PASS: Wasm RAM stages and accounting",
+          "PASS: Wasm RAM stages and accounting",
+          "PASS: Wasm RAM invalid fixture rejected",
+          "PASS: terminated owner holds lock",
+          "PASS: termination waiter blocked",
+          "PASS: terminated owner leaves mutex locked",
+          "PASS: terminated mutex waiter cannot acquire",
+          "PASS: terminated mutex waiter cleaned up",
+          "PASS: mutex owner termination",
+          "PASS: ensure owner holds lock",
+          "PASS: ensure waiter blocked",
+          "PASS: ensure unlock hands mutex to waiter",
+          "PASS: ensure mutex unlocked after waiter",
+          "PASS: mutex ensure release",
+          "PASS: inversion low owner holds lock",
+          "PASS: inversion tasks present",
+          "PASS: inversion high blocked with middle busy",
+          "PASS: inversion owner ready but not boosted",
+          "PASS: inversion high cannot acquire during middle work",
+          "PASS: inversion high acquires after middle stops",
+          "PASS: inversion mutex unlocked after high",
+          "PASS: mutex priority inversion",
+          "PASS: native helpers / validation / backend failures / ownership",
+          "PASS: Temperature.read arguments, signed scale, failures, recovery and lifetime",
+          "PASS: idiom collections / explicit blocks / matching count / empty inputs",
+          "PASS: idiom objects / naming / guards / keywords / blocks / Proc.new",
+          "PASS: idiom values / false cache / safe navigation / bytes / bounded integers",
+          "PASS: idiom resources / specific rescue / ensure / Mutex / task sleep",
+          "PASS: ADC input voltage errors cancellation and ownership",
+          "PASS: ADC cooperative waiting and concurrent busy",
+          "PASS: ADC termination VM-ID reuse and foreground recovery",
+          "PASS: GPIO pin modes physical levels errors and ownership",
+          "PASS: Button coalescing overflow generation and cleanup",
+          "PASS: Button reused VM received current edge",
+          "PASS: Button cooperative wait termination and VM-ID reuse",
+          "PASS: P2 native setup",
+          "PASS: P2 diagnostic task repeated samples and cleanup",
+          "PASS: concurrent workers",
+          "PASS: same-priority round robin",
+          "PASS: expected failure detected (exit 1 / P1 selftest: same-priority fairness)",
+          "PASS: expected failure detected (exit 1 / expected smoke failure)",
+          "PASS: non-owner unlock ready",
+          "PASS: expected failure detected (exit 1 / Mutex unlock error. not owner or not locked.)",
+          "PASS: mutex non-owner unlock assertion",
+          "PASS: expected failure detected (exit 1 / Unimplemented opcode (0x61) found (Exception))",
+          "PASS: expected failure detected (exit 1 / no block given (yield))"
+        ],
+        "warning_counts": {
+          "[-Wsign-compare]": 27,
+          "[-Wunterminated-string-initialization]": 123
+        },
+        "ram_lines": [
+          "RAM: Wasm stage=init used=3080 baseline=3080 IREP_payload=0 register=0 symbol_table_pool=0 symbol_table_static=2040 TCB=0 other_payload=0 allocator_overhead=0 padding=0 fixture=empty",
+          "RAM: Wasm stage=tcb used=3708 baseline=3080 IREP_payload=0 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=112 other_payload=0 allocator_overhead=4 padding=0 fixture=empty",
+          "RAM: Wasm stage=load used=3752 baseline=3080 IREP_payload=32 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=112 other_payload=0 allocator_overhead=8 padding=8 fixture=empty",
+          "RAM: Wasm stage=begin used=3772 baseline=3080 IREP_payload=32 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=112 other_payload=16 allocator_overhead=12 padding=8 fixture=empty",
+          "RAM: Wasm stage=string_new used=3816 baseline=3080 IREP_payload=32 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=112 other_payload=33 allocator_overhead=20 padding=27 fixture=empty",
+          "RAM: Wasm stage=string_changed used=3844 baseline=3080 IREP_payload=32 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=112 other_payload=65 allocator_overhead=20 padding=23 fixture=empty",
+          "RAM: Wasm stage=init used=3080 baseline=3080 IREP_payload=0 register=0 symbol_table_pool=0 symbol_table_static=2040 TCB=0 other_payload=0 allocator_overhead=0 padding=0 fixture=button",
+          "RAM: Wasm stage=tcb used=3708 baseline=3080 IREP_payload=0 register=512 symbol_table_pool=0 symbol_table_static=2040 TCB=112 other_payload=0 allocator_overhead=4 padding=0 fixture=button",
+          "RAM: Wasm stage=load used=3992 baseline=3080 IREP_payload=214 register=512 symbol_table_pool=22 symbol_table_static=2040 TCB=112 other_payload=0 allocator_overhead=28 padding=24 fixture=button",
+          "RAM: Wasm stage=begin used=4012 baseline=3080 IREP_payload=214 register=512 symbol_table_pool=22 symbol_table_static=2040 TCB=112 other_payload=16 allocator_overhead=32 padding=24 fixture=button",
+          "RAM: Wasm stage=string_new used=4080 baseline=3080 IREP_payload=214 register=512 symbol_table_pool=22 symbol_table_static=2040 TCB=112 other_payload=63 allocator_overhead=40 padding=37 fixture=button",
+          "RAM: Wasm stage=string_changed used=4104 baseline=3080 IREP_payload=214 register=512 symbol_table_pool=22 symbol_table_static=2040 TCB=112 other_payload=95 allocator_overhead=40 padding=29 fixture=button"
+        ],
+        "pass_count": 74
+      },
+      "bm": {
+        "debug": {
+          "build_exit": 1,
+          "collect_exit": null,
+          "verify_exit": null,
+          "flash_ram_comparison": "N/A: configure failed before producing firmware/evidence"
+        },
+        "release": {
+          "build_exit": 1,
+          "collect_exit": null,
+          "verify_exit": null,
+          "flash_ram_comparison": "N/A: configure failed before producing firmware/evidence"
+        },
+        "stress": {
+          "build_exit": 1,
+          "collect_exit": null,
+          "verify_exit": null,
+          "flash_ram_comparison": "N/A: configure failed before producing firmware/evidence"
+        },
+        "oom": {
+          "build_exit": 1,
+          "collect_exit": null,
+          "verify_exit": null,
+          "flash_ram_comparison": "N/A: configure failed before producing firmware/evidence"
+        }
+      },
+      "checks": {
+        "unit": {
+          "outcome": "FAIL",
+          "tail": [
+            "----------------------------------------------------------------------",
+            "Ran 110 tests in 9.230s",
+            "",
+            "FAILED (failures=1)"
+          ]
+        },
+        "skills": {
+          "outcome": "PASS",
+          "tail": [
+            "Skill inventory: 0 error(s)"
+          ]
+        },
+        "skill-tests": {
+          "outcome": "PASS",
+          "tail": [
+            "----------------------------------------------------------------------",
+            "Ran 7 tests in 0.020s",
+            "",
+            "OK"
+          ]
+        },
+        "research": {
+          "outcome": "FAIL",
+          "tail": [
+            "error: research/mrubyc/ruby-first-capabilities.md: invalid citation range: vendor/mrubyc/src/c_string.h:1-142 (file has 141 lines)",
+            "error: research/mrubyc/ruby-first-capabilities.md: invalid citation range: vendor/mrubyc/src/c_string.c:1-2558 (file has 2546 lines)",
+            "error: research/mrubyc/ruby-first-capabilities.md: invalid citation range: vendor/mrubyc/src/vm_config.h:1-153 (file has 150 lines)",
+            "Research inventory: 52 error(s)"
+          ]
+        }
+      },
+      "trial": {
+        "temporary": true,
+        "pushed": false,
+        "sha": "75664e112b1421e68ca381e818abc5db4670da82",
+        "diff": "diff --git a/vendor/mrubyc b/vendor/mrubyc\nindex 434bccd..5bb8ae6 160000\n--- a/vendor/mrubyc\n+++ b/vendor/mrubyc\n@@ -1 +1 @@\n-Subproject commit 434bccd609f2a3e90d6bb95c458621898bc6a508\n+Subproject commit 5bb8ae6466cc5f8ba87ca8dad4ee4f62b5d4dc14\n",
+        "parent": "9caba615ef13a4a6ff5533eac55a0c50f6f5f017",
+        "source_status": "clean"
+      }
+    },
+    "mruby": {
+      "wasm": {
+        "exit": 127,
+        "pass_lines": [
+          "PASS: event queue / FIFO / wrap / drop-newest / coalesce / saturation"
+        ],
+        "warning_counts": {},
+        "ram_lines": [],
+        "pass_count": 1
+      },
+      "bm": {
+        "debug": {
+          "build_exit": 1,
+          "collect_exit": null,
+          "verify_exit": null,
+          "flash_ram_comparison": "N/A: configure failed before producing firmware/evidence"
+        },
+        "release": {
+          "build_exit": 1,
+          "collect_exit": null,
+          "verify_exit": null,
+          "flash_ram_comparison": "N/A: configure failed before producing firmware/evidence"
+        },
+        "stress": {
+          "build_exit": 1,
+          "collect_exit": null,
+          "verify_exit": null,
+          "flash_ram_comparison": "N/A: configure failed before producing firmware/evidence"
+        },
+        "oom": {
+          "build_exit": 1,
+          "collect_exit": null,
+          "verify_exit": null,
+          "flash_ram_comparison": "N/A: configure failed before producing firmware/evidence"
+        }
+      },
+      "checks": {
+        "unit": {
+          "outcome": "PASS",
+          "tail": [
+            "----------------------------------------------------------------------",
+            "Ran 110 tests in 8.445s",
+            "",
+            "OK"
+          ]
+        },
+        "skills": {
+          "outcome": "PASS",
+          "tail": [
+            "Skill inventory: 0 error(s)"
+          ]
+        },
+        "skill-tests": {
+          "outcome": "PASS",
+          "tail": [
+            "----------------------------------------------------------------------",
+            "Ran 7 tests in 0.012s",
+            "",
+            "OK"
+          ]
+        },
+        "research": {
+          "outcome": "FAIL",
+          "tail": [
+            "error: research/dfu/embedded-bytecode.md: invalid citation range: vendor/mruby/src/dump.c:951-975 (file has 932 lines)",
+            "Research inventory: 1 error(s)"
+          ]
+        }
+      },
+      "trial": {
+        "temporary": true,
+        "pushed": false,
+        "sha": "5ed349491bf6b9dda0ef720a7958d4f49a4bcaac",
+        "diff": "diff --git a/vendor/mruby b/vendor/mruby\nindex 831da26..65d9641 160000\n--- a/vendor/mruby\n+++ b/vendor/mruby\n@@ -1 +1 @@\n-Subproject commit 831da26b9021de0369d17b71b5667e2941a1a32d\n+Subproject commit 65d9641377400b59932c452a6c72ada18eaa21e4\n",
+        "parent": "9caba615ef13a4a6ff5533eac55a0c50f6f5f017",
+        "source_status": "clean"
+      }
+    }
+  },
+  "product_bytecode": {
+    "flags": [
+      "-Brbos_evaluation",
+      "-o",
+      "<C output>",
+      "<product input>"
+    ],
+    "baseline": [
+      {
+        "input": "firmware/ruby/fault/oom.rb",
+        "input_sha256": "4de6fe6e43663d92ae368168019298de9b9bf6a09d53b2e77de262f4f39d546b",
+        "status": 0,
+        "diagnostic": "",
+        "length": 192,
+        "sha256": "214afdb4c822fbcff35e96eefc91aabcd544581c22eb5baa0882aa8378a9eba6",
+        "rite": "RITE0400",
+        "declared_length": 192
+      },
+      {
+        "input": "firmware/ruby/peripherals.rb",
+        "input_sha256": "41f15f329e18ffa3ddf8c9438da691a8b9ea3668cc0d78826bd89a269cb54487",
+        "status": 0,
+        "diagnostic": "",
+        "length": 1123,
+        "sha256": "dd44576ac69ec2fb02861f64696618e9110d48ce672ee831f4a3d45b82bcd4e1",
+        "rite": "RITE0400",
+        "declared_length": 1123
+      },
+      {
+        "input": "firmware/ruby/selftest/coordinator.rb",
+        "input_sha256": "9a582578b75077825ba31dadc1f9b3c1790ce48f1181d80829735848708e9b3c",
+        "status": 0,
+        "diagnostic": "",
+        "length": 1826,
+        "sha256": "4eb04edb2f55fa0f681477de13b3385ce7db3c40825829c18f287a5d7f060499",
+        "rite": "RITE0400",
+        "declared_length": 1826
+      },
+      {
+        "input": "firmware/ruby/selftest/worker_a.rb",
+        "input_sha256": "22a553aedc04afce33b9d55b8dd688b3ebb435ded6a494627b84f0386672811a",
+        "status": 0,
+        "diagnostic": "",
+        "length": 383,
+        "sha256": "6d03bd4a8c8dcadd3c7fc5d391810d692b1b9a3869c6d72c3980f6ff8a38561c",
+        "rite": "RITE0400",
+        "declared_length": 383
+      },
+      {
+        "input": "firmware/ruby/selftest/worker_b.rb",
+        "input_sha256": "7bba814a0244927e6b58f1cf9e4fb5cc8c1a650da710a6b70a02414cff116c78",
+        "status": 0,
+        "diagnostic": "",
+        "length": 383,
+        "sha256": "b7ed43b0bec8e7c40d6500bff8091219abe2e9707a6d2b2999fa56da31308571",
+        "rite": "RITE0400",
+        "declared_length": 383
+      },
+      {
+        "input": "firmware/ruby/stress/spinner_a.rb",
+        "input_sha256": "90e1685599e7a5492e7ee6be64f7bf1c95d1333f28a211939ed002cd988ed0b1",
+        "status": 0,
+        "diagnostic": "",
+        "length": 371,
+        "sha256": "231ba076c836f3fc7177adc4a495cf17f8670d8035343896afe3439c2e439e39",
+        "rite": "RITE0400",
+        "declared_length": 371
+      },
+      {
+        "input": "firmware/ruby/stress/spinner_b.rb",
+        "input_sha256": "b008340d021ce7e9beb584c5e2cf3fcf2a57abdf3c87def31f3e38ed5030c20c",
+        "status": 0,
+        "diagnostic": "",
+        "length": 371,
+        "sha256": "e4a21dc4ba5dec144bd32af7657330def81e803b82988188dc44e3a002d51deb",
+        "rite": "RITE0400",
+        "declared_length": 371
+      },
+      {
+        "input": "firmware/ruby/system.rb",
+        "input_sha256": "c7efa2e889cb583557bb96c5b5aca0fd48d19067b9f13b6993c01cb15bebd5ad",
+        "status": 0,
+        "diagnostic": "",
+        "length": 243,
+        "sha256": "bcca9a2b1c3817d61b6e8348eebb342f7006f437f266f341b39138efc0fd554d",
+        "rite": "RITE0400",
+        "declared_length": 243
+      },
+      {
+        "input": "src/rbos/adc.rb",
+        "input_sha256": "3b0c6e37851f93e7e8c82dbbce31a98e08c1180e715ae261f7fd5eb464e7776e",
+        "status": 0,
+        "diagnostic": "",
+        "length": 468,
+        "sha256": "ad68807f239b336da29ca26f74c59c68468abf83082eccdf10eb714256e72683",
+        "rite": "RITE0400",
+        "declared_length": 468
+      },
+      {
+        "input": "src/rbos/button.rb",
+        "input_sha256": "d3b1dc2e262054a5110a3e0d248a08b8c1fe53229b5117a88adaab54cb6d20d2",
+        "status": 0,
+        "diagnostic": "",
+        "length": 458,
+        "sha256": "96fc1c30e43a4bb2bf080994c262a57675f632880e65789550f1ff7b5cc3eea2",
+        "rite": "RITE0400",
+        "declared_length": 458
+      }
+    ],
+    "candidate_mruby": [
+      {
+        "input": "firmware/ruby/fault/oom.rb",
+        "input_sha256": "4de6fe6e43663d92ae368168019298de9b9bf6a09d53b2e77de262f4f39d546b",
+        "status": 0,
+        "diagnostic": "",
+        "length": 192,
+        "sha256": "b5b3bff61d332e1b94edf847139e4860ec320b061817aa102c767df5cabfab86",
+        "rite": "RITE0400",
+        "declared_length": 192
+      },
+      {
+        "input": "firmware/ruby/peripherals.rb",
+        "input_sha256": "41f15f329e18ffa3ddf8c9438da691a8b9ea3668cc0d78826bd89a269cb54487",
+        "status": 0,
+        "diagnostic": "",
+        "length": 1128,
+        "sha256": "b8079127b01f4859c6e3e9ea419bac41d599167f1a3464d36b6aa8f51d478e8b",
+        "rite": "RITE0400",
+        "declared_length": 1128
+      },
+      {
+        "input": "firmware/ruby/selftest/coordinator.rb",
+        "input_sha256": "9a582578b75077825ba31dadc1f9b3c1790ce48f1181d80829735848708e9b3c",
+        "status": 0,
+        "diagnostic": "",
+        "length": 1824,
+        "sha256": "f7a2ba29a7be347a2155474db5392d9458341a837b3b40d40fc95344588c6cb2",
+        "rite": "RITE0400",
+        "declared_length": 1824
+      },
+      {
+        "input": "firmware/ruby/selftest/worker_a.rb",
+        "input_sha256": "22a553aedc04afce33b9d55b8dd688b3ebb435ded6a494627b84f0386672811a",
+        "status": 0,
+        "diagnostic": "",
+        "length": 460,
+        "sha256": "eaa50dc7e01efd3a18d972e97d121e6fcd33a844f09da673c682337fdaacfe43",
+        "rite": "RITE0400",
+        "declared_length": 460
+      },
+      {
+        "input": "firmware/ruby/selftest/worker_b.rb",
+        "input_sha256": "7bba814a0244927e6b58f1cf9e4fb5cc8c1a650da710a6b70a02414cff116c78",
+        "status": 0,
+        "diagnostic": "",
+        "length": 460,
+        "sha256": "e3dcf2dca432082e2d9310ef96ab2430ddebe1efeb2b3b11a26b532b091f98dc",
+        "rite": "RITE0400",
+        "declared_length": 460
+      },
+      {
+        "input": "firmware/ruby/stress/spinner_a.rb",
+        "input_sha256": "90e1685599e7a5492e7ee6be64f7bf1c95d1333f28a211939ed002cd988ed0b1",
+        "status": 0,
+        "diagnostic": "",
+        "length": 362,
+        "sha256": "eb58462cc1a5acca3ef8b8166874d6c4bf38fefe7558c14f0fc156e3b55fcf79",
+        "rite": "RITE0400",
+        "declared_length": 362
+      },
+      {
+        "input": "firmware/ruby/stress/spinner_b.rb",
+        "input_sha256": "b008340d021ce7e9beb584c5e2cf3fcf2a57abdf3c87def31f3e38ed5030c20c",
+        "status": 0,
+        "diagnostic": "",
+        "length": 362,
+        "sha256": "c0fb0584dcabc1f5f217615894b4231955ac5daa97fa7d27043585155069a64b",
+        "rite": "RITE0400",
+        "declared_length": 362
+      },
+      {
+        "input": "firmware/ruby/system.rb",
+        "input_sha256": "c7efa2e889cb583557bb96c5b5aca0fd48d19067b9f13b6993c01cb15bebd5ad",
+        "status": 0,
+        "diagnostic": "",
+        "length": 271,
+        "sha256": "d024f2313a90c19c33f0af1f8c45647788c3359d52631cf1c9854ed4526a4a5d",
+        "rite": "RITE0400",
+        "declared_length": 271
+      },
+      {
+        "input": "src/rbos/adc.rb",
+        "input_sha256": "3b0c6e37851f93e7e8c82dbbce31a98e08c1180e715ae261f7fd5eb464e7776e",
+        "status": 0,
+        "diagnostic": "",
+        "length": 545,
+        "sha256": "726fa3cc05192b5f79f371d923af4850a7fa6fefee276c394dc160d8f6f3a115",
+        "rite": "RITE0400",
+        "declared_length": 545
+      },
+      {
+        "input": "src/rbos/button.rb",
+        "input_sha256": "d3b1dc2e262054a5110a3e0d248a08b8c1fe53229b5117a88adaab54cb6d20d2",
+        "status": 0,
+        "diagnostic": "",
+        "length": 458,
+        "sha256": "ce5c9b90c5c0c09a99ab9d167de8d6a0541e862266dd154fd739b09f74075d29",
+        "rite": "RITE0400",
+        "declared_length": 458
+      }
+    ]
+  },
+  "logs": {
+    "baseline-bytecode.log": {
+      "sha256": "e888892067e97c7fab8ccbc01412eae8870a9d31f99b47fb764c034d648a92b6",
+      "bytes": 1114
+    },
+    "baseline-debug-build.log": {
+      "sha256": "640fbf74c9c6d6eabafb7c09517dede9a721103fae5da20e90f8077475cd5cd1",
+      "bytes": 158472
+    },
+    "baseline-debug-collect.log": {
+      "sha256": "e8126c4b23bd5c1d1dc3a37773dc595cc815c403ee2e846156a480bcdbd38c4e",
+      "bytes": 108
+    },
+    "baseline-oom-build.log": {
+      "sha256": "6508f7284fd5c5f5d4bcd6f937f26304efe9d2c3e4f928cf34ac81203fe7264f",
+      "bytes": 158034
+    },
+    "baseline-oom-collect.log": {
+      "sha256": "f40ae125566420638875b81b6c66f51a01e31743da1a9771ae6da056f6ddefca",
+      "bytes": 106
+    },
+    "baseline-release-build.log": {
+      "sha256": "0de0b9d83ccae8231c7dc1dbed040aa6bc06ec21255f7baa37bd48ce88aa6078",
+      "bytes": 158716
+    },
+    "baseline-release-collect.log": {
+      "sha256": "719825778eef08f5b5cc5f8f9afac1bc4e39186798c74160553d4e03c8c42b80",
+      "bytes": 110
+    },
+    "baseline-research.log": {
+      "sha256": "6cdceeb83f92091e501fc361611d9c9504fb9aeab0fad2417b76fc1197db99af",
+      "bytes": 125
+    },
+    "baseline-run.log": {
+      "sha256": "42611a6f425f3c288e91bd82e9b2bef5e3f64ca38d31d7daa4139cdc790196e5",
+      "bytes": 291
+    },
+    "baseline-skill-tests.log": {
+      "sha256": "4190e6532da5d52050bd5ea71ff40310f4ffe0846610b4b159650675a5a9c2b2",
+      "bytes": 105
+    },
+    "baseline-skills.log": {
+      "sha256": "de362b927e5dcf3bdfe3326d72fea463672c2e225015996b2809fd3e08d661b3",
+      "bytes": 28
+    },
+    "baseline-stress-build.log": {
+      "sha256": "d679b73ee3f5c4ee3fe5ea99d46fa0ea23578708e0e3c5a1d20dbf612d28eaa0",
+      "bytes": 158844
+    },
+    "baseline-stress-collect.log": {
+      "sha256": "7fd535e2a0028aa6f8ac4402d1be4145ecf8fbc39b3d419edd16541ff6d9785e",
+      "bytes": 110
+    },
+    "baseline-unit.log": {
+      "sha256": "2a413e44fb2e5536b2b277a1b15186baee68fb72899a98440494eb3894f6eae5",
+      "bytes": 210
+    },
+    "baseline-wasm.log": {
+      "sha256": "2253752227f57282c74896971afe8c0bc016f9ecf970ac59a6089f3e69c3d3f8",
+      "bytes": 76257
+    },
+    "baseline-workspace.log": {
+      "sha256": "f80ca5509193f0ec0b1e84b80981b4f524b18eccabb97b25ffdff5b53387851c",
+      "bytes": 69
+    },
+    "clone-mruby.log": {
+      "sha256": "4158fee58b8da9ae8b1546937d99f6ed9f98bb3be195c49de6da5890bc6998ee",
+      "bytes": 644
+    },
+    "clone-mrubyc.log": {
+      "sha256": "1fca4c45defab72cf1ffb13b26a8a2327430410d97199132ef9f30283460a1bd",
+      "bytes": 645
+    },
+    "clone-sdk-nrf-bm.log": {
+      "sha256": "dc1073a30063a64692ac052363a3647ce77f8d08b4d33b955ac34144435c2505",
+      "bytes": 649
+    },
+    "clone-yomiyasu.log": {
+      "sha256": "e2e6cef87f7c528d836e8c8ac4ea6f75cf7fbd19bd5d2c6bca30e3ae8a5861c2",
+      "bytes": 647
+    },
+    "doc-yomiyasu.log": {
+      "sha256": "e2c26a57f2eb72c11a78747ab2ba127aee84c9943e4addbd0f44f2a91a789d01",
+      "bytes": 2484
+    },
+    "emsdk-env.log": {
+      "sha256": "fa9355a0a04771d0dd9ca3adfafff28e13943d991ad9ad86d06825b8e40c0671",
+      "bytes": 1124
+    },
+    "isolation-attempt-sdk-debug-build.log": {
+      "sha256": "28941e2027f6e87e5e32bd502c52cddd933f344e9c230ac70e9bcb5281f8f58f",
+      "bytes": 8580
+    },
+    "isolation-attempt-sdk-release-build.log": {
+      "sha256": "e33353e53ff64bbb11ae6672163a56bfd882c61f9945f733953c48a4bdb95f21",
+      "bytes": 8867
+    },
+    "isolation-attempt-sdk-stress-build.log": {
+      "sha256": "6e831537d0cc468d674a596ac7a3cfd4c5fffc7e04377d079e15b22510bdc5e3",
+      "bytes": 1609
+    },
+    "isolation-attempt2-sdk-debug-build.log": {
+      "sha256": "ddf50fedbcc706cd490cef3d5c1d07a0ac838430a74a0c99e76f6add0b284652",
+      "bytes": 6171
+    },
+    "isolation-attempt2-sdk-release-build.log": {
+      "sha256": "734c435ffdf84d78df264423820ace6be353d175bc9c38327ca14d607b1fac7b",
+      "bytes": 4063
+    },
+    "mruby-bytecode.log": {
+      "sha256": "854810746bcb9c882a35d9ffd3d4ca8690cb26fade80a780052e89e94f32c68a",
+      "bytes": 1111
+    },
+    "mruby-clone-mruby.log": {
+      "sha256": "f065653bbb59d8d19735e2e260e11c4e8c16bc5d1f91814342fd798563ecd1e4",
+      "bytes": 650
+    },
+    "mruby-clone-mrubyc.log": {
+      "sha256": "a18a5fd857a39b20879e47d6efdf7c1d9f7792aab62e9629e0134d10d140aebb",
+      "bytes": 651
+    },
+    "mruby-clone-sdk-nrf-bm.log": {
+      "sha256": "5e2f57ab7cdc70ebe39cd542a0207ddb4d76c41462f5c8490fe2aa02d2497dbb",
+      "bytes": 655
+    },
+    "mruby-clone-yomiyasu.log": {
+      "sha256": "a7e81b3eece24078a279d3e14957d90306244e5901a3f08a469561c02476f58f",
+      "bytes": 653
+    },
+    "mruby-debug-build.log": {
+      "sha256": "779a77b5cd1a80583a553f16b5847a198a030f2e1654ac431591239134df5e74",
+      "bytes": 14472
+    },
+    "mruby-env.log": {
+      "sha256": "fa9355a0a04771d0dd9ca3adfafff28e13943d991ad9ad86d06825b8e40c0671",
+      "bytes": 1124
+    },
+    "mruby-oom-build.log": {
+      "sha256": "03c41fca0a5a3d9fc14b280ede435db128a84b69cbe4a03902a8138228bbd07e",
+      "bytes": 14565
+    },
+    "mruby-prism-init.log": {
+      "sha256": "58663d1913c3ddc87cdba545ce4c373a97688da4ff4be1eb1da313b271f0df46",
+      "bytes": 479
+    },
+    "mruby-release-build.log": {
+      "sha256": "78a2049450f7b7c8ab26372696c7f30456b6ccd04cea1dd9b27fca1644d550dc",
+      "bytes": 14798
+    },
+    "mruby-research.log": {
+      "sha256": "93154c6e60b5186745429fb6f577bcaafe4cd3d1f7bb08d9f3bcdc0f3ff46371",
+      "bytes": 150
+    },
+    "mruby-run.log": {
+      "sha256": "301a70cbcea962d98c6a1e652047a6611ab4edb53a797679528279b0e8208898",
+      "bytes": 81
+    },
+    "mruby-runtime-smoke.log": {
+      "sha256": "de3a2183cb200b14d33a6022f174ac70dfdd3bbfee6715a461f483f71e37f6b9",
+      "bytes": 1237
+    },
+    "mruby-skill-tests.log": {
+      "sha256": "0797a603f79e55a5612211749887a547eca16fda33260dc9b3baf57657cc4f17",
+      "bytes": 105
+    },
+    "mruby-skills.log": {
+      "sha256": "de362b927e5dcf3bdfe3326d72fea463672c2e225015996b2809fd3e08d661b3",
+      "bytes": 28
+    },
+    "mruby-stress-build.log": {
+      "sha256": "a4989237e05de9d084da2c1d9f2eb4bcce306569df9b1ab8ad6503c7a7f8ebee",
+      "bytes": 14664
+    },
+    "mruby-unit.log": {
+      "sha256": "59b71ce7b8fbc2742698e55883231b89e52adba8c72ff3f15dd98594608b43fa",
+      "bytes": 210
+    },
+    "mruby-wasm.log": {
+      "sha256": "dd4ed9ca3b57b791f3420fd0fbd682ce67223674a512e2808fd7caff6c48bd98",
+      "bytes": 4815
+    },
+    "mruby-workspace.log": {
+      "sha256": "f80ca5509193f0ec0b1e84b80981b4f524b18eccabb97b25ffdff5b53387851c",
+      "bytes": 69
+    },
+    "mrubyc-clone-mruby.log": {
+      "sha256": "e173e2f82707685aa84a76f4168b08759733e5c89a87d8dc2081ace52f894b85",
+      "bytes": 651
+    },
+    "mrubyc-clone-mrubyc.log": {
+      "sha256": "dfd067a05bd82a8f372b6511df68f06d2994fec5b9c4aa49cecbc75ae48e2fb4",
+      "bytes": 652
+    },
+    "mrubyc-clone-sdk-nrf-bm.log": {
+      "sha256": "51739986afe0ce37486b5fbb079d22fa228378252765545f1fdf5c8d8e13e05d",
+      "bytes": 656
+    },
+    "mrubyc-clone-yomiyasu.log": {
+      "sha256": "ba849f04eeb1ede1a23f0974d25e8874713dfb2e5ddca74c69765e21e8164bbc",
+      "bytes": 654
+    },
+    "mrubyc-debug-build.log": {
+      "sha256": "7c581f92fd238a5f53819e2452728ad79698ab7931a555a408448b02fdc12ba3",
+      "bytes": 15659
+    },
+    "mrubyc-env.log": {
+      "sha256": "fa9355a0a04771d0dd9ca3adfafff28e13943d991ad9ad86d06825b8e40c0671",
+      "bytes": 1124
+    },
+    "mrubyc-oom-build.log": {
+      "sha256": "3b86df3cb95d15ef7391ea19d6a60ef3ac25497c3e1468a2adf074e771bf2b32",
+      "bytes": 15738
+    },
+    "mrubyc-release-build.log": {
+      "sha256": "9cacec1e0b9af5b422664840de1d30e749ae272c17113e062d4918804abda900",
+      "bytes": 16003
+    },
+    "mrubyc-research.log": {
+      "sha256": "ce03e30da93efdc9ce6a1bee9df56e1a5ed55451892e2c577a01a8b6771c6752",
+      "bytes": 6490
+    },
+    "mrubyc-run.log": {
+      "sha256": "8d71dd3a7c8390fed919619668bcb0ba71ee96685ece30fd1fc6b8b683ce27ff",
+      "bytes": 85
+    },
+    "mrubyc-skill-tests.log": {
+      "sha256": "2b8a5c7e7bfdde85bf100dde94d4f0d07df6f886aca0c69849d08d8bb7a0973a",
+      "bytes": 105
+    },
+    "mrubyc-skills.log": {
+      "sha256": "de362b927e5dcf3bdfe3326d72fea463672c2e225015996b2809fd3e08d661b3",
+      "bytes": 28
+    },
+    "mrubyc-stress-build.log": {
+      "sha256": "99a850d134423693036aea1d09ab5463a4f1c95e360f4d6b7554cd3ea697e46f",
+      "bytes": 15861
+    },
+    "mrubyc-unit.log": {
+      "sha256": "6dbc0e64b8012622cded1d0a6811baaebecb1f9708873613b41aa6e70831f5ee",
+      "bytes": 2496
+    },
+    "mrubyc-wasm.log": {
+      "sha256": "a5bcc5a6218b4a94c8aeb2a0aa14cbdbf3bbb233096456281aa3bfab943a6ae1",
+      "bytes": 84770
+    },
+    "mrubyc-workspace.log": {
+      "sha256": "f80ca5509193f0ec0b1e84b80981b4f524b18eccabb97b25ffdff5b53387851c",
+      "bytes": 69
+    },
+    "sdk-clone-cmock.log": {
+      "sha256": "b798acd89eb555ca9477d37b2796db6ac898b45fbcbd76f64d07cdf37e476ff9",
+      "bytes": 70
+    },
+    "sdk-clone-cmsis.log": {
+      "sha256": "ff0c8a8bad00ee61d68b548ff18721cadf4e01f3ed41d20bcda8d6c3dd2d4f22",
+      "bytes": 77
+    },
+    "sdk-clone-cmsis_6.log": {
+      "sha256": "1b3e8336a24e376feb3839bb3cf35a672e679c8dec5e4a031e370622b3eed660",
+      "bytes": 79
+    },
+    "sdk-clone-hal_nordic.log": {
+      "sha256": "8d54d65e3449236d2c18e037f1219c1973a5efa66de2e490b08df0f299c688b2",
+      "bytes": 1997
+    },
+    "sdk-clone-mbedtls.log": {
+      "sha256": "e127ea8d78a3feb1f8a5ef1026e4ca9b9153bdf200f86e34af8fc2f1f7d95f98",
+      "bytes": 82
+    },
+    "sdk-clone-mcuboot.log": {
+      "sha256": "ef4a0384e124c6b693bafc617c1094c2236e2f54dcf5cc09adb15a5ba91b7534",
+      "bytes": 78
+    },
+    "sdk-clone-nrf-bm.log": {
+      "sha256": "d22131dbed57bcf04495b43f76e2bf812b2009d3e7390fe051ec10b6c7e716d0",
+      "bytes": 646
+    },
+    "sdk-clone-nrf.log": {
+      "sha256": "a4eeff7c071c46396541928d042726a5f85052dbd0601d5a2f6275fb015630cf",
+      "bytes": 2838
+    },
+    "sdk-clone-nrfxlib.log": {
+      "sha256": "64facfa3ddafe4769a1ca70b4553c4753a8bd4307e4e9bd2e0d0474d4abf98e3",
+      "bytes": 404
+    },
+    "sdk-clone-oberon-psa-crypto.log": {
+      "sha256": "3f3dd9fa6ee071f04de99e7bb1ccaa1975523416bc508af4f1be2bdf9330e0bf",
+      "bytes": 92
+    },
+    "sdk-clone-picolibc.log": {
+      "sha256": "b7a2844e4d5ab486d6d2c178f20903e829af19bf390ee4bc94210f282f97655c",
+      "bytes": 80
+    },
+    "sdk-clone-qcbor.log": {
+      "sha256": "162cd0ecd5230f989aa7b7dfdfefc503f7a25a36a5335399e49ad1f5cf64d3bb",
+      "bytes": 82
+    },
+    "sdk-clone-segger.log": {
+      "sha256": "cdcc2b0c420fa6d26bff1a2c9618e5427550e8e92f313cf031ca3a17ffa55a0b",
+      "bytes": 80
+    },
+    "sdk-clone-zcbor.log": {
+      "sha256": "1016730663a5fe67f68ff510cb9fcf4bffc7165917e96d86b3b33c11ddc01b56",
+      "bytes": 77
+    },
+    "sdk-debug-build.log": {
+      "sha256": "3333d39fc0cbf32336b1d74425c3b0213aff03690a2997eafc44b6fb2917644d",
+      "bytes": 163143
+    },
+    "sdk-debug-collect.log": {
+      "sha256": "67314119f8ae285a0aac0ecff3998687ee97cc28272d7ebdf69124cde09f4eef",
+      "bytes": 103
+    },
+    "sdk-emsdk-env.log": {
+      "sha256": "fa9355a0a04771d0dd9ca3adfafff28e13943d991ad9ad86d06825b8e40c0671",
+      "bytes": 1124
+    },
+    "sdk-oom-build.log": {
+      "sha256": "ddb081240e7a4f306fd2c879ecaf26d860572fb1e962601c6f8d99911438ab84",
+      "bytes": 162629
+    },
+    "sdk-oom-collect.log": {
+      "sha256": "0effcfb7c661bd36540e55d3c6f5fe2fcf8655c165c3a8170007ab32c1d74516",
+      "bytes": 101
+    },
+    "sdk-release-build.log": {
+      "sha256": "5f582aa766c01304f1a27da16f3eaea1aaff5a2c76e8f184aaa5dc8f1c99aaea",
+      "bytes": 163294
+    },
+    "sdk-release-collect.log": {
+      "sha256": "4a2ab7aa25c56a65b6d691e4b71bfcf0a1a475b451079293afda794aaf10c879",
+      "bytes": 105
+    },
+    "sdk-research.log": {
+      "sha256": "73fef356896a3751258a1faea0613e11581a6553f37ffffadef3d4852059533c",
+      "bytes": 1929
+    },
+    "sdk-run.log": {
+      "sha256": "2e0b179f9860e3efeba3f450642dd8a324e7e1dda5b5bd06230ec84cf2966c96",
+      "bytes": 231
+    },
+    "sdk-skill-tests.log": {
+      "sha256": "46f05af99b22dfedb182a4b733f5ca22359ca7d4b617917975c84ed5c88d83ee",
+      "bytes": 105
+    },
+    "sdk-skills.log": {
+      "sha256": "de362b927e5dcf3bdfe3326d72fea463672c2e225015996b2809fd3e08d661b3",
+      "bytes": 28
+    },
+    "sdk-stress-build.log": {
+      "sha256": "7a4851144050444caf0e5cd43494cd1688916580d60db7688e1e2f23e86f0a6f",
+      "bytes": 163444
+    },
+    "sdk-stress-collect.log": {
+      "sha256": "7a566ef6daf166f5009ff45f53588362eeeebc07a15561dd402007ce139c7b77",
+      "bytes": 105
+    },
+    "sdk-unit.log": {
+      "sha256": "0be3cd32155d0e6174363322e8df190cd75745021ec69252a01d4ea1b455c05c",
+      "bytes": 211
+    },
+    "sdk-wasm.log": {
+      "sha256": "4208da8915503445c3d9ebd7e6cc27ebd5855312d42acc20fbb96c295d135059",
+      "bytes": 82415
+    },
+    "sdk-workspace.log": {
+      "sha256": "f80ca5509193f0ec0b1e84b80981b4f524b18eccabb97b25ffdff5b53387851c",
+      "bytes": 69
+    },
+    "sdk-zephyr-clone.log": {
+      "sha256": "f625dbf373134810e4d077acd222307ecd59f29983ce799b19f5f216650d2661",
+      "bytes": 3496
+    }
+  },
+  "release_policy": {
+    "mrubyc": "release4.0.0",
+    "mruby": "4.0.0",
+    "candidate_tests": "completed before the instruction to stop prerelease candidate evaluation; not continued afterward",
+    "recommendations": {
+      "sdk": "reject: downgrade",
+      "mrubyc": "reject: not a formal release",
+      "mruby": "reject: not a formal release"
+    },
+    "reevaluate": "when mruby 4.1.0 is formally released, check formal releases of both dependencies"
+  },
+  "compiler_artifacts": {
+    "baseline": {
+      "sha256": "87f04d0a87d9213e3c091d5f53fb559ba6ecf34c8d48e37add5b3b697d6cb93b",
+      "bytes": 3579216
+    },
+    "candidate_mruby": {
+      "sha256": "91467c0b7f836e74c5dd352ba6bf705d7dc4e16560cb2582f47f97c08b181178",
+      "bytes": 3571808
+    }
+  },
+  "candidate_mruby_runtime_probe": {
+    "input": "tests/mruby/bytecode_mutation.rb",
+    "compiler": "candidate mrbc build/mrbc/bin/mrbc",
+    "runtime": "baseline Wasm runner",
+    "exit": 1,
+    "output": [
+      "PASS: bytecode String changed",
+      "Assertion failed: mrbc_type(regs[a]) == MRBC_TT_EXCEPTION (op_rescue)"
+    ]
+  },
+  "candidate_mruby_compiler_version": "mrbc RITE0400 (unknown unknown unknown) Parser: Prism-2.1.0",
+  "sdk_workspace": {
+    "expected_modules_override": [
+      "nrf-bm nrf-bm e9041d77ec4cb17c383252b868ffb7e2685a9975",
+      "nrf nrf ba167d9f3db4abbdc9b67887ca3ea66c64f2d956",
+      "zephyr zephyr fd9204a02d52630660ce8d729945a4dd743feabf",
+      "mcuboot bootloader/mcuboot fce4dac2e6295cf98bd02a85f7c4254f6102106d",
+      "qcbor modules/tee/tf-m/qcbor 751d36583a9ce1a640900c57e13c9b6b8f3a2ba2",
+      "mbedtls modules/crypto/mbedtls 5bb86aeae32420e4f537e5cc390f7219a1bcf500",
+      "oberon-psa-crypto modules/crypto/oberon-psa-crypto fd1f2aa156d8beb78584dfbaf30df30bf8f6568f",
+      "nrfxlib nrfxlib cfb98f4bcd4efe00df0c741e137b42f307680402",
+      "cmock test/cmock f65066f15d8248e6dcb778efb8739904a4512087",
+      "cmsis modules/hal/cmsis 512cc7e895e8491696b61f7ba8066b4a182569b8",
+      "cmsis_6 modules/hal/cmsis_6 30a859f44ef8ab4dc8f84b03ed586fd16ccf9d74",
+      "hal_nordic modules/hal/nordic 1acb428a205bad58f3dfd4e38f2d1663bb784ba1",
+      "picolibc modules/lib/picolibc ca8b6ebba5226a75545e57a140443168a26ba664",
+      "segger modules/debug/segger 50892fdbcf2f570e67baa72b8894a66b16946f72",
+      "zcbor modules/lib/zcbor 9164bd18dcd88ff9d9ef98279501fc1093571017"
+    ],
+    "all_other_modules": "same as tools/bm-build/modules.txt at base revision",
+    "invalid_attempts_excluded": [
+      "symlink workspace attempt 1",
+      "symlink workspace attempt 2"
+    ]
+  },
+  "dependabot_snapshot": {
+    "source_sha": "1a0125f11e75859a0957b4d73ea6b8656570b30e",
+    "sdk_default_branch": "main",
+    "sdk_default_head": "fa301fdac89c27835f54242db86d622c243593a3",
+    "default_head_history": [
+      "fa301fdac89c27835f54242db86d622c243593a3",
+      "0a8268e98c781758fd6f6a472a183f207ef4c108",
+      "b501092f0d89916fac49d1cede20b966a88eda7a",
+      "27615f44ee0f53c82193bc4d7478390f16d636b5",
+      "4f2367853a41f1f76bd81370e0ba8023606c8714",
+      "cf5e86d0378fa7888456c7e4a3a97dd4a339dbe8",
+      "014e9cb884d63c01f5f9e7eb3a807bbd9f69fea4",
+      "a3de257cac3b29f0d43d429982eff474ab58a78a",
+      "ea6900f396c28755aed8782a14aaa43cff1546bd",
+      "709c5edf43926e53160bc94cc768ffffa70aab90",
+      "b0b59d7d1c4b7a31e08b9170aab9a54b01c2be60",
+      "f3b80c2ca24e144b032fd844534ef18baa0e7b2c",
+      "9342042e340d356d0ad35ee195c45314308dde37",
+      "c3d265a94ba211f994e29641835943074a423ae0",
+      "26c1baedecc47aa250fa5497e92f63bfa096a61a",
+      "533859007faf9363e77646d7f109fbc66378d77f",
+      "701ddd749235f55c32f18ecb78ee80acd1fe0c8b",
+      "25c954cd82aa7035540b0e32590634a636b2625d",
+      "53b4a20026e3ca8e7189048b154c3673388a69bb",
+      "5d560e133a661a065eec8916e715ad7540314867",
+      "e168ad050bf7b3caaa26e5beb63708fd8fcb331c",
+      "b1b556441d490621aace53c85cd67513d49eef88",
+      "e6eadcbc99fa54cef6993aaf48796f2ddecc2248",
+      "4bffd4cf66c9383b49adb1b37775144968a5db33",
+      "e1b2274279682ec7b00fc9f9872385655d2d0c6e",
+      "3e515ebc66bfebe8bc2875cc111137806cfcd9fa",
+      "14ffc288f5b402691459799646749be8942205be",
+      "637db005525d95839bc794dc32bbf30431c938ac",
+      "14b3836fc7e648769d2441cf08762061d9e96bda",
+      "2249f94002b0c2821de5646902a4ad2b87c7b156",
+      "edadb731d6ada501489b38f100affeeaf5bee7b2",
+      "6c36d94b0aa3284d0e7be27374c3ef46b8625236",
+      "2a20fd149cac56bdf7a205257cd0d3f28b90505a",
+      "4e619eeeff64cd5875fdf8e61162e35a583aa7b2",
+      "f520720aaba0aa0e98234a992a126d1da0c83f7e",
+      "a54465b46ded5d273ee557bbbdb7544078d3a21b",
+      "abec28ddf3f14fbf0904389f4241d7cf119c34b5",
+      "dc66ffb549d4947a002ff49af08f3b8bc7445e70",
+      "e907d340c85276e125bb47747c63053067a32abb",
+      "4b8ed99ecb98bb0db0b74162d144b8f92c0aef3b",
+      "503bb5b7355f7b75e284375c1d8b278ef34c66e2",
+      "c1d4c9e123ef546dcee0ddd59c18e6abc614824c",
+      "8bd64e6cb7f341d72eddf26f84c94f482027a89e",
+      "4d6a870cb511c1b9383f1a66d4a8448c1914e36a",
+      "3ccb8e6baf36dfc8a141dd2b57b00501dcddfcc8",
+      "91d8d721df5008bf00ff8067bad2fae4c3183578",
+      "dd328eba08b334be90aa0d92c9d92ef92c3dc20a",
+      "0a3eb62a1424e6db13adf3d465b9bbef413492fb",
+      "83b5d37eb25d6b63c024372876adf62ebb5b7f6b",
+      "46ce5d695c612acdcc1f07cd7d1d3c5a7bba2831",
+      "39137d9c1df98dc483827418d34b52da588f1bf1",
+      "a4812acbee56fb7ce4991264437a141eee7491a0",
+      "a6ca0e8bbc2ae3e095ac936c0ff71e3af38a48b1",
+      "4bf8bd2301a9432638b11ad751d2969a2ac72292",
+      "b2172f8873057194e29761620f71c6c733933e7b",
+      "dd58f4e6fb47c098d7a87611919d5fe53f5ef16b",
+      "220b744554a4f328c808dc0d34b53339af938e1f",
+      "eed990deb9536c0385887d7293379d51c20b3aa2",
+      "a321b6045951c9ba43074bb069842c0c48abb0d4",
+      "59872d86220af80415bde03ebb73f838a3a1cc07",
+      "9a8b2286350023bb7668b2457ad8650e437de88c",
+      "5b635f1f22d1f85f3d7ecc78c67b7433b1e58959",
+      "fb41975ce0e89aa0301a7bbfcf6567b0f70eab51",
+      "eb30b500c439096793f4873cb77d436a2e3ee05c",
+      "485f412e35dfbc0e7854889b1893552e2db9538f",
+      "ddbe266e32423fb3beff5a9b118d3e2c7b49fcaa",
+      "7491f9ad03743e0df9da1adef56fad59ace15d3a",
+      "a18ca85fc00a9e6f8cb20e54d15028483c448c25",
+      "f3888043397cdc8759a8ccd19edbbe2732ce9ebf",
+      "f48b270a9ce37f1df705015e630c446045038222",
+      "93188787033dd8097828ae13c845ed2a9ef1831c",
+      "ce36047602640e0c8ff0169a799781f1d87016e4",
+      "d23c84a2e9d62bc5b14801179083f22c6d2f5cca",
+      "9fad52d6dff5672d8effbaa12adcb5dacd414188",
+      "5ed6e891d1ae6a06ec1eeb56366941db9a6b63d8",
+      "d5a84ae5c723e01cc9e995064b5f6e90ec30e0df",
+      "b27e4be4f8fea92067ba9a41c0ce4ae3a91b5505",
+      "842f7ad6033fe0305a5e6ec8d99590bc5671c9c0",
+      "50beaf579895c52d4d0df5b0472ea0a80d91d154",
+      "e8ffa86ed45c86f5ba84a79d834017c6eb9a86b5",
+      "6c9c70ca4861abb9ec7ec59ac985e294c38d15df",
+      "758698001b2f643c19b6ee117ca0e97a4bb9566f",
+      "c8a8c3932ca642d6ccd2c23548f829dd55599346",
+      "bfac68befeccf2ca0d7ff1414950e5367b322855",
+      "257e3bc721eaef409c587ed4a28647313221a646",
+      "2a49932cb0725a7fe1d74745e69e5bc81e191c3b",
+      "b31bf154dfa7ff414e7921b6a6c29a632801298c",
+      "6047fdd286809e0669082012005bb96613a6ab61",
+      "9861c462ad6886281adf8f3a4b9046482c21d0ae",
+      "cb5f0f1b46c18a9c820bf2af3526414554aa57f5",
+      "482bf38fa6402da3f13072e67484749fb5b1741c",
+      "d13b670e6034400065ce080b6d112ba7d5113b96",
+      "75ccf3bf55b6ecf1ba0c121a90c219aa7a6aae7d",
+      "90a7f673c51291ca7d1893ed43d68792a36dd5dc",
+      "5b521cfe595ade8da11fd439807e93e7a3d6e5c1",
+      "b94b6dd0f3d64146f1f67394c158b9ddc5906f6b",
+      "b92904ec25aede358c3b29d5fff4f2f26a9859ae",
+      "feb53bd9737873ab4b1c80ca48681d5616c81cfc",
+      "b766243a03cf02f7986b8da039c9ad246d83f507",
+      "c2b5aac63655d9167eed2c47c7e7ba4c5f0e4a76",
+      "9031b1517adfecc5a8c97f1ded0e7f4f7cba55f2",
+      "3f3f717cd3f68080c94468cfe59cb0581d0cc92f",
+      "338195edcf7ff4349cc12ade848bc35c072de2d1",
+      "37c9cf0ed019ea3054de0ba87aab03730067d20a",
+      "579fee216af9d60cf9ae761db0b4ad54f0d23d8c",
+      "ded4f69685e54b6898d43d236970f57161a902d2",
+      "5a4d09f10ebb10a311733969d745e9763919497e",
+      "6cff29bc6d15a488335f6fe1ff7e6c8eb13ff5e9",
+      "5b86f11ed84bd828f3e110f0bec6a38b9e3f09ad",
+      "84035e8b6ca4d3f5dfae92ed135da3c1d98c0205",
+      "940b83dee44b48c853d41168b729515a8969ec9c",
+      "6c7eef31ea20942c1e73623696c372ba5c2a4ece",
+      "88eb66a1b20c95b59e176fa0b38474e9b69c2ddd",
+      "4aaa8867c1e7ab8dd6dc693c16e2ef0c78d57eb7",
+      "236d65e25d338d22a0851cc751c6ae7dc7bc9bc5",
+      "3bdce8b0d978dd7ca8a48924b9ac4eb4d641645e",
+      "65dfbc2b5e086971a5ed3fc7a31c3d01b923b37f",
+      "aca455080d09ea133951d6321e73751c6b97e4cb",
+      "cdf2e0dbf36beaebc2f78651b79ada0fdf3e6dab",
+      "142f86d2e45744f5d7c1b34c05193f8fbd506f25",
+      "4240aa36b9c38f3d404500f791c8a968c966a95f",
+      "dbf9ff543d3a32b1aedbd89b4e62e3bf7fc35dbd",
+      "cd7819ed58c4578c90f58113adc63dc9c1dc0d71",
+      "6e5339b6748df1edd798f6f31c3c7dfcd9dde673",
+      "84abc29040161f4492d34bbcdfd2a92ef059516b",
+      "0dc2d87356299ffc99576a738c5b880a2f9e06bc",
+      "a0aa67dcdaefa980d726b166ff1a4c44de006bec",
+      "3e63fe726f44d2b173397197cb331b4ad559a4b8",
+      "38af19b1b8b8739c75956906e340657332fe1770",
+      "2cf26ff18c7c0d9bce1901d456c2e949d8cd49dc",
+      "0a14a26f04da4e08a8e45ce1f4366a4251049474",
+      "3cf2debff899d2d824b0aeb3c0c780de10312853",
+      "d5675f76d1e4c768f5da011d769249d261e6fe17",
+      "dc7c4f200160ae8528872429df7aee17bb1d654a",
+      "62df1c0be0f3d151941f45a8360e8c18d616dbed",
+      "e0605cacf3301271c4a543c05e939eb9cfab0822",
+      "894fa1836f0fc2b1b251870bde7de74a80446f41",
+      "6c8f23712c7195d628ac7f9b7c8f5824780bee5a",
+      "08982c526f31d6bcc14818b0a7200471fdfc2a65",
+      "99a994506ca6c61234aee28fea2f36d2a68309dd",
+      "1280970dc05ee46bb67fece8e8818010cc77677d",
+      "f33e6fbb7b62faa322cca488c6a55466831a409b",
+      "7de9aa3ab8affbb52017d2802458f389ee56d88a",
+      "3062b35eb8c6ac50607ed5a35213c846cb807fc4",
+      "ac3c391b477bda8a15d8af9e2e270eda4cbea418",
+      "6fee3eaa03e040c716faf8dc01f835d9638bffa4",
+      "6c5990f260b9869017bebdf56bd8da97313ee67c",
+      "91abc42a0d17b7c4bc75e7f42370720d09e074b3",
+      "1d50be520afaef592b7e9d0349e19751530a57ae",
+      "af7ef07b13238c059f3ae486400e046a550114bf",
+      "13782e54256ca48b3c0e23265604fadc76276197",
+      "63860e4a671ccd1963602dcff89aa8968295cf48",
+      "572e80b62665f27d7227f434f621f90f05e90302",
+      "c257f4a19f8d14f70a20a545fa5bf103d4d486cf",
+      "9938bc18f12e02f64b42867a76647b467fdbce9d",
+      "f54707299b464fa2b567703ba4a6e2f4f0e2fd45",
+      "381f407a4fca0e603b97d6053964e5f2076c6172",
+      "8c0a7bdc6d836c00f70d0391885e5c714174f2bc",
+      "d08870306af5bda5f6a92395de354889abaf40bf",
+      "14c43c4a8d127b294ad4db7c28ccc860ded44567",
+      "e556dd4658f802d19ffbedf7d45daa2492761870",
+      "25390af6616593296ead0f6b0dfd89fa3dce398a",
+      "dd75c42b4a06b09c67d3a1ab9a76245b03ce502c",
+      "8cdd50c9e85361672826f3e0ab88fe78eb7c47a7",
+      "4ced319879f58dbe07ae68002c1afe78744b1e89",
+      "5e567ce33a78919b14b22b0cd048801c721c5926",
+      "8ebf00836bc6f04f3ab1596374d7b6964e806d4a",
+      "c2303dddd6eb53827d74fdce7fae14d2f682ce47",
+      "c7a4710282b966901ffe41a13c41fd783b125a74",
+      "c3ec6552cbee679f3f177ad8ad3e9744a7fe853d",
+      "4b0eeaf71d59ca5c0b4b4dba73f834e3d73fa2ab",
+      "9d4a2f7aca6641258ac3ec79e612e640d3c44d34",
+      "b27238603d9303411c9d8e3ff754571444e03fa1",
+      "4374989610f9966f6548e51e87436e3af1098de9",
+      "aa1bb85c93984ce961236baf8bba54e40c02f92f",
+      "6226ff62558ac9c55caefffd39f9345f746fc6dc",
+      "8f4b154ff17820230d435f3c61f6e88adac9cf08",
+      "712effa9fd0290b50bfa934f08714476a289b99c",
+      "677efd06d077eea39277bb675fac3a3f59426ddd",
+      "a3ef75488e920dfd03bef019dd9cb16ccd9aa471",
+      "e9041d77ec4cb17c383252b868ffb7e2685a9975",
+      "aae99487b4acf652f48fb6d0ca0b78479fe3dca5",
+      "9f7209adca56446b6939bd6d65391dd10178763b",
+      "9732e4e45dc1e822fd057fdb2898181e77d70e40",
+      "8d217dbda1691f89d3ba6e452af0255b8c49b3fc",
+      "290b5e87ff4a1b52ee5506a16799e4f278672205",
+      "82cf1d6b48ee9986544b46c6c2f16e53f443fc9b",
+      "76c1ccd1d42dc501451b7ba6ec4d380305668ffc",
+      "6490cae1976f37fcab651564273587214840b255",
+      "95646649d8ed2dc936429d1e2324bd187f975f67",
+      "39fd39135e86bd7dce6c1ffdc44f93b5ca7ff6c4",
+      "d248be6df741410e75f1b32ea6a157f2cddae543",
+      "d1a659f00ebbc4414d233944b55145558acfc75f",
+      "13f29d93834297b7fd96039754dcabe3811c9e8e",
+      "e8534b983bac3e80b734c460ce199a7bfa3b8bcd",
+      "73dcd91721c6909914eb15fe2b496d37cdea90e1",
+      "d539d56d270055ae934baa25de9e0524cb8143e5",
+      "15ca84fe119ffab60636118822c3b826461148c3",
+      "e254d0a077052323835ac1ec75716ad1407c6793",
+      "3778e1430a565a997e317b949cee70edafc78967",
+      "0cbc47641da59928c04f5f9dad73c6c8d72c4969",
+      "56903046f25d4cafdb1c423e81fec0026d84be63",
+      "ae28e495386f4c2112f317e5a32e71322e60c20b",
+      "96adbd6b51120a6614f2a192440d8703934d1978",
+      "b4b9ef757b196c64d75647f51b0b7f2b53733146",
+      "42d11f496eed28924f32257fcfe4e20271533567",
+      "3cbf08f05a2dbd92e395c51e84383277726eed0f",
+      "f1c1fa92a5ae9652dbc44be91e6e14f325c9dad0",
+      "3d82240312c8154fdbce2298327eb292cadb8013",
+      "9d4341511e299ceef0f95a85a1c2181bcf39ead4",
+      "aa18ca2c81a06b1078f90daacb048e5e4edf39e2",
+      "c08702f756c97a19f308496661f948b43fcad576",
+      "49c6919fa768bf7601637ead0e8542e4b6d5ce5a",
+      "d616cc5e1b5476c95c8f54a23248b232b5c7fd40",
+      "1e9dc0170d61b3a68ce134ecba4a57a769a5d5d7",
+      "f3e37c72ed937ffc4202f347984fe0f4abe2358c",
+      "f5b5905f5271ba2f54f9db1dcbeb600702abc268",
+      "98488e1e4cd14d7142c8d8da389b9d082db4a077",
+      "aba6c5dc73f7a6e36d7a0c825bb198ab43948393",
+      "dc580320d8e0d31451bab60f315c486b04b80d98",
+      "69e5188ac8845ca98bd43b8bb0cf80e2a71e69b5",
+      "c70ab08d035d3196f10399e59eb701176e2258d2",
+      "5fe4e59865d0949bb88a5241e3514656e0492be9",
+      "5c68fa042d489a8430921da615e509688443cdc9",
+      "db6f3172d0c9da48e549008c64390a9bed051900",
+      "6d729d5f14ce502efd2b99fada4c56a9ea763989",
+      "ecb33dda4876008447396c9d753d10165a63a66d",
+      "e7bf523d548277373c7c3fdf738ee5cc8fc2e550",
+      "bb328e4d0e7b3adf313726f9453f894c176ec3df",
+      "429b7aacd54e4b24a27937b23e1b8479e12ae45f",
+      "445e4953a6bb5b087304a861a51022b409f66b65",
+      "f6ad1448ecf6e17b58fbe15efbb1905ec5ee27d2",
+      "cb3b843b8ce5356a43eaeb027bee504fa8fec396",
+      "d3a170da0c4dd98facea6c1ecac65e45a0266886",
+      "339703daa5a70ab30d8d9422554d0508c8741fc8",
+      "fc29f50947d3968f333e057598baddaf7eeb999f",
+      "b7b5affb452e2b4c29796447f48399de3f3eff30",
+      "31a01054c29eae906b621f4fd0698ee6e6151c4c",
+      "29497e32a6efbf5154083e3a91662d9b7075d957",
+      "50637c4d298de63d7f5d2688fa4b52406a2a6930",
+      "5fbf63ff165c312decd8185a99ad88af690593cf",
+      "ec15e1c73d256eb5780bc844e4a0167f6a7fe3b8",
+      "bc69719139b93b866732949e9600e05b303bd8d3",
+      "eb91e70a91333d56f0adf051c647022a33a944ac",
+      "923d692b52fc7c124ec44fe6a1d24b8697d61f10",
+      "b07c92b268388ebe53984f3dde37510edecc53a7",
+      "955ee65e7e4941bab67f4c8cfbbb397099924783",
+      "9d53200da61e51f5dc1db2418a3e449e41881a8d",
+      "01d7dc049b77b90a577e7487db18f384a457daaf",
+      "bdc99336ef4fc320727107a6ba5ee242036bc832",
+      "a6b7c70a68fc694aa7d1efb17a0b6fb33619ba5f",
+      "24e88c3d609bc11fe09c79f2a590949a2f619574",
+      "335f174ad14b89f6eb66e51115c5aa5f6dd44b17",
+      "f97b9614c186afd9ce2fc055852a5846fc05beb7",
+      "3a8678d780cd9d1857fb0b8493a1143153524384",
+      "8e19f012794decbb2696008e37790911d41106d1",
+      "cf860e21e2a8af03f1ace498643b770368658ebb",
+      "0dbb82ba02f129e48483aba01b68719732899732",
+      "5089454e55f09b123da2627a79e5c9b8f6c33ed4",
+      "e1e73050d37144455f93a2ba375eb6cdf3abb41d",
+      "006f52644c30d2cb0de0ec981fa537d2c8dd393d",
+      "7c4865590849ab71a25a95b8cf5071d2c61741fc",
+      "922ac617f718703728a0565f83cff78f7989accc",
+      "bbb97e483d697c6edaf42ae938d07efdc7673d84",
+      "d03ab900183535fd94dee1a8abd6b4d6e30242a6",
+      "d9ba95ce07bf53de11885ac79d9d2716a22043c6",
+      "48842f1bec4a5b5c1531cc310a7ffc396655b026",
+      "c6cebbe77fcb5478b17ea47928f59d99154380e8",
+      "9b83e862d4ebcd9c3cddea4b36b72b5ad886f185",
+      "597ba8a5c0705d3489b8bcc0f2d6af124ae81921",
+      "f97d7f76e201f239b76372394b90eee05b7e9fee",
+      "d64846ab8e8337ee8375a7d41c68fdc01707fafc",
+      "d3f93324ba7ce54a51e69387fc7615bcf0cda157",
+      "797ee90b2a226819822799bd1a477dc54d506582",
+      "6dae4d5645f0a6dcfbdeb65fc577394b0fce9d49",
+      "6e610ef24687e95707261ee3eb40ededb3b18587",
+      "b6e9abde5813e672216dba2079efcee740066ec9",
+      "da9a15673ecf4cff620b40be33501122443770e0",
+      "0302c4408dcc36ad82a71b551231375f1d5a0c66",
+      "d54e7d77ff5c004f7a18e8e231acf1354ea80902",
+      "1c9898c1ddc114ec2ec5923614df9a84fbf3b7df",
+      "20e4704fba1cee2c97c8ff7534b472f15be8d23f",
+      "a6fea8ee1c7e2afa5d38aa9206ef8f4d3e8bd642",
+      "7f93c10a1984e7a0391e6d26bd86cf3cd300812a",
+      "bcfd8a57a16c440c95a964cec1e6a18a29234127",
+      "835a9e185eee5882c3e3c657b37e964ad16a1790",
+      "5cfe60b64a89ee17461440864e897186b707c821",
+      "a3650ee2ed6eee5df5ad38ddfb298aee44e554da",
+      "d167baccaccbe6e2c43d559db9d4bd56f654d639",
+      "9b0a1558dd97d691596de46c06ad03833c2b93d9",
+      "aa2e7610d39fdb4ffe04f39ef8cd501bb4c53d69",
+      "cf6d28387b69f82d271ddb0d5c3f02e845cb301e",
+      "33465cd727a104f35596c114cbbd08c6aaf445b7",
+      "0106eb1a31d789e46e679f7c8c9c8724e7a05a2e",
+      "a998bf0250824f54c221c88c9fba195382311e30",
+      "034da2903dae46c31065db5d54f34b94c108c162",
+      "fc08ce4dac436e98734ec3dd93a28ae98c0d194a",
+      "5fc182621e981e5fa4d4e2ee417c07399db5f119",
+      "7e27a93aebbc6733a328d1271f5e933d83b14c5f",
+      "fd44eab52ea5e7846637a5d4b3d7f549745621d2",
+      "b2e9592840b04568a921d30af89295ba1c1045d8",
+      "b0371116070018cd3189f305eb00fffb63727e05",
+      "ecab0681a9d04e1c07fa28d5c0d44de502a3d7ea",
+      "1b3a23dad5a0ff29395b91a62a6cd075a3a138dc",
+      "38647ff6e3325b62c5228d213de46a9dc3cfa3fb",
+      "cd5817a5cfdbbf3462137c26c90d678e87e5a41a",
+      "8f50446dc4ee140403139e1528c7ed6db8c0bbfd",
+      "f4d9261bb1d8fa2ccf67915d7fd180fc81626342",
+      "10f647cae5a8c171d5ae76f373bd8d16c4a5eb22",
+      "75a5fb6204c35a5f03ae8d9a3c6cc507f4bceb0c",
+      "70e388df7c340f97d3f9f6624803374671481c6f",
+      "102c308348ce0267657fd862493cf51bea7b27be",
+      "3d76d7ae818dac3fe02d8354b00a8fe25e1e361f",
+      "74a106a178325ad0c081e3e2ec85247f418579e5",
+      "6bd524678867fabfac446a8771a28e2b273f3af9",
+      "625dfca77309892379cf4a30b982cff0cbc35c2e",
+      "b208cf275d5260c842b3fdc45ef40f5a9c0436ae",
+      "b4b3a0178c79041dcae5b43960d5bf64244e2b64",
+      "2f1eb4653c61d9cdb8e4089dd9fd6b487d270e94",
+      "12f4b00f4030ae7033ef9bbfb9f216970c007fc8",
+      "bc536afab5eba3c7238d7cfd3a3f799451ea6cea",
+      "16b53967dbc55bc988b4a4cb1d3526f4f2e32d1b",
+      "80afef1fbe0a1055f3ce3f13d448a317ba8f751b",
+      "164abe095498ebdb19ddd1c2e6e2a5b01a5f8612",
+      "ebadeecd7d2307b2c0cb94eb4bb02d468d453f25",
+      "3405623276fa49fbe520ab8c84e2c805917f2938",
+      "b698bbd9cfeca6e29a2412a97af6f63780962b24",
+      "427de8b11fbe5b8233ec90e3e71451a8be7f3957",
+      "8039ef7066b042d6f835aef4caaaa16dc7e05a2a",
+      "d2946f6879b55958480364653136755df2418eb3",
+      "3b99a4dd84d38b798e0fe20558dd1984cad5cbe0",
+      "78db96204b7b1f3d9193202e04440ab3160c2e60",
+      "36f7c30eefd99a165e1f8febde3ae44ca1e97460",
+      "e62b890b358038cb7366a2b746901987737e466e",
+      "0c85969d36b0c4a7467fdbcafbb75eb3b76ec6cd",
+      "0b165f3c4ef3b5260682627dbc8844022334b894",
+      "09f3efcddd25b906b7911b555fb74a69e6c5aa13",
+      "1c336292f1c59a669ed5bcd083bcc353e6a6270a",
+      "ad83ad3db4b7c634c7234681fcf0fe447fff8993",
+      "62e30f5e560ad210015f71214178698e69331458",
+      "a6fc8ea7a8ef98d3d3dd042cc8204e206eedc0d9",
+      "fbe42a93829dbb2a8217ad27bc0b33190e115648",
+      "be17d7c2ee181fc03fd4c0760f053c22ae7eff7c",
+      "31016d7db2173d06631e97bdb6c6d7d158a226b4",
+      "e5c8b7d1bf82af3600b33d090534104d98e43588",
+      "d0cfca819ecaa744dd2188530565cf7ca3c188c0",
+      "9dca95f97e2686054fbd678525e64817610c722d",
+      "6de4c431497730d5f91298b5dfa34b5ed217b06f",
+      "865197f118b3d153e4079c70a551702f047e2660",
+      "1afcfe037886cc3667cd5b06ac357f72837c9409",
+      "77dc5834751f4593a3315852110c5329fb58a5e1",
+      "f3e2a25f4f4eb6667fa0915ad61414fa73ba2f22",
+      "cc76aa2b361c6ad1cf1e0e67e4f517acf5a36e61",
+      "80633ee54ca65ab54bf92e74ef289143aecdb549",
+      "45e67e7a0d691d136d2d5622e2ba23689ca905d7",
+      "afdb4afae35d48105f5dcdf907a9353dadc2b1a6",
+      "148af912fa0768d2e11aabbd20fa68a15f0f6a0d",
+      "353cdd9e869aa8464e78297148f5f8ec9198b48c",
+      "08abdca2f761a4b00fbff6927aaad03daa3b6c1a",
+      "8d9b2aae206991265f00f50926f91cc3a447346d",
+      "8c84d0fe82fe12d6c03c38f9dad43e796f8fad2b",
+      "e99d24e4f4a2be963eaad1f20b90f94be2d94bff",
+      "4840bffb38fa4e1fe26c1e5749356228a7cd54f6",
+      "17082b8febfb3d2933472ff633eb0238f5163de3",
+      "da3148f70b0b97027d323e7ff362b49812149f97",
+      "47e5e36aace52831486ac1de5ed45ccc55c11eba",
+      "df6dd9f4c937446fb8d5b771033be17677c63de2",
+      "2840bfe21ca3d555bfd5d0d839880cc41cbcc8cc",
+      "50408581706e29d91833fde15699c3ed11db40d7",
+      "a06d0618a6763cc004f6a53406cf33220d3a9976",
+      "68840c04f8ef514b8bb46a791e96eb5d8d4b502a",
+      "2a1430a829188be341170176765ac52b45c6df2d",
+      "2e803a186dca1166d18a33df8958e2a0ab8fa032",
+      "6aeb0a03b4b111b72c76d0979dd743ea2c95d359",
+      "672b6f10d94ebd345d3a8ac3bee78ec698f79dfd",
+      "4c88cb8292ec7236e79e90777c3b4e758409c5fa",
+      "0da196c0314078915ca5e4dd37059cb698698c58",
+      "cf63d8eba44dff785c8edf69c7ee36946a8ec7bc",
+      "3c221ca925ea4b495f2b6ddd50c9de01f0a9a0d1",
+      "152cd7b489116ef87e86753d0125793a36bf2115",
+      "c23d00c7129827096e6cd4e3a3c5ea9dbf981db4",
+      "cdb3ad11a067a089f69e7df1a6d5854eeb0a8191",
+      "c9efd1cf4bc900ac74c574a1a494b1dfd2aeca90",
+      "608045251613db979230005c0d58de6016c80604",
+      "991901c5d837c6990df6c4cc384c0c24ade5aaa9",
+      "559ef647e541cf9b4d761674e0dba0fb008f6952",
+      "11fceb0cd06de152543e2e4a49b78d59eb703722",
+      "b8f1b8187d594e15fbc59aaad2ad581c34afef40",
+      "8e8feeb373de0ffdab9d5a88975a55d9677a68ae",
+      "c47aac6468f5a44c0748fef00ba9d5399e77d446",
+      "b53de12cd832bd45773f88b4165a8469033df1f4",
+      "e8aa6cea31e832926b0f7cdc9ff13c06a8af18d6",
+      "414bec652d316cb8cfe58c82c0831af6b248ae0a",
+      "0198c408eb30632c830865abc4273983e2c17d85",
+      "8536ef301b0a4cc04d4b4d5b87282ad23b4b53d8",
+      "e9e5a72cbe264637eceae222b2ca6f2b10af1354",
+      "315735039ed04b1587fc8536f848096c7dda29ca",
+      "1588f61c2385c4c30a2e84f037f00447b88b6e9c",
+      "a378aeb17a76a9030de30deec9d3937b0435475f",
+      "989b6110087c9f0790ad71446780e4169bf8e13c",
+      "5f5b275f09e271ba86848a89ee39fd6944035e8f",
+      "c6453bc730fe08eb04db050ad523d6f9a9908e87",
+      "d4e525511784260602f14beb48d8b99001094c10",
+      "ba6e09300bf39d9ebcd9797dd5aab1a0d21d88ab",
+      "79e92ec6c72fff03bbadb6b4508cf1e40b98d09e",
+      "2cc216ab2ef863aead5311e32606003d6a5167e6",
+      "aea92cafcc767c531abad3d7a8f2bfe7068b6477",
+      "64f07e65a923d5f5b60ff8b382211b0fc721658f",
+      "8a13eacf440d7f592d26635d47f0a3284f2d6eb2",
+      "ac8b414c788786daed2f3ee413081163a3114520",
+      "9299409e2793ec738b4a6cb86d0ac6e16b5c85ee",
+      "eec16a31266b11d3b69d7cb3f174583e138844b2",
+      "08bca792f96a1c5ddd4b30b7622aed6811c57bb8",
+      "828449581815147459e0db323ff5ce031b006df2",
+      "ebe65cc1cec46cb0653bc3971694354e80d510ee",
+      "94d763928b5878092f335f774246e4611eceaf85",
+      "f5e477edced0e76d9433988132cab78d9887c1f1",
+      "ee8c7810aba153ead0e9f819b8cad0733b744d2e",
+      "d789d7d919dc7a1552729e599f73586db2ff70b4",
+      "39f9c49906fa282e2948194ea7115079aececa20",
+      "0867007cbac75d08be34b9deb31ee2d6debe0d79",
+      "40450d1a9f25200d4460cf2103da5c7711fde156",
+      "6b06d60240d70d13c05ab4634ed0871efd83dd80",
+      "7fc5edd1d9bcc16b23513d074e08159b59096cd8",
+      "957462356ccafeb171e0f9393302a650dca4280f",
+      "47ff43d464092d5001a30e60dc5323daaccfabd3",
+      "066574c168cd99fe29d36c0dbd2f7122e5607d6a",
+      "9529bed4108d6d42f56fce835bbbc549e5040535",
+      "a8a9aec22ceb6e75da8c326096adef204c9c17ad",
+      "0b7953cbfddcc5467a23ba4b0aad7a02df030d62",
+      "2272c8717c357bd0e6b7339426fe722bd8b96ad7",
+      "b91da48805be51c4e67780ecdd04aa7bf9a5652c",
+      "2034a10b3bf46e2d58d7738a1ef744362f62c9bc",
+      "c5dee9fb71b829091bfd236bcc76312e7b261e17",
+      "a1646778ea84a9c1195230f148f3b352c1b09c82",
+      "a0766be07e5757d250c19485358edf342ae07b19",
+      "64b4b1a9bfc9adcb454dfc5908a3e1f94acad688",
+      "84f4080911f5d9e7552ac9ab6fea547fdcddb022",
+      "0330a09fe06d5b0c99901b36cc97e72695dfe3b6",
+      "d47cbb9495b1a99503bd958541e57acf3d1745fb",
+      "6768bc5c0e60fd20867ea764fc14484868af4473",
+      "864df554e78173fdf339cc816f01e97e0755f9e8",
+      "5577d79fe71e216ccc485d65a034db06b3ff78f2",
+      "ffe03556ed668059ce2daf7be557739f4af6134e",
+      "ab325158e0cbf7d87936e36fa22e4229f937e662",
+      "da3d1c5e4ff58448ca0bc5acdf46fa7d17b3e7f5",
+      "a97ca3439dc19e0ba3436daa3516539467a12339",
+      "31bf957911bea8f6358a86dd3e8400f783272c51",
+      "3de73b41b672c4d03524eb7d5bf0cb156a5a7845",
+      "60d28243f3de761f6cc905c168ddb0993fba8803",
+      "e56eb67bf3a12d37d01009b0abe02820529d8b84",
+      "5838ca64d8ad84864c1a8fa0c6c0dfde83cc6f7d",
+      "ecae7bffd3f92cdf0f29833bb5c5155a46cbd434",
+      "29f85d8613701ed60d9fcd2b4749a5171d2e7325",
+      "d8cb61a1e288739d000ece5a9b7a2368dab984a1",
+      "7e9356eb02bb3b79e892908806fe476eff26ddae",
+      "aba290b9aedf22350d2707c210876bc3b12896b0",
+      "1a0f51aa064945ba1160ba6e1881f7447e9d522f",
+      "a75495a7a824702ac8721ac56ece6618202551b4",
+      "78271fd52c5b041e0c7c7a1c66a6bcb7dc13822d",
+      "7cedaa4486119df3b046660ffaf3af74c0903006",
+      "04987580b14a253cb6bff23db10622fc1f599aec",
+      "3e6604e8bbb7ee27224dd59bc4a2e2c860b94125",
+      "7b245465db0dde27acb49bce89212044f0a8e5b9",
+      "eaccc2c5f458e0fa6937a7ae2cce79427ee507ab",
+      "e62c3719170f2b6219b2cda1d8e2ecff0875ce90",
+      "b8b0e930bf4f312ef6b920a50094c7e38840291c",
+      "8515c02664be929f252153ee04160bcc24ea9a39",
+      "a2c6591a9b0470d60dfdd84e02b28b8711e76ead",
+      "401bda7c72388008cd6c24fa01d47097e4bcce04",
+      "1d8737f909db52976b541ae1626a5bede6a83be3",
+      "4b2b9ffc0295aeaf4270e6c9c928fc76cd4f608b",
+      "477d5084762b1ba2a3eef12721d764be3fbf350d",
+      "64f1d5cc16bd3c4830141200b0128a04a7825040",
+      "d31ddf6271b3f1857cae42d3b2b614bf10af2e11",
+      "fe48fc0e3bc380b7c57149d7281df8e8f2ebeec0",
+      "62974dc5b16d1a346d2e86924062c2047e28892c",
+      "d9e9b85e4ec0ed6619750780b2375eb1df27541d",
+      "4e675d791e23a70842daf5cca022bc6ace463621",
+      "0b1e0c32049baa81d81eb095b9b04b549cbf7c61",
+      "6fb08c6c40ce631933f64e31c023bf172b8a1583",
+      "995d667c086d87cd29b9d5b113be5ee9a4fe3451",
+      "07de9323a0cea5f7dd411eb73c2d80a6a4e3c7b9",
+      "ea763278bfc139448d0e9caf9cdb8965d8eb5483",
+      "f0a07479be897572202be0b8eaad23d1e7536b17",
+      "4845a74ad09919b92cf9a8b456eab705cd553de1",
+      "23327ea259b4584b766ab307097a5c8de9df173f",
+      "9976edd523f0d6f785b6c7f7aa403a0729bf1fc8",
+      "bc4217e3485c0598cadae3c8b8583385273b8598",
+      "637aa26d0d08192e8738527feef126dac7429d94",
+      "30e89961c02234e98e2cc79d5752a3e4185530b2",
+      "60c370bbf199fd8bc1d6f8a1ab6a34094eb2f41d",
+      "e80d696eadb316f407120a2bf248d3d3e2a26ae0",
+      "3bd9f891c36e148953deb5fedd8957c3a9f4ad60",
+      "9a984a1449ebfb5dc6e9671f5f16c4c37b648fd2",
+      "a2c4437a0a931002d5eb646ac2f5258edb03e930",
+      "28e42b8be7278661d66a348441f65753087319d5",
+      "d03f927b529f9505e4e2fc3b386a3bd6b520903b",
+      "f69ec07ea07e93c0033349f45505566d80a04ff8",
+      "0a807c0938f1fb3798a5d1414e75c63f30d5593a"
+    ],
+    "sdk_tags": [
+      {
+        "name": "v2.0.1",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v2.0.1",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v2.0.1",
+        "commit": {
+          "sha": "51484143c09199e19bccc16fa3b437f7a502a72b",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/51484143c09199e19bccc16fa3b437f7a502a72b"
+        },
+        "node_id": "REF_kwDONABW_LByZWZzL3RhZ3MvdjIuMC4x"
+      },
+      {
+        "name": "v2.0.0",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v2.0.0",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v2.0.0",
+        "commit": {
+          "sha": "e9041d77ec4cb17c383252b868ffb7e2685a9975",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/e9041d77ec4cb17c383252b868ffb7e2685a9975"
+        },
+        "node_id": "REF_kwDONABW_LByZWZzL3RhZ3MvdjIuMC4w"
+      },
+      {
+        "name": "v2.0.0-rc1",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v2.0.0-rc1",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v2.0.0-rc1",
+        "commit": {
+          "sha": "49c6919fa768bf7601637ead0e8542e4b6d5ce5a",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/49c6919fa768bf7601637ead0e8542e4b6d5ce5a"
+        },
+        "node_id": "REF_kwDONABW_LRyZWZzL3RhZ3MvdjIuMC4wLXJjMQ"
+      },
+      {
+        "name": "v2.0.0-preview1",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v2.0.0-preview1",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v2.0.0-preview1",
+        "commit": {
+          "sha": "e56eb67bf3a12d37d01009b0abe02820529d8b84",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/e56eb67bf3a12d37d01009b0abe02820529d8b84"
+        },
+        "node_id": "REF_kwDONABW_LlyZWZzL3RhZ3MvdjIuMC4wLXByZXZpZXcx"
+      },
+      {
+        "name": "v1.0.0",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v1.0.0",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v1.0.0",
+        "commit": {
+          "sha": "7fdf24063d6386b37cdb063c1dc64b4362540e77",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/7fdf24063d6386b37cdb063c1dc64b4362540e77"
+        },
+        "node_id": "REF_kwDONABW_LByZWZzL3RhZ3MvdjEuMC4w"
+      },
+      {
+        "name": "v1.0.0-rc2",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v1.0.0-rc2",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v1.0.0-rc2",
+        "commit": {
+          "sha": "1fc97e61d1a3832c4ccfab668232579dafe16ebe",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/1fc97e61d1a3832c4ccfab668232579dafe16ebe"
+        },
+        "node_id": "REF_kwDONABW_LRyZWZzL3RhZ3MvdjEuMC4wLXJjMg"
+      },
+      {
+        "name": "v1.0.0-rc1",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v1.0.0-rc1",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v1.0.0-rc1",
+        "commit": {
+          "sha": "b8dc06136f7646f79a491e2d2451aff98d39d651",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/b8dc06136f7646f79a491e2d2451aff98d39d651"
+        },
+        "node_id": "REF_kwDONABW_LRyZWZzL3RhZ3MvdjEuMC4wLXJjMQ"
+      },
+      {
+        "name": "v0.9.0",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v0.9.0",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v0.9.0",
+        "commit": {
+          "sha": "9b7766ff278750eb88f48c8f5fda390024d71ec1",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/9b7766ff278750eb88f48c8f5fda390024d71ec1"
+        },
+        "node_id": "REF_kwDONABW_LByZWZzL3RhZ3MvdjAuOS4w"
+      },
+      {
+        "name": "v0.9.0-rc2",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v0.9.0-rc2",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v0.9.0-rc2",
+        "commit": {
+          "sha": "21de12782fd82223eb7e178c1f712b9c74f7682b",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/21de12782fd82223eb7e178c1f712b9c74f7682b"
+        },
+        "node_id": "REF_kwDONABW_LRyZWZzL3RhZ3MvdjAuOS4wLXJjMg"
+      },
+      {
+        "name": "v0.9.0-rc1",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v0.9.0-rc1",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v0.9.0-rc1",
+        "commit": {
+          "sha": "c8581433093e373aaf4d8dc578ae5641e057fb84",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/c8581433093e373aaf4d8dc578ae5641e057fb84"
+        },
+        "node_id": "REF_kwDONABW_LRyZWZzL3RhZ3MvdjAuOS4wLXJjMQ"
+      },
+      {
+        "name": "v0.8.0",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v0.8.0",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v0.8.0",
+        "commit": {
+          "sha": "b5bc32e087035f50fc23c679f29f3064d7fbf2d1",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/b5bc32e087035f50fc23c679f29f3064d7fbf2d1"
+        },
+        "node_id": "REF_kwDONABW_LByZWZzL3RhZ3MvdjAuOC4w"
+      },
+      {
+        "name": "v0.8.0-rc2",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v0.8.0-rc2",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v0.8.0-rc2",
+        "commit": {
+          "sha": "60df6af05d22f61e4f48107f004d6f7fc269ca92",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/60df6af05d22f61e4f48107f004d6f7fc269ca92"
+        },
+        "node_id": "REF_kwDONABW_LRyZWZzL3RhZ3MvdjAuOC4wLXJjMg"
+      },
+      {
+        "name": "v0.8.0-rc1",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v0.8.0-rc1",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v0.8.0-rc1",
+        "commit": {
+          "sha": "d6bd9295b995ddad9d80396c59265c39b406d94a",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/d6bd9295b995ddad9d80396c59265c39b406d94a"
+        },
+        "node_id": "REF_kwDONABW_LRyZWZzL3RhZ3MvdjAuOC4wLXJjMQ"
+      },
+      {
+        "name": "v0.7.0",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v0.7.0",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v0.7.0",
+        "commit": {
+          "sha": "3d66d7f4100529d14e27351c264ea311cc2c7947",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/3d66d7f4100529d14e27351c264ea311cc2c7947"
+        },
+        "node_id": "REF_kwDONABW_LByZWZzL3RhZ3MvdjAuNy4w"
+      },
+      {
+        "name": "v0.7.0-rc2",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v0.7.0-rc2",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v0.7.0-rc2",
+        "commit": {
+          "sha": "52f061375437869cad76945650c5ebb7d1d81449",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/52f061375437869cad76945650c5ebb7d1d81449"
+        },
+        "node_id": "REF_kwDONABW_LRyZWZzL3RhZ3MvdjAuNy4wLXJjMg"
+      },
+      {
+        "name": "v0.7.0-rc1",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v0.7.0-rc1",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v0.7.0-rc1",
+        "commit": {
+          "sha": "4124cb2632c3039343c4f83ae3b066e68af9a5bc",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/4124cb2632c3039343c4f83ae3b066e68af9a5bc"
+        },
+        "node_id": "REF_kwDONABW_LRyZWZzL3RhZ3MvdjAuNy4wLXJjMQ"
+      },
+      {
+        "name": "v0.1.0",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v0.1.0",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v0.1.0",
+        "commit": {
+          "sha": "4b2ded7e63c54731f00d318ca8341a56041c1ca2",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/4b2ded7e63c54731f00d318ca8341a56041c1ca2"
+        },
+        "node_id": "REF_kwDONABW_LByZWZzL3RhZ3MvdjAuMS4w"
+      },
+      {
+        "name": "v0.1.0-rc1",
+        "zipball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/zipball/refs/tags/v0.1.0-rc1",
+        "tarball_url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/tarball/refs/tags/v0.1.0-rc1",
+        "commit": {
+          "sha": "bab9456f168f00cc31bb300c67e30f0660096046",
+          "url": "https://api.github.com/repos/nrfconnect/sdk-nrf-bm/commits/bab9456f168f00cc31bb300c67e30f0660096046"
+        },
+        "node_id": "REF_kwDONABW_LRyZWZzL3RhZ3MvdjAuMS4wLXJjMQ"
+      }
+    ],
+    "historical_updater_version_and_execution_log": "NOT_RETRIEVED"
+  }
+}
