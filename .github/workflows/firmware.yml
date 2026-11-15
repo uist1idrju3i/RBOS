@@ -24,6 +24,9 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
+      - name: bytecode 回帰テスト用の submodule を取得
+        run: git submodule update --init --depth 1 vendor/mruby vendor/mrubyc
+
       - name: 変更判定のテスト
         run: python3 -m unittest discover -s tests/check-changes
 
