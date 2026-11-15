@@ -12,6 +12,9 @@ class NRFGPIOTests(unittest.TestCase):
 #define BOARD_CONSOLE_UARTE_PIN_TX 36
 #endif
 #define BOARD_CONSOLE_UARTE_PIN_CTS 39
+#ifndef BOARD_PIN_LED_0
+#define BOARD_PIN_LED_0 73
+#endif
 """,
             "zephyr/kernel.h": """#define ARRAY_SIZE(a) (sizeof(a)/sizeof(*(a)))
 #define IS_ENABLED(x) (x)
@@ -82,6 +85,13 @@ int main(void) {
   assert(rbos_nrf_pin_validate(0,1)==RBOS_RESERVED_PIN);
   assert(rbos_nrf_pin_validate(0,BOARD_CONSOLE_UARTE_PIN_TX)==RBOS_RESERVED_PIN);
   assert(rbos_nrf_pin_validate(0,BOARD_CONSOLE_UARTE_PIN_CTS)==RBOS_RESERVED_PIN);
+  level[BOARD_PIN_LED_0]=1;
+  assert(rbos_nrf_pin_validate(0,BOARD_PIN_LED_0)==RBOS_RESERVED_PIN);
+  assert(rbos_nrf_gpio_configure(0,BOARD_PIN_LED_0,RBOS_GPIO_OUT)==RBOS_RESERVED_PIN);
+  value=123;
+  assert(rbos_nrf_gpio_read(0,BOARD_PIN_LED_0,&value)==RBOS_RESERVED_PIN && value==123);
+  assert(rbos_nrf_gpio_write(0,BOARD_PIN_LED_0,0)==RBOS_RESERVED_PIN);
+  assert(level[BOARD_PIN_LED_0]==1 && direction==0);
   assert(rbos_nrf_gpio_configure(0,42,RBOS_GPIO_OUT|RBOS_GPIO_OPEN_DRAIN|RBOS_GPIO_PULL_UP)==RBOS_OK);
   assert(direction==2 && input==0 && drive==32 && pull==8);
   assert(rbos_nrf_gpio_write(0,42,1)==RBOS_OK);
@@ -102,3 +112,28 @@ int main(void) {
         flags = ["-I", str(test_temperature.ROOT / "src/platform/nrf")]
         self.compile_and_run(headers, program, sources, flags)
         self.compile_and_run(headers, program, sources, flags + ["-DBOARD_CONSOLE_UARTE_PIN_TX=73"])
+        self.compile_and_run(headers, program, sources, flags + ["-DBOARD_PIN_LED_0=71"])
+
+    def test_status_led_uses_board_pin_and_polarity(self):
+        headers = {
+            "board-config.h": "#include <stdint.h>\n#define BOARD_PIN_LED_0 71\n",
+            "hal/nrf_gpio.h": "#include <stdint.h>\nvoid nrf_gpio_cfg_output(uint32_t);\n"
+                              "void nrf_gpio_pin_write(uint32_t,uint32_t);\n",
+        }
+        program = r'''#include <assert.h>
+#include "status_led.h"
+static uint32_t configured, written, level;
+void nrf_gpio_cfg_output(uint32_t pin) { configured=pin; }
+void nrf_gpio_pin_write(uint32_t pin, uint32_t value) { written=pin; level=value; }
+int main(void) {
+  rbos_status_led(true);
+  assert(configured==71 && written==71 && level==BOARD_LED_ACTIVE_STATE);
+  rbos_status_led(false);
+  assert(configured==71 && written==71 && level==!BOARD_LED_ACTIVE_STATE);
+  rbos_status_led(true);
+  assert(configured==71 && written==71 && level==BOARD_LED_ACTIVE_STATE);
+}
+'''
+        for active in (0, 1):
+            self.compile_and_run(headers, program, [], ["-I", str(test_temperature.ROOT / "firmware/src"),
+                                                      f"-DBOARD_LED_ACTIVE_STATE={active}"])

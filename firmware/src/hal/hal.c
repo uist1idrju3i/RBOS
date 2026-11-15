@@ -7,6 +7,7 @@
 #include "mrubyc.h"
 #include "runtime.h"
 #include "supervisor.h"
+#include "status_led.h"
 
 static struct bm_timer tick_timer;
 static uint64_t last_ms;
@@ -96,6 +97,7 @@ int mrbc_hal_write(int fd, const void *buf, int nbytes)
 
 _Noreturn void mrbc_hal_abort(const char *message)
 {
+	rbos_status_led(true);
 	mrbc_hal_flush(2);
 	printk("RBOS fatal: %s", message ? message : "Ruby abort\n");
 	LOG_PANIC();

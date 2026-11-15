@@ -36,6 +36,7 @@ enum rbos_status rbos_nrf_pin_validate(void *context, uint32_t pin)
   static const uint8_t count[] = DT_PROP(DT_NODELABEL(rbos_gpio_pins), port_pin_counts);
   BUILD_ASSERT(ARRAY_SIZE(count) == 3, "nRF54L15 pin metadata requires three ports");
   if (port >= 3 || bit >= count[port] || !nrf_gpio_pin_present_check(pin)) return RBOS_INVALID_PIN;
+  if (pin == BOARD_PIN_LED_0) return RBOS_RESERVED_PIN;
   /* Only explicitly reviewed DT pins are released. Other pins need an
      electrical/owner review before use, including clocks, NFC and debug. */
   for (unsigned int i = 0; i < sizeof(labels) / sizeof(*labels); ++i) {

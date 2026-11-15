@@ -10,7 +10,7 @@ pin は `port*32+pin` の Integer、厳密な `P<port>.<pin>` の String、Devic
 
 利用者承認により、GPIO の全表記を物理電気レベルで統一しました。`read` は Integer の0/1、`high?` / `low?` は bool、`write(1)` は物理 high です。Symbol だけを active-low で反転しません。DK Button は押下時0です。
 
-BM board は元の GPIO/GPIOTE DT node を削除します。Zephyr GPIO driver は復活させず、[overlay](../../firmware/boards/bm_nrf54l15dk_nrf54l15_cpuapp_s115_softdevice_mcuboot.overlay)の `rbos,gpio-bank` を pin メタデータとして使います。文字列の `label` property ではなく node label を列挙します。既定の公開対象は LED0..3（73/42/71/46）と Button0..3（45/41/40/4）の8 pinだけです。その他の存在する pin は RuntimeError（reserved）とし、Integer/String もこの制約を通します。UARTE20 の TX と HWFC 有効時の CTS は、メタデータに追加されても保護します。
+BM board は元の GPIO/GPIOTE DT node を削除します。Zephyr GPIO driver は復活させず、[overlay](../../firmware/boards/bm_nrf54l15dk_nrf54l15_cpuapp_s115_softdevice_mcuboot.overlay)の `rbos,gpio-bank` を pin メタデータとして使います。文字列の `label` property ではなく node label を列挙します。既定の公開対象は LED1..3（42/71/46）と Button0..3（45/41/40/4）の7 pinだけです。0.2.0では LED0 を C の状態表示専用に予約し、`BOARD_PIN_LED_0` に解決する全 pin 形式の GPIO 操作と Button の取得を `RuntimeError: Pin is reserved` として hardware access 前に拒否します。その他の存在する pin も reserved とし、Integer/String にも適用します。UARTE20 の TX と HWFC 有効時の CTS は、メタデータに追加されても保護します。
 
 追加 pin は board 管理者が回路・所有者・console/clock/debug/reset/NFC 等の競合を確認して DT の許可集合へ追加します。一般 header pin を無条件に開放しません。この許可集合は P3 の task 別認可や native memory sandbox ではありません。
 
@@ -46,7 +46,7 @@ debounce、個々の edge の時刻・順番、電気的な全 edge の捕捉は
 
 Wasm fixture は pin 互換、active-low の物理値、mode、driver failure、busy、coalesce、newest drop、each_event、close 失敗と orphan 再試行、task 終了と VM ID 再利用を検査します。host は parser/mode/ring と nRF GPIO adapter を検査し、固定 SDK に対する firmware build は実際の nrfx/IRQ/DT の結合を検査します。
 
-既定の `CONFIG_RBOS_PERIPHERAL_EXERCISE` は自己検査後に [Ruby 診断 task](../../firmware/ruby/peripherals.rb)を起動し、LED0を点灯、4 Button を所有して `button index=… level=… count=…` を出します。100巡回ごとに温度と三電源を反復測定します。raw と voltage は別の変換で、同じ一 sample の対ではありません。OOM profile では無効です。製品 Ruby に組み込むときはこの診断 task を置き換えます。
+既定の `CONFIG_RBOS_PERIPHERAL_EXERCISE` は自己検査後に [Ruby 診断 task](../../firmware/ruby/peripherals.rb)を起動し、LED1を点灯、4 Button を所有して `button index=… level=… count=…` を出します。100巡回ごとに温度と三電源を反復測定します。raw と voltage は別の変換で、同じ一 sample の対ではありません。OOM profile では無効です。製品 Ruby に組み込むときはこの診断 task を置き換えます。
 
 実機の電位、IRQ timing/競合、BLE/tick、stack/pool、ADC/温度の精度は未確認です。build/fake 成功を P2 の実機受け入れ完了とは扱いません。
 

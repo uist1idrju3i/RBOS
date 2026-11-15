@@ -4,7 +4,11 @@
 
 P2 の `Temperature.read` は共有 binding と `src/platform/nrf/backend.c` で実装し、S115 の `sd_temp_get` を利用します。既定／stress profile の coordinator は P1 自己検査の後に `temperature c=<Floatの°C>` を一回出します。P1 の PASS/stats 形式は変えません。OOM profile では coordinator を実行しません。[API 契約・同期処理・未確認条件](../research/implementation/temperature-api.md)を参照してください。
 
-P2 は GPIO と Button の [共有 API・DT pin メタデータ・GPIOTE 配送](../research/implementation/gpio-button-api.md)も実装します。既定の `RBOS_PERIPHERAL_EXERCISE` は自己検査の終了後に LED0 を GPIO API へ引き渡し、4 Button の物理値と count、温度と三電源の反復値を出します。この診断 task が Button を所有するため、製品 Ruby では task を置き換えるかこの設定を無効にしてください。console は UARTE20、pairing/bonding は非対応のままです。
+P2 は GPIO と Button の [共有 API・DT pin メタデータ・GPIOTE 配送](../research/implementation/gpio-button-api.md)も実装します。既定の `RBOS_PERIPHERAL_EXERCISE` は自己検査の終了後に LED1 を GPIO API で点灯し、4 Button の物理値と count、温度と三電源の反復値を出します。この診断 task が Button を所有するため、製品 Ruby では task を置き換えるかこの設定を無効にしてください。console は UARTE20、pairing/bonding は非対応のままです。
+
+LED0 は C の状態表示専用です。起動中と `mrbc_hal_abort()` の fatal 直前は点灯し、Ruby scheduler の開始直前に消灯します。点滅や WDT は追加しません。極性は `BOARD_LED_ACTIVE_STATE` に従います。正常時の消灯は heartbeat や実行継続の保証ではありません。
+
+backend は `BOARD_PIN_LED_0` の物理 pin を予約し、GPIO の生成・設定・読出し・書込みと Button の取得を拒否します。`:led0`、Integer、String のどの形式でも `RuntimeError: Pin is reserved` となり、hardware access は行いません。LED1〜3 と既存の Button pin は引き続き使用できます。Wasm fake も board pin table の LED0 を予約します。実機の点灯・電気特性は未確認です。
 
 ## build 時の生成
 

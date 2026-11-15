@@ -30,6 +30,7 @@ static enum rbos_status pin_validate(void *context, uint32_t pin)
   (void)context;
   const uint8_t count[] = { 7, 16, 11 };
   if (pin / 32 >= 3 || pin % 32 >= count[pin / 32]) return RBOS_INVALID_PIN;
+  if (pin == board_pins[0]) return RBOS_RESERVED_PIN;
   for (unsigned int i = 0; i < 8; ++i) if (pin == board_pins[i]) return RBOS_OK;
   return RBOS_RESERVED_PIN;
 }
