@@ -1,0 +1,168 @@
+{
+  "rbos_commit": "243682c0313d7cedbd86e6d5a35260430452871c",
+  "mrbc_version": "mruby 4.0.0 (2026-04-20)",
+  "mrbc_sha256": "b579ddc5e20d094f4985de19039c552954f15b6ecfbbe068390ffc9bf0f6d2ce",
+  "zlib_version": "1.2.11",
+  "rows": [
+    {
+      "input": "firmware/ruby/fault/oom.rb",
+      "input_sha256": "4de6fe6e43663d92ae368168019298de9b9bf6a09d53b2e77de262f4f39d546b",
+      "default": {
+        "bytes": 192,
+        "sha256": "214afdb4c822fbcff35e96eefc91aabcd544581c22eb5baa0882aa8378a9eba6",
+        "zlib9_bytes": 174,
+        "lzma_default_bytes": 228
+      },
+      "remove_lv": {
+        "bytes": 168,
+        "sha256": "ce31c5249af3b13e26102ebb679c9e3133c3e93144f34ad9208dc2b5c2eade8a",
+        "zlib9_bytes": 154,
+        "lzma_default_bytes": 208
+      }
+    },
+    {
+      "input": "firmware/ruby/peripherals.rb",
+      "input_sha256": "41f15f329e18ffa3ddf8c9438da691a8b9ea3668cc0d78826bd89a269cb54487",
+      "default": {
+        "bytes": 1123,
+        "sha256": "dd44576ac69ec2fb02861f64696618e9110d48ce672ee831f4a3d45b82bcd4e1",
+        "zlib9_bytes": 733,
+        "lzma_default_bytes": 784
+      },
+      "remove_lv": {
+        "bytes": 995,
+        "sha256": "8b8b4083a9c595cbf355bd621b28ae2dbba6f3af468e5299d4246e65b7b833fe",
+        "zlib9_bytes": 653,
+        "lzma_default_bytes": 708
+      }
+    },
+    {
+      "input": "firmware/ruby/selftest/coordinator.rb",
+      "input_sha256": "9a582578b75077825ba31dadc1f9b3c1790ce48f1181d80829735848708e9b3c",
+      "default": {
+        "bytes": 1826,
+        "sha256": "4eb04edb2f55fa0f681477de13b3385ce7db3c40825829c18f287a5d7f060499",
+        "zlib9_bytes": 1049,
+        "lzma_default_bytes": 1072
+      },
+      "remove_lv": {
+        "bytes": 1698,
+        "sha256": "2b821d26beeee87b2745613f4ac8b8cf0ea2baa7ed9d3ead2eae63b64cd1007a",
+        "zlib9_bytes": 973,
+        "lzma_default_bytes": 996
+      }
+    },
+    {
+      "input": "firmware/ruby/selftest/worker_a.rb",
+      "input_sha256": "22a553aedc04afce33b9d55b8dd688b3ebb435ded6a494627b84f0386672811a",
+      "default": {
+        "bytes": 383,
+        "sha256": "6d03bd4a8c8dcadd3c7fc5d391810d692b1b9a3869c6d72c3980f6ff8a38561c",
+        "zlib9_bytes": 303,
+        "lzma_default_bytes": 360
+      },
+      "remove_lv": {
+        "bytes": 360,
+        "sha256": "2ba5191b6f272fb17257b06267a3da8be7848e58a183a51f598cb90965ff774b",
+        "zlib9_bytes": 289,
+        "lzma_default_bytes": 344
+      }
+    },
+    {
+      "input": "firmware/ruby/selftest/worker_b.rb",
+      "input_sha256": "7bba814a0244927e6b58f1cf9e4fb5cc8c1a650da710a6b70a02414cff116c78",
+      "default": {
+        "bytes": 383,
+        "sha256": "b7ed43b0bec8e7c40d6500bff8091219abe2e9707a6d2b2999fa56da31308571",
+        "zlib9_bytes": 304,
+        "lzma_default_bytes": 360
+      },
+      "remove_lv": {
+        "bytes": 360,
+        "sha256": "f74931839a620040d696e581b35aca554aaf1b50ab4fca794f7a2fe55464c9c3",
+        "zlib9_bytes": 289,
+        "lzma_default_bytes": 344
+      }
+    },
+    {
+      "input": "firmware/ruby/stress/spinner_a.rb",
+      "input_sha256": "90e1685599e7a5492e7ee6be64f7bf1c95d1333f28a211939ed002cd988ed0b1",
+      "default": {
+        "bytes": 371,
+        "sha256": "231ba076c836f3fc7177adc4a495cf17f8670d8035343896afe3439c2e439e39",
+        "zlib9_bytes": 301,
+        "lzma_default_bytes": 360
+      },
+      "remove_lv": {
+        "bytes": 335,
+        "sha256": "6842213b97f1fc033cd69b2b4675dfc323d7e503c3189aa7b90b4bcb927e1e9f",
+        "zlib9_bytes": 277,
+        "lzma_default_bytes": 332
+      }
+    },
+    {
+      "input": "firmware/ruby/stress/spinner_b.rb",
+      "input_sha256": "b008340d021ce7e9beb584c5e2cf3fcf2a57abdf3c87def31f3e38ed5030c20c",
+      "default": {
+        "bytes": 371,
+        "sha256": "e4a21dc4ba5dec144bd32af7657330def81e803b82988188dc44e3a002d51deb",
+        "zlib9_bytes": 302,
+        "lzma_default_bytes": 360
+      },
+      "remove_lv": {
+        "bytes": 335,
+        "sha256": "eec8e1c8fa1d1eec708bfdc61c1df735b0a0f069874501f70607892f1d8361f5",
+        "zlib9_bytes": 278,
+        "lzma_default_bytes": 332
+      }
+    },
+    {
+      "input": "firmware/ruby/system.rb",
+      "input_sha256": "c7efa2e889cb583557bb96c5b5aca0fd48d19067b9f13b6993c01cb15bebd5ad",
+      "default": {
+        "bytes": 243,
+        "sha256": "bcca9a2b1c3817d61b6e8348eebb342f7006f437f266f341b39138efc0fd554d",
+        "zlib9_bytes": 201,
+        "lzma_default_bytes": 256
+      },
+      "remove_lv": {
+        "bytes": 222,
+        "sha256": "e637bcd418310e59224bd78fda5a243a90c63c13fde034749cccc0a04ee9a4ea",
+        "zlib9_bytes": 188,
+        "lzma_default_bytes": 244
+      }
+    },
+    {
+      "input": "src/rbos/adc.rb",
+      "input_sha256": "3b0c6e37851f93e7e8c82dbbce31a98e08c1180e715ae261f7fd5eb464e7776e",
+      "default": {
+        "bytes": 468,
+        "sha256": "ad68807f239b336da29ca26f74c59c68468abf83082eccdf10eb714256e72683",
+        "zlib9_bytes": 306,
+        "lzma_default_bytes": 368
+      },
+      "remove_lv": {
+        "bytes": 416,
+        "sha256": "c0ef244a3f8a620648e045f86687661da5f50d91471ef82148744e442cda88bd",
+        "zlib9_bytes": 276,
+        "lzma_default_bytes": 336
+      }
+    },
+    {
+      "input": "src/rbos/button.rb",
+      "input_sha256": "d3b1dc2e262054a5110a3e0d248a08b8c1fe53229b5117a88adaab54cb6d20d2",
+      "default": {
+        "bytes": 458,
+        "sha256": "96fc1c30e43a4bb2bf080994c262a57675f632880e65789550f1ff7b5cc3eea2",
+        "zlib9_bytes": 311,
+        "lzma_default_bytes": 368
+      },
+      "remove_lv": {
+        "bytes": 427,
+        "sha256": "3139f70d1ecdeff70a22df620205f99ca59645483ab43e15d67c48ab31be24ff",
+        "zlib9_bytes": 297,
+        "lzma_default_bytes": 352
+      }
+    }
+  ]
+}

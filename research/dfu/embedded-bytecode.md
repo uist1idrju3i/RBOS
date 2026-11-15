@@ -2,6 +2,8 @@
 
 ## 初期構成
 
+この文書は初期設計の記録です。現在は const 配列の生成・結合機構があり、未受け入れ条件は [2026-11-15 の照合](../implementation/session-plan-review.md)を参照してください。将来の ZMS 保存については[直接参照と寿命の再確認](zms-direct-execution.md)に分けました。初期の firmware DFU 方針は変更していません。
+
 2026-11-08 JST の更新方針では、vendor/mruby の mrbc 4.0.0 で Ruby をコンパイルし、const 配列として firmware に結合します。storage へ保存せず、RAM への全体コピーも行いません。更新は firmware single-bank DFU のみです。BLE 転送・保存・reload は [将来計画](../openblink/future-support.md)へ移します。
 
 ## 生成と結合
