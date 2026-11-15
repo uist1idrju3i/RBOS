@@ -1,10 +1,12 @@
 #include <string.h>
+#include <hal/nrf_ficr.h>
 #include <ble_gatts.h>
 #include <bm/bluetooth/ble_adv.h>
 #include <bm/softdevice_handler/nrf_sdh.h>
 #include <bm/softdevice_handler/nrf_sdh_ble.h>
 #include <zephyr/logging/log.h>
 #include "runtime.h"
+#include "rbos/ble_name.h"
 
 LOG_MODULE_REGISTER(rbos_ble, CONFIG_RBOS_LOG_LEVEL);
 BLE_ADV_DEF(advertising);
@@ -78,7 +80,13 @@ int rbos_ble_init(void)
 	if (err) return err;
 	ble_gap_conn_sec_mode_t security;
 	BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&security);
-	uint32_t result = sd_ble_gap_device_name_set(&security, "RBOS", 4);
+	uint8_t device_id[8];
+	char name[RBOS_BLE_NAME_CAPACITY];
+	rbos_ble_device_id_bytes(nrf_ficr_deviceid_get(NRF_FICR, 0),
+	                         nrf_ficr_deviceid_get(NRF_FICR, 1), device_id);
+	err = rbos_ble_name_generate(name, sizeof(name), CONFIG_RBOS_BLE_NAME_PREFIX, device_id);
+	if (err) return err;
+	uint32_t result = sd_ble_gap_device_name_set(&security, name, strlen(name));
 	if (result) return -EIO;
 	struct ble_adv_config config = {
 		.conn_cfg_tag = CONFIG_NRF_SDH_BLE_CONN_TAG,

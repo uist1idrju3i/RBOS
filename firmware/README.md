@@ -1,5 +1,17 @@
 # P1/P2 runtime
 
+## BLE の名前・広告・交渉（0.2.0）
+
+app の広告名は `RBOS_XXXX` です。`CONFIG_RBOS_BLE_NAME_PREFIX` の既定値は `RBOS`。FICR DEVICEID の word 1、word 0 の順に、各 word を big-endian の4 bytesにして連結します。固定 Zephyr の `hwinfo_get_device_id()` と同じ8 bytesを、OpenBlink と同じ reflected CRC16（多項式引数 `0x9EB2`、seed `0xFFFF`、最終 XOR なし）へ渡し、`%04X` の大文字16進4桁にします。CRC は BM の `crc16_reflect()` を使い、名前の生成と byte 順は host unittest で検査します。
+
+4桁への縮約なので名前は一意ではなく、端末の認証にも使えません。prefix は1〜21 bytesです。Flags の3 bytesと名前 AD の header 2 bytesを含め、従来広告の31 bytesに収めます。空・長すぎる prefix は BLE 初期化で拒否します。`RBOS_XXXX` は9文字、C buffer は終端込みで最低10 bytesです。
+
+広告は起動時に FAST（10秒、20 ms間隔）を開始し、その後は SLOW（40 ms間隔）を無期限に続けます。`CONFIG_BLE_ADV_SLOW_ADVERTISING_TIMEOUT=0` を SDK が duration に渡し、S115 の general discoverable mode では0が無期限を意味します。timeout による IDLE へは移らず、接続時は広告を終了し、切断後は既存の SDK 設定で FAST から再開します。広告エラーに対する独自の再試行は追加していません。
+
+app は DLE TX/RX の上限を251 bytes、ATT MTU を247 bytesに設定します。相手からの要求には SDK が自動応答しますが、接続時に自分から交渉を開始しません。実効値は相手の対応にも依存します。loader は別 image で、その名前・広告・DLE/MTU 設定を変更しません。app の MCUmgr/DFU 入口も今回の対象外です。
+
+広告名が変わる利用者向けの変更を、未公開の0.2.0に含めます。VERSION と TWEAK は据え置きます。BM evidence の前後比較は静的 RAM 配置の比較です。MTU による SoftDevice 内部の必要 RAM は実行時に確認するため、map の差分だけで余裕を保証しません。実機での名前・無期限広告・切断後再開・BLE 交渉・消費電力は未確認です。
+
 ## WDT・fatal・reset reason（0.2.0）
 
 `CONFIG_RBOS_WDT=y` と `CONFIG_RBOS_WDT_TIMEOUT_MS=2000` を既定とし、WDT30 を nrfx から直接使います。DT node や Zephyr watchdog device は不要です。`CONFIG_NRFX_WDT` は RBOS の設定から選択します。固定 S115 の予約定義には WDT30/31 の予約がなく、BM board も driver を有効にしています。MCUboot は両 instance の reload register へ feed しますが、選択される nrfx 経路の `MCUBOOT_WATCHDOG_SETUP()` は空で、WDT を起動しません。実機での引継ぎは未確認です。既に WDT30 が動いていた場合は再設定せず fatal とします。

@@ -6,6 +6,8 @@
 
 ### Changed
 
+- 未公開の0.2.0で app の BLE 名を固定の `RBOS` から DEVICEID 由来の `RBOS_XXXX` へ変更します。prefix は Kconfig、suffix は OpenBlink と同じ reflected CRC16 と大文字16進4桁です。一意性・認証の保証はありません。広告は FAST 10秒から無期限 SLOW へ移り、切断後の再開を維持します。app の DLE TX/RX を251、ATT MTU を247とし、相手の要求へ自動応答する一方、自分から交渉を始めません。loader は変更せず、VERSION は0.2.0のままです。実機の広告・交渉・消費電力は未確認です。
+
 - 未公開の0.2.0に、WDT30 の2秒監視と reset reason の起動 log・clear を追加しました。foreground maintenance の完了時だけ feed し、停滞後には再開しません。release の fatal は100 ms の BM timer を使って log flush に期限を設け、cold reboot します。timer IRQ 自体が動かない場合は WDT が最後の reset 手段です。debug は fatal 時に WDT を停止して halt します。Kconfig で切り替え、debug 専用の WDT fault conf を追加しました。LED と Task API は変更せず、VERSION は既存の0.2.0のままです。実機 reset・reset reason は未確認です。
 
 - 0.2.0で LED0 を C の状態表示専用に予約します。GPIO と Button からの取得・設定・読出し・書込みは pin の指定形式によらず `RuntimeError: Pin is reserved` となります。起動中と HAL の fatal 直前は点灯、scheduler 開始後の正常時は消灯とし、診断 Ruby は LED1 へ移しました。他の LED・Button pin、Task API、WDT は変更しません。実機の表示は未確認です。利用可能な pin が減る非互換 MINOR ですが、未公開の A3 PR 1 と同じ0.2.0に含め、VERSION は変更しません。
