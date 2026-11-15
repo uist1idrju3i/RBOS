@@ -225,6 +225,23 @@ class IssueTests(unittest.TestCase):
                 self.assertEqual(api.call_args.args[2:4], ('PATCH', 'issues/7'))
                 self.assertEqual(api.call_args.args[4], {'body': WATCH.issue_body(current), 'state': 'open'})
 
+    def test_closed_crlf_same_candidate_is_untouched(self):
+        issue = {'title': WATCH.issue_title(self.dep), 'number': 7,
+                 'body': WATCH.issue_body(self.dep).replace('\n', '\r\n'), 'state': 'closed'}
+        with mock.patch.object(WATCH, 'api_request', return_value=[issue]) as api:
+            self.sync()
+        self.assertEqual(api.call_count, 1)
+
+    def test_closed_crlf_issue_reopens_for_newer_release(self):
+        current = compare(tags=remote(('4.0.0', A), ('4.1.0', B), ('4.2.0', C)))
+        self.report = {'status': 'PASS', 'dependencies': [current]}
+        issue = {'title': WATCH.issue_title(self.dep), 'number': 7,
+                 'body': WATCH.issue_body(self.dep).replace('\n', '\r\n'), 'state': 'closed'}
+        with mock.patch.object(WATCH, 'api_request', side_effect=[[issue], {}]) as api:
+            self.sync()
+        self.assertEqual(api.call_args.args[2:4], ('PATCH', 'issues/7'))
+        self.assertEqual(api.call_args.args[4], {'body': WATCH.issue_body(current), 'state': 'open'})
+
     def test_closed_issue_without_recognizable_candidate_is_untouched(self):
         for body in [None, '', 'この版は見送ります。', '| [4.1.0-rc2](url) | `' + B + '` |']:
             issue = {'title': WATCH.issue_title(self.dep), 'number': 7, 'body': body, 'state': 'closed'}

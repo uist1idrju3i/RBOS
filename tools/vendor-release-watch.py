@@ -116,8 +116,9 @@ def issue_body(dep):
 
 
 def recorded_release_version(name, body):
+    body = (body or '').replace('\r\n', '\n').replace('\r', '\n')
     versions = []
-    for tag in re.findall(r'^\| \[([^\]]+)\]\([^\n]+\) \| `[0-9a-f]+` \|$', body or '', re.MULTILINE):
+    for tag in re.findall(r'^\| \[([^\]]+)\]\([^\n]+\) \| `[0-9a-f]+` \|$', body, re.MULTILINE):
         match = re.fullmatch(PATTERNS[name], tag)
         if match:
             versions.append(tuple(int(part or 0) for part in match.groups()))
