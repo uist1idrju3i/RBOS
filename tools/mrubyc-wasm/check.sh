@@ -158,11 +158,23 @@ emcc -O1 -Wall -Wextra -Wno-unused-parameter \
   -sASSERTIONS=1 -sSTACK_SIZE=1048576 \
   "$root/tools/mrubyc-wasm/test_ram.c" "${ram_sources[@]}" \
   "$build/mrubyc/hal/emscripten/hal.c" -o "$build/test-ram.js"
-timeout 30s node "$build/test-ram.js" | tee "$build/ram.log"
-grep -Fxq 'PASS: Wasm RAM stages and accounting' "$build/ram.log"
-for stage in init tcb load begin string_new string_changed; do
-  grep -q "^RAM: Wasm stage=$stage " "$build/ram.log"
+for fixture in empty button; do
+  timeout 30s node "$build/test-ram.js" "$fixture" | tee "$build/ram-$fixture.log"
+  grep -Fxq 'PASS: Wasm RAM stages and accounting' "$build/ram-$fixture.log"
+  for stage in init tcb load begin string_new string_changed; do
+    grep -q "^RAM: Wasm stage=$stage .* fixture=$fixture$" "$build/ram-$fixture.log"
+  done
 done
+if timeout 30s node "$build/test-ram.js" invalid >"$build/ram-invalid.log" 2>&1; then
+  ram_status=0
+else
+  ram_status=$?
+fi
+if [[ "$ram_status" != 1 ]] || ! grep -Fxq 'FAIL: RAM accounting' "$build/ram-invalid.log"; then
+  cat "$build/ram-invalid.log" >&2
+  exit 1
+fi
+echo 'PASS: Wasm RAM invalid fixture rejected'
 for marker in \
   'const empty Ruby accepted' 'bytecode String changed' \
   'bytecode rescue executed' 'bytecode ensure executed' \

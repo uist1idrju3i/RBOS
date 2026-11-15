@@ -13,6 +13,8 @@ RBOS の実装に必要な仕様、参照実装、制約、試験項目をまと
 
 SDK の build は [BM の再現手順と P1 map 比較](implementation/bm-build.md)に記録しました。P0 の実機操作は[利用者報告](implementation/dk-provisioning.md)と区別し、P1 の未確認項目は [P1 の振り返り](implementation/retrospective-P1.md)にまとめています。host の Wasm build と短い Ruby の実行結果は [mruby/c 能力確認](mrubyc/capability-probes.md)へ分離しました。文書の検査結果を実機試験の代わりに扱わないでください。
 
+P4 の [host/build 受け入れ記録（A1）](implementation/p4-host-acceptance.md)に、PR #45〜#50 の試験、四 profile の CI layout 結果、空・製品 Button の Wasm RAM 内訳をまとめました。実機 pointer、high-water、OOM 後の復旧、DFU、FLASH segment の RWE は Phase B に残しています。
+
 ## Ruby らしさと共通 I/O API
 
 P2 の [調査判断・検証結果と振り返り](implementation/retrospective-P2.md)に、採用・不採用の理由、四構成の証拠、改善4項目と文書への反映確認をまとめました。P2 のコード実装と CLI 検査は実施済みですが、実機受け入れは未完了です。

@@ -48,6 +48,8 @@ firmware は RBOS の `firmware/` に置きます。`src/rbos/` の共有 bindin
 
 ## host mrbc と bytecode
 
+[P4/A1 の受け入れ記録](p4-host-acceptance.md)に、manifest と配置検査、PR #50 の四 profile CI（layout 8/8/10/5 symbols、全て PASS）を記録しました。`collect-evidence.sh` が manifest・生成物と最小の配置 report を収集し、`verify-evidence.py` が map・署名済み image と照合します。ELF 全体は evidence に入れません。BM の map 使用量と Wasm の allocator 計測、実機 high-water は別の証拠です。
+
 **決定: host binary は再配布しません。** `firmware/cmake/mrubyc.cmake` が configure 時に、固定 submodule `vendor/mruby`（4.0.0、SHA は[調査索引](../README.md#資料の版)）を build directory の `mruby-host/` にコピーし、そこで次を実行します。vendor 内では build しません。
 
 ```sh

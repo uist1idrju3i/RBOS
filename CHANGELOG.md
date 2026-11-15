@@ -6,6 +6,8 @@
 
 ### Added
 
+- P4/A1 の host/build 受け入れ記録に、PR #45〜#50、四 profile の CI 配置結果、Phase B の残件を対応付けました。Wasm 専用 RAM harness は空 Ruby に加えて製品 Button の const 配列を load し、子 IREP・symbol ID・実際の String literal の生成と変更を分類計測します。製品 API・vendor は変更せず、実機の受け入れ完了とは扱いません。
+
 - bytecode manifest の全 symbol に ELF/map の FLASH 範囲・非 writable section・生成 byte 一致の配置 gate を追加しました。最小限の配置 report を BM evidence で検証し、Wasm 専用 harness で RAM の段階別内訳を出力します。製品 API と vendor は変更しません。
 
 - Wasm 検査の固定 emsdk を 7.0.0 に更新しました。中間版の変更履歴を確認し、既存の全試験と bytecode の mutation 試験を再実行しています。製品 mrbc・firmware・public API は変更しません。
