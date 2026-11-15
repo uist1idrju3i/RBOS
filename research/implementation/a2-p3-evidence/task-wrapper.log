@@ -1,0 +1,7 @@
+PASS builtin callback captured before shadow
+PASS shadowed priority= delegates saved builtin (get/list/current)
+PASS normal completion observed via HAL enable callback
+REPRODUCED old pointer-only Task handle resolves new lifetime after explicit TCB storage reuse
+PASS Emscripten run_step completion observed via HAL enable callback
+PASS direct user privileged call denied
+REPRODUCED user-defined RBOSSystem.service executes privileged callback as system VM

@@ -1,0 +1,1 @@
+#define SUDO_TIMER_STYLE

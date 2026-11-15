@@ -82,6 +82,8 @@ GPIO/Button・Temperature・三電源 ADC の binding/backend、固定 ring と 
 
 ## P3: system task と信頼境界
 
+**方針更新**：[2026-11-15 の C/user-only 設計](a2-p3-design.md)を優先します。以下は従来計画の未完了項目の記録です。system Ruby の role 認可を Ver 1 の実装義務とはせず、実装時に C 管理・policy・WDT の受け入れ項目へ置き換えます。完了済みとした項目はありません。
+
 - [ ] user VM に許す peripheral の範囲を決める。
 - [ ] system Ruby の信頼元、権限付与、破棄、ID 再利用を定義する。
 - [ ] 特権 API の全 callback に認可検査を入れる。

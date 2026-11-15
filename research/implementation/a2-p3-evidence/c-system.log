@@ -1,0 +1,13 @@
+PASS normal: user replacement executes only as user; reserved native operation denied; C-only supervisor unaffected
+evidence mode=normal ticks=287 returns=29 service=29 idle=0 feeds=287 withheld=0
+PASS empty: empty user program completes under native ownership
+evidence mode=empty ticks=3 returns=1 service=0 idle=0 feeds=3 withheld=0
+Exception(vm_id=1): in `raise': expected user exception (RuntimeError)
+PASS error: uncaught user exception returns error to native owner
+evidence mode=error ticks=4 returns=1 service=0 idle=0 feeds=4 withheld=0
+PASS sleep: native idle maintenance advances sleeping user
+evidence mode=sleep ticks=9 returns=2 service=6 idle=6 feeds=9 withheld=0
+PASS spin: wrapped mrbc_vm_run returns to native maintenance without Ruby yield or idle
+PASS idle-only: timer preemption does not execute idle or foreground service for always-ready Ruby
+PASS block: timer cannot preempt native callback; stale foreground heartbeat withholds simulated watchdog feed
+evidence mode=block ticks=83 returns=2 service=1 idle=0 feeds=28 withheld=55

@@ -1,0 +1,8 @@
+PASS TCB-local scope, nested scope, empty/error input, child isolation and noncapturing escaped Proc
+PASS ensure cleanup on exception, break and nonlocal return
+PASS ensure cleanup after another Task raises into sleeping elevated task
+REPRODUCED user-defined shared method runs with caller elevated privilege
+REPRODUCED C callback after Proc.call runs before Ruby block executes
+REPRODUCED terminate skips Ruby ensure; native HAL observer revoked capability
+REPRODUCED shared Ruby cleanup method replacement bypasses ensure-based demotion
+PASS sudo semantic probe complete (authentication is a fixture, not HMAC)

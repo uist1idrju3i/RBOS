@@ -1,0 +1,4 @@
+source_function	frame_bytes	classification
+hmac_sha256_genkey	64	static
+hmac_sha256_sign	496	static
+hmac_sha256_verify	496	static

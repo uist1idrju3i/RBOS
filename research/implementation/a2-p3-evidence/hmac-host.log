@@ -1,0 +1,9 @@
+RFC4231 case 1: PSA=PASS original-sign=REJECT original-verify=REJECT key=20 data=8
+RFC4231 case 2: PSA=PASS original-sign=REJECT original-verify=REJECT key=4 data=28
+RFC4231 case 3: PSA=PASS original-sign=REJECT original-verify=ACCEPT key=20 data=50
+RFC4231 case 4: PSA=PASS original-sign=REJECT original-verify=ACCEPT key=25 data=50
+RFC4231 case 5: PSA=PASS original-sign=REJECT original-verify=REJECT key=20 data=20
+RFC4231 case 6: PSA=PASS original-sign=REJECT original-verify=REJECT key=131 data=54
+RFC4231 case 7: PSA=PASS original-sign=REJECT original-verify=REJECT key=131 data=152
+REPRODUCED original verify accepts full MAC buffer with declared MAC len=0
+PASS original supported-input roundtrip and changed-MAC rejection

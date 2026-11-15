@@ -1,5 +1,7 @@
 # HMAC-SHA256 と system-task 認証
 
+このページは初期調査の記録です。後段の「system 権限を付与」は当時の候補であり、現在の採用方針ではありません。現在は [C/user-only の A2 設計](../implementation/a2-p3-design.md)を選択しています。後続の [RFC 4231・wrapper/backend 評価](hmac-evaluation.md)と [将来の認証方式比較](../implementation/a2-p3-authentication.md)を参照してください。末尾の「未実施」は初期調査時点です。
+
 ## 参照実装
 
 対象は MDBT 版 d6efc07877ebac6bd55519b8458be4629bef80c3 の [hmac-sha256.c](https://github.com/OpenBlink/openblink-demo-mdbt50q-db-40/blob/d6efc07877ebac6bd55519b8458be4629bef80c3/src/lib/hmac-sha256.c#L1-L239) です。header は BSD-3-Clause / ViXion。**自前 SHA-256 ではなく PSA Crypto の wrapper** で、Zephyr logging、PSA、fn_t に依存します。
