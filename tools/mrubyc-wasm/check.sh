@@ -126,16 +126,18 @@ for variant in wrapped control; do
   emcc -O1 -Wall -Wextra -Wno-unused-parameter -finstrument-functions \
     -include "$root/research/implementation/a2-p3-evidence/c_system_config.h" \
     -DCONFIG_RBOS_SERVICE_INTERVAL_MS=10 -DMAX_VM_COUNT=32 \
+    -DCONFIG_RBOS_WDT=1 -DCONFIG_RBOS_WDT_TIMEOUT_MS=2000 \
     -I"$root/tools/mrubyc-wasm/supervisor_include" -I"$root/firmware/src" \
     -I"$root/include" -I"$root/research/implementation/a2-p3-evidence" \
     -I"$build" -I"$build/mrubyc/src" \
     -sSINGLE_FILE=1 -sENVIRONMENT=node -sEXIT_RUNTIME=1 -sASSERTIONS=1 \
     -sSTACK_OVERFLOW_CHECK=1 -sSTACK_SIZE=1048576 "${supervisor_flags[@]}" \
     "$root/tools/mrubyc-wasm/test_supervisor.c" "$root/firmware/src/supervisor.c" \
+    "$root/tools/mrubyc-wasm/watchdog.c" \
     "${sources[@]}" -o "$build/supervisor-$variant.js"
   timeout 15s node "$build/supervisor-$variant.js" spin
 done
-for fixture in empty error sleep; do
+for fixture in empty error sleep stall start-error; do
   timeout 15s node "$build/supervisor-wrapped.js" "$fixture"
 done
 

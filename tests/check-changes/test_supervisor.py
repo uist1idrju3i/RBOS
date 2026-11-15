@@ -8,6 +8,54 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class SupervisorTests(unittest.TestCase):
+    def test_watchdog_completion_deadline_and_start_failure(self):
+        import test_temperature
+        test_temperature.TemperatureTests.compile_and_run(self, {
+            "mrubyc.h": "#pragma once\n#include <stdint.h>\ntypedef struct mrbc_vm {int v;} mrbc_vm;\n",
+        }, r'''
+#include <assert.h>
+#include "supervisor.h"
+static int64_t now;
+static unsigned calls, feeds, elapsed;
+static int error;
+int64_t k_uptime_get(void) { return now; }
+int rbos_wdt_start(void) { return error; }
+void rbos_wdt_feed(void) { assert(calls > feeds); ++feeds; }
+int __real_mrbc_vm_run(mrbc_vm *vm) { (void)vm; return 0; }
+void rbos_maintenance(bool idle) {
+  (void)idle; ++calls;
+  unsigned previous=feeds;
+  rbos_supervisor_poll(true);
+  assert(feeds==previous);
+  now+=elapsed;
+}
+int main(void) {
+  rbos_supervisor_poll(true);
+  assert(calls==0 && feeds==0);
+  error=-1;
+  assert(rbos_supervisor_start()==-1);
+  rbos_supervisor_poll(true);
+  assert(calls==0 && feeds==0);
+  error=0;
+  assert(rbos_supervisor_start()==0);
+  elapsed=1;
+  rbos_supervisor_poll(true);
+  assert(calls==1 && feeds==1);
+  rbos_supervisor_poll(false);
+  assert(calls==1 && feeds==1);
+  now=10; elapsed=2000;
+  rbos_supervisor_poll(false);
+  assert(calls==2 && feeds==1);
+  elapsed=0; now+=10;
+  rbos_supervisor_poll(true);
+  assert(calls==3 && feeds==1);
+}
+''', ["firmware/src/supervisor.c"], [
+            "-I" + str(ROOT / "firmware/src"),
+            "-I" + str(ROOT / "tools/mrubyc-wasm/supervisor_include"),
+            "-DCONFIG_RBOS_WDT=1", "-DCONFIG_RBOS_WDT_TIMEOUT_MS=2000",
+            "-DCONFIG_RBOS_SERVICE_INTERVAL_MS=10"])
+
     def test_deadline_initialization_and_reentry(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

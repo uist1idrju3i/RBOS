@@ -109,4 +109,19 @@ def make_layout_fixture(bundle, app, elf_class=64):
             'rrt0_sha256': hashlib.sha256(b'rrt0 fixture').hexdigest(),
             'rrt0_vm_relocations': ['00000000 R_ARM_THM_CALL mrbc_vm_run'], 'functions': functions}
     (app.parent / 'supervisor-link.json').write_text(json.dumps(link))
+    config_path = app / '.config'
+    if config_path.exists():
+        config_path.write_text(config_path.read_text() + '\nCONFIG_RBOS_WDT=y\nCONFIG_NRFX_WDT=y\n'
+                               'CONFIG_RBOS_WDT_TIMEOUT_MS=2000\nCONFIG_RBOS_FATAL_FLUSH_MS=100\n')
+    names = ['rbos_wdt_start', 'rbos_wdt_feed', 'rbos_supervisor_poll', 'mrbc_hal_abort',
+             'rbos_reset_reason_log']
+    routes = ['bl 0 <nrfx_wdt_init>\nbl 0 <nrfx_wdt_enable>',
+              'bl 0 <nrfx_wdt_channel_feed>', 'bl 0 <rbos_maintenance>\nbl 0 <rbos_wdt_feed>', '', '']
+    watchdog = dict(schema=1, instance=30, configuration=dict(CONFIG_RBOS_WDT=1, CONFIG_NRFX_WDT=1,
+                    CONFIG_RBOS_WDT_TIMEOUT_MS=2000, CONFIG_RBOS_FATAL_FLUSH_MS=100,
+                    CONFIG_RBOS_FATAL_REBOOT=0, CONFIG_RBOS_FAULT_WDT=0),
+                    functions=[dict(name=name, address=address, size=8, disassembly=route,
+                                    sha256=hashlib.sha256(image[0xe00:0xe08]).hexdigest())
+                               for name, route in zip(names, routes)])
+    (app.parent / 'watchdog.json').write_text(json.dumps(watchdog))
     return report

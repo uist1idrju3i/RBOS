@@ -1,5 +1,23 @@
 # P1/P2 runtime
 
+## WDT・fatal・reset reason（0.2.0）
+
+`CONFIG_RBOS_WDT=y` と `CONFIG_RBOS_WDT_TIMEOUT_MS=2000` を既定とし、WDT30 を nrfx から直接使います。DT node や Zephyr watchdog device は不要です。`CONFIG_NRFX_WDT` は RBOS の設定から選択します。固定 S115 の予約定義には WDT30/31 の予約がなく、BM board も driver を有効にしています。MCUboot は両 instance の reload register へ feed しますが、選択される nrfx 経路の `MCUBOOT_WATCHDOG_SETUP()` は空で、WDT を起動しません。実機での引継ぎは未確認です。既に WDT30 が動いていた場合は再設定せず fatal とします。
+
+初期化完了後、supervisor の開始時に WDT を起動します。CPU sleep 中は動作し、debugger の halt 中は停止します。feed は foreground の `rbos_maintenance()` が戻った後だけです。前回の feed（初回は起動）から timeout 以上経っていれば、戻ってきても feed を再開しません。tick IRQ・VM の復帰だけ・再入した poll は feed の根拠にしません。初期化中は監視対象外です。
+
+release は `CONFIG_RBOS_FATAL_REBOOT=y` とし、fatal の冒頭で `CONFIG_RBOS_FATAL_FLUSH_MS=100` の single-shot BM timer を予約します。従来の Ruby 出力と log を flush した後に `sys_reboot(SYS_REBOOT_COLD)` を呼びます。BM UARTE の送信は同期式なので、単に flush の前後で時刻を見る方式は使いません。flush が戻らない場合も timer IRQ から同じ reboot API を呼び、timer の開始に失敗したら直ちに reboot します。IRQ が進まない故障では、この期限を保証できず、起動済みの WDT が最後の reset 手段になります。
+
+debug・stress・oom の既定は `CONFIG_RBOS_FATAL_REBOOT=n` です。fatal 時だけ WDT を停止し、従来どおり log を出して halt します。debugger halt 時の pause とは別の処理です。debug の停止を維持するため WDT の stop 機能を許可しますが、通常動作中に停止する Ruby API はありません。LED と Task API は変更しません。
+
+起動時は `nrf_reset_resetreas_get(NRF_RESET)` の生 bitmask を `reset reason=0x........` として log に出し、読んだ bit を `nrf_reset_resetreas_clear()` で clear します。SoftDevice を通す旧 reset reason API は使いません。これは bootloader 通過後に application が読めた値であり、実機での原因判別や clear の結果は未確認です。
+
+### WDT fault 検査
+
+四つの通常 profile は変えず、debug build の追加 conf として `firmware/wdt-fault.conf` を用意しました。通常の debug build コマンドに `-DEXTRA_CONF_FILE=<repo>/firmware/wdt-fault.conf` を渡すと、最初の native poll が maintenance の直前で止まり、IRQ と CPU sleep は継続しても feed しません。debug 最適化・WDT 有効・fatal halt の組合せだけで選択できます。四 profile 用の evidence gate は通常の feed 経路を必須とするため、この故障注入 image の収集には使いません。実機へ書き込む場合は reset を反復するため、検査後に fault を無効にして通常 image を書き戻してください。
+
+host は feed の完了・期限・再入・起動失敗、WDT adapter、fatal の halt/reboot・flush 停滞・timer 失敗を検査します。Wasm は native 処理の停滞後に feed されないことを fake で検査します。四 profile の BM evidence には WDT 設定の ELF 絶対 symbol と `.config` の照合、WDT・supervisor・fatal・reset reason の関数、署名 image の byte hash を含めます。実機での timeout、reboot、reset reason、debugger halt、BLE と併用した周期は未確認です。
+
 対象と build 手順は [BM build 手順](../research/implementation/bm-build.md)を参照してください。flash / erase は build に含めません。
 
 P2 の `Temperature.read` は共有 binding と `src/platform/nrf/backend.c` で実装し、S115 の `sd_temp_get` を利用します。既定／stress profile の coordinator は P1 自己検査の後に `temperature c=<Floatの°C>` を一回出します。P1 の PASS/stats 形式は変えません。OOM profile では coordinator を実行しません。[API 契約・同期処理・未確認条件](../research/implementation/temperature-api.md)を参照してください。
@@ -32,7 +50,7 @@ BM の repeated timer は 31 ticks（992 µs）周期です。絶対 uptime か�
 
 0.2.0 では firmware 専用の `RBOSSystem.service` と system Ruby task を削除しました。全 task は user Ruby として生成し、Task API 自体は変更しません。mrblib・binding・task の初期化後に C supervisor を有効にします。`mrbc_vm_run` の link wrapper と HAL idle が期限を確認し、既定10 ms周期で最大1回の maintenance を実行します。再入時は実行せず、Ruby callback や method lookup は使いません。全 user task の終了後も C の poll/idle loop を続けます。
 
-maintenance は BM scheduler、binding 後処理、最大4回の log processing、pool の使用量集計を実行します。統計 log は既定10000 ms周期です。pool の最大値は maintenance 時点の観測値で、呼出し間の一時的な最大割当ては含みません。LTO は wrap を迂回する可能性があるため build を拒否します。長い native callback と BM queue drain の遅延上限は保証せず、WDT はこの変更には含めません。
+maintenance は BM scheduler、binding 後処理、最大4回の log processing、pool の使用量集計を実行します。統計 log は既定10000 ms周期です。pool の最大値は maintenance 時点の観測値で、呼出し間の一時的な最大割当ては含みません。LTO は wrap を迂回する可能性があるため build を拒否します。長い native callback と BM queue drain の遅延上限は保証しません。
 
 tick の最小・最大間隔、catch-up 回数、`mrbc_tick()` 回数は、前回の統計から今回までの区間値です。出力用の snapshot と reset を一つの `irq_lock()` 内で実行し、出力中の tick は次の区間へ数えます。pool 最大値と idle / supervisor 回数は起動後の累積値です。`supervisor=` は wrapper 経由で実行した maintenance、`idle=` は HAL idle または全 task 終了後の C loop 経由で実行した maintenance の回数です。poll 自体や HAL idle の呼出し回数ではなく、両経路を合わせて周期制限します。stack は出力時点の paint scan による high-water の推定値で、厳密な最大深さではありません。
 

@@ -37,6 +37,8 @@ class EvidenceTests(unittest.TestCase):
             (build / "linked.signed.bin").symlink_to(build / "secret.pem")
             bytecode = make_bytecode_bundle(build / 'firmware/bytecode', 'a' * 40)
             make_layout_fixture(build / 'firmware/bytecode', build / 'firmware/zephyr')
+            (build / 'firmware/zephyr/zephyr.bin').write_bytes(
+                (build / 'firmware/zephyr/zephyr.signed.bin').read_bytes())
             obj = build / 'firmware/CMakeFiles/app.dir/mrubyc/src/rrt0.c.obj'
             obj.parent.mkdir(parents=True)
             obj.write_bytes(b'rrt0 fixture')
@@ -47,6 +49,15 @@ class EvidenceTests(unittest.TestCase):
                 'objdump': '0000ae00 <mrbc_run>:\n ae00: bl ae08 <__wrap_mrbc_vm_run>\n'
                            '0000ae08 <__wrap_mrbc_vm_run>:\n ae08: bl ae10 <mrbc_vm_run>\n',
             }
+            commands['nm'] += ('00000001 A CONFIG_RBOS_WDT\n00000001 A CONFIG_NRFX_WDT\n'
+                               '000007d0 A CONFIG_RBOS_WDT_TIMEOUT_MS\n00000064 A CONFIG_RBOS_FATAL_FLUSH_MS\n')
+            for name, route in [
+                ('rbos_wdt_start', 'bl 0 <nrfx_wdt_init>\n bl 0 <nrfx_wdt_enable>'),
+                ('rbos_wdt_feed', 'bl 0 <nrfx_wdt_channel_feed>'),
+                ('rbos_supervisor_poll', 'bl 0 <rbos_maintenance>\n bl 0 <rbos_wdt_feed>'),
+                ('mrbc_hal_abort', ''), ('rbos_reset_reason_log', '')]:
+                commands['nm'] += f'0000ae00 00000008 T {name}\n'
+                commands['objdump'] += f'0000ae00 <{name}>:\n ae00: {route}\n'
             for name, text in commands.items():
                 path = binaries / name
                 path.write_text('#!/usr/bin/env python3\nimport sys\nprint(' + repr(text) +
@@ -74,6 +85,7 @@ class EvidenceTests(unittest.TestCase):
             self.assertTrue((output / 'firmware/bytecode/manifest.json').is_file())
             self.assertTrue((output / 'firmware/bytecode-layout.json').is_file())
             self.assertTrue((output / 'firmware/supervisor-link.json').is_file())
+            self.assertTrue((output / 'firmware/watchdog.json').is_file())
             self.assertFalse((output / 'firmware/zephyr/zephyr.elf').exists())
             self.assertTrue((output / 'firmware/bytecode/generated/rbos_adc_bytecode.c').is_file())
             self.assertTrue((output / 'firmware/bytecode/inputs/src/rbos/adc.rb').is_file())
@@ -85,6 +97,9 @@ class EvidenceTests(unittest.TestCase):
                 "firmware/zephyr/.config": {
                     "CONFIG_NRF_SDH_DISPATCH_MODEL_SCHED": "y",
                     "CONFIG_NRFX_RESERVED_RESOURCES_HEADER": '"rbos_reserved_resources.h"',
+                    "CONFIG_RBOS_WDT": "y",
+                    "CONFIG_RBOS_WDT_TIMEOUT_MS": "2000",
+                    "CONFIG_RBOS_FATAL_FLUSH_MS": "100",
                 },
                 "mcuboot/zephyr/.config": {"CONFIG_SOFTDEVICE": "n"},
             })

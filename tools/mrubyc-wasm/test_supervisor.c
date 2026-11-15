@@ -13,6 +13,8 @@ static uint8_t pool[1024 * 1024];
 static unsigned ticks, calls, idle_calls, work, depth;
 static int active, simulating, irq_depth;
 static const char *mode;
+extern unsigned rbos_wasm_wdt_feeds;
+extern int rbos_wasm_wdt_error;
 
 int64_t NOINSTR k_uptime_get(void) { return ticks; }
 
@@ -49,9 +51,11 @@ void NOINSTR rbos_maintenance(bool idle)
   ++calls;
   if (idle) ++idle_calls;
   unsigned before = calls;
+  unsigned feeds = rbos_wasm_wdt_feeds;
   ticks += CONFIG_RBOS_SERVICE_INTERVAL_MS;
+  if (!strcmp(mode, "stall")) ticks += CONFIG_RBOS_WDT_TIMEOUT_MS;
   rbos_supervisor_poll(!idle);
-  assert(calls == before);
+  assert(calls == before && rbos_wasm_wdt_feeds == feeds);
   --depth;
   if (!strcmp(mode, "spin") && calls >= 30) {
     assert(idle_calls == 0);
@@ -84,6 +88,24 @@ int main(int argc, char **argv)
 {
   assert(argc == 2);
   mode = argv[1];
+  if (!strcmp(mode, "stall") || !strcmp(mode, "start-error")) {
+    active = 1;
+    if (!strcmp(mode, "start-error")) {
+      rbos_wasm_wdt_error = -1;
+      assert(rbos_supervisor_start() == -1);
+      rbos_supervisor_poll(true);
+      assert(calls == 0 && rbos_wasm_wdt_feeds == 0);
+      puts("PASS watchdog: failed start leaves supervisor disabled");
+    } else {
+      assert(rbos_supervisor_start() == 0);
+      rbos_supervisor_poll(true);
+      assert(calls == 1 && rbos_wasm_wdt_feeds == 0);
+      rbos_supervisor_poll(true);
+      assert(calls == 2 && rbos_wasm_wdt_feeds == 0);
+      puts("PASS watchdog: stalled native maintenance never feeds or revives expired watchdog");
+    }
+    return 0;
+  }
   const void *code;
   if (!strcmp(mode, "spin")) code = c_spin_code;
   else if (!strcmp(mode, "sleep")) code = c_sleep_code;
@@ -97,7 +119,7 @@ int main(int argc, char **argv)
   mrbc_tcb *task = mrbc_create_task(code, NULL);
   assert(task);
   active = 1;
-  rbos_supervisor_start();
+  assert(rbos_supervisor_start() == 0);
   int status = mrbc_run();
   assert(status == (!strcmp(mode, "error") ? 2 : 0));
   assert(task->state == TASKSTATE_DORMANT);
@@ -108,6 +130,7 @@ int main(int argc, char **argv)
     rbos_supervisor_poll(true);
   }
   assert(calls == before + 5 && depth == 0);
+  assert(rbos_wasm_wdt_feeds == calls);
   printf("PASS supervisor: %s returns to persistent native owner, init disabled, no reentry\n", mode);
   return 0;
 }
