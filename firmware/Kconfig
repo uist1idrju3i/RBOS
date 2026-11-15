@@ -3,6 +3,14 @@ config NRFX_RESERVED_RESOURCES_HEADER
 
 menu "RBOS application"
 
+config RBOS_BLE_NAME_PREFIX
+	string "BLE device name prefix (1-21 bytes)"
+	default "RBOS"
+	help
+	  Prefix for the DEVICEID-derived name. The suffix uses five bytes.
+	  Names must fit legacy advertising with the three-byte Flags field.
+	  Empty or overlong prefixes are rejected during BLE initialization.
+
 config RBOS_WDT
 	bool "Foreground progress watchdog"
 	default y
