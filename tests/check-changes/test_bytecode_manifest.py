@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 
 from bytecode_fixture import make_bytecode_bundle, manifest_tool, ROOT
@@ -29,6 +30,20 @@ class BytecodeManifestTests(unittest.TestCase):
             make_bytecode_bundle(root, REVISION, profile)
             self.assertEqual(manifest_tool['verify'](root, REVISION, profile)['blobs'], count)
 
+    def test_actual_cmake_task_inventory(self):
+        for tasks in [[], ['system.rb'], self.manifest['tasks'][:-1], ['custom/diagnostic.rb', 'system.rb']]:
+            with self.subTest(tasks=tasks), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                manifest = make_bytecode_bundle(root, REVISION, tasks=tasks)
+                self.assertEqual(manifest_tool['verify'](root, REVISION, 'debug')['blobs'], len(tasks) + 3)
+                manifest['blobs'].pop()
+                (root / 'manifest.json').write_text(json.dumps(manifest))
+                with self.assertRaisesRegex(ValueError, 'missing/duplicate blobs'):
+                    manifest_tool['verify'](root, REVISION, 'debug')
+        for tasks in [None, 'system.rb', [1], ['../escape.rb'], ['system.rb', 'system.rb']]:
+            with self.subTest(tasks=tasks), self.assertRaises(ValueError):
+                manifest_tool['inventory'](tasks)
+
     def test_every_required_field(self):
         for section in [(), ('compiler',), ('revisions',), ('blobs', 0),
                         ('blobs', 0, 'generated_c'), ('blobs', 0, 'bytecode'), ('blobs', 0, 'inputs', 0)]:
@@ -43,6 +58,74 @@ class BytecodeManifestTests(unittest.TestCase):
                 del target[key]
                 with self.subTest(section=section, key=key), self.assertRaises(ValueError):
                     self.verify(changed)
+
+    def test_bundle_replaces_profile_output(self):
+        base = Path(self.directory.name)
+        build, repo, output = base / 'build', base / 'repo', base / 'output'
+        for profile, count in [('stress', 10), ('debug', 8), ('oom', 5)]:
+            with self.subTest(profile=profile):
+                stage = base / profile
+                manifest = make_bytecode_bundle(stage, REVISION, profile)
+                records = []
+                for blob in manifest['blobs']:
+                    target = build / blob['build_output']
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes((stage / blob['generated_c']['path']).read_bytes())
+                    for item in blob['inputs']:
+                        source = repo / item['path']
+                        source.parent.mkdir(parents=True, exist_ok=True)
+                        source.write_bytes((stage / 'inputs' / item['path']).read_bytes())
+                    record = {key: value for key, value in manifest.items() if key != 'blobs'}
+                    record['blob'] = blob
+                    path = Path(str(target) + '.record.json')
+                    path.write_text(json.dumps(record))
+                    records.append(path)
+                manifest_tool['bundle'](SimpleNamespace(records=records, build=build, repo=repo, output=output))
+                self.assertEqual(manifest_tool['verify'](output, REVISION, profile)['blobs'], count)
+                self.assertEqual({p.relative_to(output) for p in output.rglob('*') if p.is_file()},
+                                 {p.relative_to(stage) for p in stage.rglob('*') if p.is_file()})
+
+    def test_bundle_requires_records(self):
+        with self.assertRaisesRegex(ValueError, 'no compiler records'):
+            manifest_tool['bundle'](SimpleNamespace(records=[]))
+
+    def test_cmake_reconfigures_mrblib_after_external_compiler_replacement(self):
+        base = Path(self.directory.name)
+        source, build = base / 'cmake', base / 'build'
+        source.mkdir()
+        compiler = base / 'mrbc'
+        header = '0x52,0x49,0x54,0x45,0x30,0x34,0x30,0x30,0x00,0x00,0x00,0x0c'
+        compiler.write_text('#!/usr/bin/env python3\nimport sys\nfrom pathlib import Path\n'
+                            'args = sys.argv[1:]\n'
+                            'if args == ["--version"]: print("mruby 4.0.0 (2026-04-20)")\n'
+                            'else:\n'
+                            ' symbol = next(arg[2:] for arg in args if arg.startswith("-B"))\n'
+                            ' option = next(arg for arg in args if arg.startswith("-o"))\n'
+                            ' output = args[args.index(option)+1] if option == "-o" else option[2:]\n'
+                            f' Path(output).write_text("#include <stdint.h>\\nconst uint8_t " + symbol + "[] = {{{header}}};\\n")\n')
+        compiler.chmod(0o755)
+        (source / 'CMakeLists.txt').write_text(
+            'cmake_minimum_required(VERSION 3.20)\nproject(bytecode_dependency C)\n'
+            'add_library(app STATIC)\n'
+            f'set(CMAKE_CURRENT_SOURCE_DIR "{ROOT}/firmware")\n'
+            f'set(RBOS_MRBC "{compiler}" CACHE FILEPATH "")\n'
+            'set(CONFIG_RBOS_TEST_PROFILE_OOM ON)\n'
+            f'include("{ROOT}/firmware/cmake/mrubyc.cmake")\n')
+
+        def run(*args):
+            result = subprocess.run(['cmake', *map(str, args)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+        run('-S', source, '-B', build, '-G', 'Ninja')
+        run('--build', build, '--target', 'rbos_bytecode_manifest')
+        first = json.loads((build / 'bytecode/manifest.json').read_text())
+        compiler.write_text(compiler.read_text() + '\n# replacement binary\n')
+        run('--build', build, '--target', 'rbos_bytecode_manifest')
+        second = json.loads((build / 'bytecode/manifest.json').read_text())
+        self.assertNotEqual(first['compiler']['sha256'], second['compiler']['sha256'])
+        self.assertEqual(second['compiler']['sha256'], manifest_tool['digest'](compiler.read_bytes()))
+        record = json.loads((build / 'mrubyc/src/mrblib.c.record.json').read_text())
+        self.assertEqual(record['compiler'], second['compiler'])
 
     def test_empty_duplicate_wrong_profile_and_metadata(self):
         for field, value in [('schema', 2), ('schema', True), ('profile', 'oom'), ('blobs', []), ('blobs', None)]:
@@ -138,9 +221,11 @@ class BytecodeManifestTests(unittest.TestCase):
                             f'else: Path(sys.argv[sys.argv.index("-o") + 1]).write_text({c_source!r})\n')
         compiler.chmod(0o755)
         output = build / 'rbos_adc_bytecode.c'
+        tasks = build / 'tasks.json'
+        tasks.write_text(json.dumps(self.manifest['tasks']))
         command = [sys.executable, str(ROOT / 'tools/bm-build/bytecode-manifest.py'), 'compile',
                    '--repo', str(repo), '--build', str(build), '--compiler', str(compiler), '--profile', 'debug',
-                   '--', '-Brbos_adc_bytecode', '-o', str(output), str(source)]
+                   '--tasks-file', str(tasks), '--', '-Brbos_adc_bytecode', '-o', str(output), str(source)]
         subprocess.run(command, check=True, capture_output=True)
         record = json.loads(Path(str(output) + '.record.json').read_text())
         self.assertEqual(record['blob']['inputs'][0]['length'], 0)
