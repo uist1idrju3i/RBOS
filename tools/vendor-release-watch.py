@@ -115,6 +115,15 @@ def issue_body(dep):
     return '\n'.join(lines) + '\n'
 
 
+def recorded_release_version(name, body):
+    versions = []
+    for tag in re.findall(r'^\| \[([^\]]+)\]\([^\n]+\) \| `[0-9a-f]+` \|$', body or '', re.MULTILINE):
+        match = re.fullmatch(PATTERNS[name], tag)
+        if match:
+            versions.append(tuple(int(part or 0) for part in match.groups()))
+    return max(versions, default=None)
+
+
 def api_request(repository, token, method, endpoint, payload=None):
     request = urllib.request.Request(
         f'https://api.github.com/repos/{repository}/{endpoint}',
@@ -152,6 +161,11 @@ def sync_issues(report, repository, token):
         title, body = issue_title(dep), issue_body(dep)
         issue = existing.get(title)
         if issue:
+            if issue['state'] == 'closed':
+                recorded = recorded_release_version(dep['name'], issue['body'])
+                if recorded is None or tuple(dep['latest']['version']) <= recorded:
+                    print(f'見送りを維持: {title}', file=sys.stderr)
+                    continue
             if issue['body'] != body or issue['state'] != 'open':
                 api_request(repository, token, 'PATCH', f"issues/{issue['number']}",
                             {'body': body, 'state': 'open'})

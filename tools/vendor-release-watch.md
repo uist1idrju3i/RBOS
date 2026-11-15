@@ -28,7 +28,7 @@ rc・pre 等は除外します。annotated tag は `^{}` の commit SHA、lightw
 通知には `--update-issues`、`GITHUB_REPOSITORY`、`GITHUB_TOKEN` が必要です。workflow の権限は `contents: read` と `issues: write` のみです。
 
 - 依存ごとの固定 title `依存更新: <name> の正式 release` で、open/closed の既存 issue を検索します。PR は対象外です。
-- 既存 issue があれば本文を更新し、closed の場合は再開します。同じ本文の open issue には再書込みしません。
+- open issue は本文を更新し、同じ本文なら再書込みしません。closed issue は、本文の表に記録した最新 tag より新しい正式版が出たときだけ再開します。同じ版以下、または記録した版を読み取れない場合は、本文も状態も変更しません。
 - 新版がなければ issue を作成・更新しません。既存 issue の自動 close もしません。
 - schedule と手動実行は直列化し、同時実行による重複作成を防ぎます。
 

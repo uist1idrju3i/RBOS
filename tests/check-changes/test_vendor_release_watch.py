@@ -193,13 +193,44 @@ class IssueTests(unittest.TestCase):
         for text in ['4.0.0', A, '4.1.0', B, '人が判断']:
             self.assertIn(text, args[4]['body'])
 
-    def test_existing_open_or_closed_issue_updated_not_duplicated(self):
-        for state in ['open', 'closed']:
-            issue = {'title': WATCH.issue_title(self.dep), 'number': 7, 'body': 'old', 'state': state}
-            with self.subTest(state=state), mock.patch.object(WATCH, 'api_request', side_effect=[[issue], {}]) as api:
+    def test_existing_open_issue_updated_not_duplicated(self):
+        issue = {'title': WATCH.issue_title(self.dep), 'number': 7, 'body': 'old', 'state': 'open'}
+        with mock.patch.object(WATCH, 'api_request', side_effect=[[issue], {}]) as api:
+            self.sync()
+        self.assertEqual(api.call_args.args[2:4], ('PATCH', 'issues/7'))
+        self.assertEqual(api.call_args.args[4]['state'], 'open')
+
+    def test_closed_same_or_newer_candidate_is_untouched(self):
+        for tag in ['4.1.0', '4.2.0', '4.10.0']:
+            recorded = compare(tags=remote(('4.0.0', A), (tag, B)))
+            issue = {'title': WATCH.issue_title(self.dep), 'number': 7,
+                     'body': WATCH.issue_body(recorded) + '\nこの版は見送ります。\n', 'state': 'closed'}
+            with self.subTest(tag=tag), mock.patch.object(WATCH, 'api_request', return_value=[issue]) as api:
+                self.sync()
+                self.assertEqual(api.call_count, 1)
+                self.assertEqual(issue['state'], 'closed')
+
+    def test_closed_issue_reopens_only_for_newer_release(self):
+        for name, old, new in [('mruby', '4.9.0', '4.10.0'),
+                               ('mrubyc', 'release4.9', 'release4.10'),
+                               ('sdk-nrf-bm', 'v4.9.0', 'v4.10.0')]:
+            stable = {'mruby': '4.0.0', 'mrubyc': 'release4.0', 'sdk-nrf-bm': 'v4.0.0'}[name]
+            previous = compare(name, tags=remote((stable, A), (old, B)))
+            current = compare(name, tags=remote((stable, A), (old, B), (new, C)))
+            self.report = {'status': 'PASS', 'dependencies': [current]}
+            issue = {'title': WATCH.issue_title(current), 'number': 7,
+                     'body': WATCH.issue_body(previous), 'state': 'closed'}
+            with self.subTest(name=name), mock.patch.object(WATCH, 'api_request', side_effect=[[issue], {}]) as api:
                 self.sync()
                 self.assertEqual(api.call_args.args[2:4], ('PATCH', 'issues/7'))
-                self.assertEqual(api.call_args.args[4]['state'], 'open')
+                self.assertEqual(api.call_args.args[4], {'body': WATCH.issue_body(current), 'state': 'open'})
+
+    def test_closed_issue_without_recognizable_candidate_is_untouched(self):
+        for body in [None, '', 'この版は見送ります。', '| [4.1.0-rc2](url) | `' + B + '` |']:
+            issue = {'title': WATCH.issue_title(self.dep), 'number': 7, 'body': body, 'state': 'closed'}
+            with self.subTest(body=body), mock.patch.object(WATCH, 'api_request', return_value=[issue]) as api:
+                self.sync()
+                self.assertEqual(api.call_count, 1)
 
     def test_same_issue_body_is_not_written_again(self):
         issue = {'title': WATCH.issue_title(self.dep), 'number': 7,

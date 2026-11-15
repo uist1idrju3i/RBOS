@@ -42,6 +42,8 @@
 
 ### Fixed
 
+- 正式 release の通知 issue を close した場合、同じ候補版では再開しないようにしました。本文に記録した版より新しい正式版が出たときだけ再開します。
+
 - 外部 mrbc の実体を同じ版の別 binary に差し替えたときも mrblib の生成記録を更新し、他の bytecode との compiler hash 不一致を防ぐようにしました。
 
 - bytecode bundle の出力先を生成時に作り直し、同じ build directory で profile を切り替えたときに古い task のファイルが残る問題を修正しました。
