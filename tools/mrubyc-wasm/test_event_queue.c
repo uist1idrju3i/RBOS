@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 #include "rbos/event_queue.h"
 
 static struct rbos_event event(enum rbos_event_type type, uint32_t source, uint32_t value)
@@ -106,12 +107,64 @@ static void generations(void)
   assert(rbos_event_queue_pop(&queue, &output) && output.generation == 2);
 }
 
+static uint32_t random_word(uint32_t *state)
+{
+  *state = *state * 1664525u + 1013904223u;
+  return *state;
+}
+
+static void reference_model(void)
+{
+  const uint32_t seeds[] = { 1, 0x5a17cafe, UINT32_MAX };
+  for (unsigned int seed = 0; seed < sizeof(seeds) / sizeof(*seeds); ++seed) {
+    uint32_t state = seeds[seed], size = 0, overflow = 0, coalesced = 0;
+    struct rbos_event_queue queue = {0};
+    struct rbos_event model[RBOS_EVENT_QUEUE_CAPACITY];
+    for (unsigned int step = 0; step < 20000; ++step) {
+      uint32_t op = random_word(&state);
+      if (op % 4 == 0) {
+        struct rbos_event actual = event(RBOS_EVENT_COMPLETION, 999, 888);
+        assert(rbos_event_queue_pop(&queue, &actual) == (size != 0));
+        if (size) {
+          assert(actual.type == model[0].type && actual.source == model[0].source &&
+                 actual.value == model[0].value && actual.count == model[0].count &&
+                 actual.generation == model[0].generation);
+          memmove(model, model + 1, --size * sizeof(*model));
+        } else assert(actual.source == 999 && actual.value == 888);
+      } else {
+        struct rbos_event input = event((op >> 4) & 1, (op >> 8) % 5, (op >> 12) & 1);
+        input.generation = (op >> 16) % 3;
+        uint32_t i = 0;
+        if (input.type == RBOS_EVENT_BUTTON) {
+          for (; i < size; ++i)
+            if (model[i].type == input.type && model[i].source == input.source &&
+                model[i].generation == input.generation) break;
+        } else i = size;
+        bool accepted = i < size || size < RBOS_EVENT_QUEUE_CAPACITY;
+        if (i < size) { ++model[i].count; model[i].value = input.value; ++coalesced; }
+        else if (accepted) { model[size] = input; model[size++].count = 1; }
+        else ++overflow;
+        assert(rbos_event_queue_push(&queue, &input) == accepted);
+      }
+      assert(queue.size == size && queue.overflow == overflow && queue.coalesced == coalesced);
+      for (uint32_t i = 0; i < size; ++i) {
+        struct rbos_event *actual = &queue.events[(queue.head + i) % RBOS_EVENT_QUEUE_CAPACITY];
+        assert(actual->type == model[i].type && actual->source == model[i].source &&
+               actual->generation == model[i].generation && actual->value == model[i].value &&
+               actual->count == model[i].count);
+      }
+    }
+  }
+  puts("PASS: event queue reference model seeds=1,0x5a17cafe,0xffffffff steps=60000");
+}
+
 int main(void)
 {
   fifo_and_wrap();
   coalesce_and_overflow();
   saturating_counters();
   generations();
+  reference_model();
   puts("PASS: event queue / FIFO / wrap / drop-newest / coalesce / saturation");
   return 0;
 }

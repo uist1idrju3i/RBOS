@@ -141,6 +141,35 @@ for fixture in empty error sleep stall start-error; do
   timeout 15s node "$build/supervisor-wrapped.js" "$fixture"
 done
 
+"$mrbc" -Bmanagement_boundary -o "$build/management_boundary.c" "$root/tests/mruby/management_boundary.rb"
+emcc -O1 -Wall -Wextra -Wno-unused-parameter -finstrument-functions \
+  -include "$root/research/implementation/a2-p3-evidence/c_system_config.h" \
+  -DRBOS_BOUNDARY_TEST -Dhal_abort=mrbc_hal_abort -DCONFIG_RBOS_SERVICE_INTERVAL_MS=10 -DMAX_VM_COUNT=32 \
+  -DCONFIG_RBOS_WDT=1 -DCONFIG_RBOS_WDT_TIMEOUT_MS=2000 \
+  -I"$root/tools/mrubyc-wasm/supervisor_include" -I"$root/firmware/src" \
+  -I"$root/include" -I"$root/research/implementation/a2-p3-evidence" \
+  -I"$build" -I"$build/mrubyc/src" \
+  -I"$build/mrubyc/hal/emscripten" -sSINGLE_FILE=1 -sENVIRONMENT=node -sEXIT_RUNTIME=1 \
+  -sASSERTIONS=1 -sSTACK_OVERFLOW_CHECK=1 -sSTACK_SIZE=1048576 -Wl,--wrap=mrbc_vm_run \
+  "$root/tools/mrubyc-wasm/test_supervisor.c" "$root/firmware/src/supervisor.c" \
+  "$root/tools/mrubyc-wasm/watchdog.c" "$root/tools/mrubyc-wasm/backend.c" \
+  "$build/adc_bytecode.c" "$build/button_bytecode.c" "${sources[@]}" "${bindings[@]}" \
+  -o "$build/supervisor-boundary.js"
+timeout 30s node "$build/supervisor-boundary.js" boundary
+
+oom_sources=()
+for source in "${sources[@]}" "${bindings[@]}"; do
+  case "$source" in */alloc.c|*/adc_binding.c|*/gpio_binding.c|*/button.c) ;; *) oom_sources+=("$source");; esac
+done
+emcc -O1 -Wall -Wextra -Wno-unused-parameter \
+  -include "$root/tools/mrubyc-wasm/runner_config.h" -DMAX_VM_COUNT=32 \
+  -I"$root/include" -I"$build/mrubyc/src" -I"$build/mrubyc/hal/emscripten" \
+  -sASYNCIFY -sENVIRONMENT=node -sEXIT_RUNTIME=1 -sASSERTIONS=1 -sCHECK_NULL_WRITES=1 -sSTACK_SIZE=1048576 \
+  "$root/tools/mrubyc-wasm/test_binding_oom.c" "${oom_sources[@]}" \
+  "$build/mrubyc/hal/emscripten/hal.c" \
+  "$build/adc_bytecode.c" "$build/button_bytecode.c" -o "$build/binding-oom.js"
+python3 "$root/tools/mrubyc-wasm/check-allocations.py" "$build"
+
 for profile in stress fault; do
   for source in "$root"/firmware/ruby/"$profile"/*.rb; do
     "$mrbc" -o "$build/p1-$profile-$(basename "${source%.rb}").mrb" "$source"

@@ -299,9 +299,15 @@ static void ownership(mrbc_vm *vm, mrbc_value v[], int argc)
   SET_TRUE_RETURN();
 }
 
+static void backend_calls(mrbc_vm *vm, mrbc_value v[], int argc)
+{
+  SET_INT_RETURN(rbos_wasm_backend_calls());
+}
+
 void rbos_wasm_native_fixture_define(void)
 {
   mrbc_class *cls = mrbc_define_class(NULL, "NativeFixture", NULL);
+  mrbc_define_method(NULL, cls, "backend_calls", backend_calls);
   mrbc_define_method(NULL, cls, "button_spawn", button_spawn);
   mrbc_define_method(NULL, cls, "peripherals_spawn", peripherals_spawn);
   mrbc_define_method(NULL, cls, "peripherals_delete", peripherals_delete);

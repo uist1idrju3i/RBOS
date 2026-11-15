@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "guarantee": "実 allocator の OOM で既存 fatal に到達し、到達前の backend 操作、pin claim、native lease、参照数を検査する。OOM 後の回復と解放完了は保証しない。",
+  "cases": [
+    {"operation": "internal", "points": ["ADC instance", "@input ivar table"], "state": "backend 未開始、pin claim・native request lease なし。ivar OOM では instance の参照数1。"},
+    {"operation": "request", "points": ["VM-independent ADC request"], "state": "ADC instance は既存。ADC start 未到達、native request lease なし。"},
+    {"operation": "gpio", "points": ["GPIO instance", "@pin ivar table"], "state": "GPIO configure 未到達、pin claim なし。ivar OOM では instance の参照数1。"},
+    {"operation": "button", "points": ["Button instance", "subscription", "@subscription ivar table"], "state": "watch 未到達、pin claim・native lease なし。ivar OOM 直前は Button の参照数1、subscription の参照数2。"},
+    {"operation": "poll", "points": ["return Array handle", "return Array buffer"], "state": "既存 watch と pin claim を維持。native subscription の参照数2、配送 count は1のまま。"},
+    {"operation": "stats", "points": ["return Array handle", "return Array buffer"], "state": "snapshot を1回取得。既存 watch と pin claim、subscription の参照数2を維持。"}
+  ]
+}

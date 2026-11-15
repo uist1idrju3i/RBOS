@@ -46,6 +46,18 @@ host build のキャッシュは mruby の submodule SHA ごとに分けます�
 
 ## 検査範囲
 
+### A5 host の境界試験
+
+[引数の対応表](argument-cases.json)は公開 API、native の内部 method、生成を禁止する内部 class の constructor を対象にします。各 method に不足・過剰・nil・誤型・下限・上限・keyword・backend 非到達の case、または適用できない理由を記録します。[Ruby fixture](../../tests/mruby/argument_matrix.rb)は各失敗の例外と hardware 操作数を照合し、backend 分類では lookup・validation・snapshot も含む全 fake operation の呼出し数が増えないことを検査します。`check-contracts.py` は分類・method・case・理由・backend の counter 検査が欠けると拒否します。
+
+[allocation の対応表](allocation-cases.json)は API 実行中の instance、request、subscription、ivar table、return Array の handle と buffer の12点を扱います。`test_binding_oom.c` は vendor の allocator と製品 binding を変更せずに test translation unit へ読み込みます。対象の割当て直前に残りの free block を実 allocator で確保し尽くし、元の要求サイズの割当てを OOM にします。NULL を返す模擬 allocator ではありません。正常 control の割当て数も表と一致させます。
+
+合格条件は、既存 allocator の fatal 経路への到達と、到達前の backend 操作、pin claim、native lease、参照数、未配送 count の状態です。**OOM 後の回復や解放完了は保証しません。** 状態の照合後は通常の Wasm と同じ Emscripten HAL を通り、fatal の診断と終了値1を照合します。BM の halt・reboot や実機復旧を検査するものではありません。class 登録・symbol 初期化など起動時の VM 全体の割当ては、この API 実行時の表には含めません。
+
+`management_boundary.rb` は `RBOSSystem.service` と `Supervisor.poll` を Ruby で再定義します。実際の共有 binding と `firmware/src/supervisor.c`、VM run wrapper を結合し、LED0 の三表記で GPIO・Button の権限が得られないことと、busy な user Ruby の実行中も C supervisor が30回進むことを検査します。時計、maintenance の受け口、hardware は host の mock です。
+
+event queue は seed `1`、`0x5a17cafe`、`0xffffffff` の計60,000操作を、線形配列の参照 model と照合します。既存の飽和試験も維持します。unittest の `test_runtime_events.py` は製品の `runtime.c` を host で compile し、post/take/snapshot の IRQ key の復元、満杯・空・coalesce、unlock 直後の割込みを模した snapshot の整合を検査します。実際の IRQ priority や並行実行の保証ではありません。
+
 - host C の event queue 検査で FIFO・wrap・newest drop・Button の coalesce・counter 飽和を確かめます。Wasm の `native_helpers.rb` は、試験専用 `NativeFixture` から共有 helper を呼び、引数・fake backend の失敗・参照寿命を検査します。`NativeFixture` は firmware へ結合しない試験用 API です。
 - `tests/mruby/` では複数 task、sleep_ms、priority、pass、Mutex、join/value、rescue、空プログラムを実行します。
 - 未捕捉例外の fixture は exit 1 と例外メッセージを照合します。引数なし・存在しない file・空 file・不一致 RITE version・magic・宣言サイズは exit 2 と診断を照合します。timeout は失敗です。

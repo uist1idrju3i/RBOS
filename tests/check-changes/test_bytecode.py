@@ -53,6 +53,25 @@ class BytecodeTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn('Bytecode check failed:', result.stderr)
 
+    def test_header_length_table(self):
+        header = b'RITE0400' + (12).to_bytes(4, 'big')
+        for length in range(12):
+            with self.subTest(length=length):
+                self.check(header[:length], 'Truncated bytecode header')
+
+    def test_declared_size_boundaries(self):
+        for actual in (12, 13, 255, 256, 257):
+            for declared in (0, 11, actual - 1, actual, actual + 1, 0xffffffff):
+                with self.subTest(actual=actual, declared=declared):
+                    self.check(b'RITE0400' + declared.to_bytes(4, 'big') + bytes(actual - 12),
+                               None if actual == declared else 'Invalid declared bytecode size')
+
+    def test_invalid_token_table(self):
+        for token in ('0x', '0x1', '0x100', '0xgg', '-0x01', '256', 'nil', '', '0x00 0x01'):
+            with self.subTest(token=token):
+                self.check_source('const uint8_t task[] = {0x52,' + token + ',};',
+                                  'Invalid mrbc byte array')
+
 
 if __name__ == '__main__':
     unittest.main()
