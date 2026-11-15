@@ -1,5 +1,7 @@
 # Ruby 能力の小さな実行確認
 
+現在の CI 固定版は emsdk 7.0.0 です。[更新評価](emsdk-7-update.md)を参照してください。以下は過去の測定条件・結果であり、更新後の再測定としては扱いません。
+
 2026-11-09 JST、既存 Wasm runner と固定 mrbc を使用しました。RBOS 基点は `181af4ed5fffcb97d77539321a843d478a142efb`。文書だけの調査 branch 上で実行し、fixture は ignored 領域に置き tests/ へ追加していません。
 
 - mruby/c: `434bccd609f2a3e90d6bb95c458621898bc6a508`

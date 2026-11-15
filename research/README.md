@@ -72,6 +72,7 @@ P2 の [資源予約と配送 context](implementation/resource-reservations.md)�
 
 - ZMS: [直接参照の根拠・訂正・未確認条件](dfu/zms-direct-execution.md)、[原報告の履歴](dfu/zms-session-original.md)。既存の保存方式の決定は変えていません。
 - mruby/c: [minify・圧縮・圧縮メモリと再測定](mrubyc/bytecode-compression.md)、[入力・生成物 hash と測定データ](mrubyc/bytecode-size-results.json)。
+- Wasm toolchain: [emsdk 7.0.0 の更新評価・変更履歴の採否・回帰比較](mrubyc/emsdk-7-update.md)。
 - 実装計画: [P0〜P6 の照合、未承認の Phase A/B と image 受け渡し](implementation/session-plan-review.md)、[初版](implementation/session-plan-initial.md)、[改訂版](implementation/session-plan-revised.md)、[会話・shell 証拠の抽出](implementation/session-evidence.json)。
 
 ### 主題別の文書

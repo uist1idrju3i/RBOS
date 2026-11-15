@@ -1,5 +1,7 @@
 # Ruby idiom の Wasm 実行記録
 
+現在の CI 固定版は emsdk 7.0.0 です。[更新評価](../mrubyc/emsdk-7-update.md)を参照してください。以下の版と hash は過去の測定記録として保持します。
+
 調査日: 2026-11-08。RBOS の基準 commit は `bd634b2eb06c58494209a06437a197c35af6bbac`。vendor・runner・永続 tests は変更せず、研究用の一時入力を既存 runner で個別に実行しました。後続 skill の回帰 fixture は別 PR の対象です。
 
 ## 再現条件

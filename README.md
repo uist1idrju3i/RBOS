@@ -105,7 +105,7 @@ mruby/c が scheduler を担い、製品開発者は Ruby を主に書いて RBO
 製品 Ruby の書き方は [ruby-idiomatic](.agents/skills/ruby-idiomatic/SKILL.md)、周辺機器 API の契約は [io-api-guideline](.agents/skills/io-api-guideline/SKILL.md)、版と公開準備は [semver](.agents/skills/semver/SKILL.md)にまとめています。利用者向けの変更は [CHANGELOG](CHANGELOG.md)に記録します。
 
 `mruby-wasm` CI は mruby 4.0.0 の mrbc で smoke scripts と将来の `src/**/*.rb` を compile し、smoke scripts を mruby/c の emscripten HAL で実行します。未捕捉例外の検出も検査します。
-emsdk 6.0.12 の環境を読み込めば、ローカルでも `tools/mrubyc-wasm/check.sh` を実行できます。必要なツール・試験範囲は [検査手順](tools/mrubyc-wasm/README.md)を参照してください。
+emsdk 7.0.0 の環境を読み込めば、ローカルでも `tools/mrubyc-wasm/check.sh` を実行できます。必要なツール・試験範囲は [検査手順](tools/mrubyc-wasm/README.md)を参照してください。
 Nordic の実機動作を検証する CI ではありません。
 
 ## ライセンス
