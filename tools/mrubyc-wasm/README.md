@@ -11,6 +11,16 @@ P2 の正常 suite と必須 PASS は [API 契約・試験在庫](../../research
 
 ## ローカル実行
 
+### RAM の段階計測
+
+`test_ram.c` は test 専用です。空 Ruby の const 配列を使い、初期化、TCB 確保、load、begin、String 生成、String の32 byte追記の6段階を `mrbc_alloc_statistics` で計測します。`RAM: Wasm` 行はこの Wasm build の観測値であり、ARM の値ではありません。
+
+`IREP_payload` は RAM 上の IREP 管理構造体、`register` と `TCB` は確保時の要求サイズです。この空 fixture では IREP の子・symbol ID table は0件なので `symbol_table_pool=0` です。命令・pool は const blob を参照します。`symbol_table_static` は pool 外の symbol index 配列全体で、`used` には加算しません。
+
+`baseline` は初期化済み pool の使用量です。その後の増分を上記の要求サイズ、`other_payload`（begin の self instance と String 本体・終端込み buffer）、使用 block 数から求める allocator header、残りの `padding` に分けます。padding はこの限定 fixture の allocator の丸め・最小 block による余りであり、一般の Ruby task の未知の割当を推定分類した値ではありません。pool 管理構造体・全 static RAM を含む総 RAM 内訳でもありません。
+
+test の translation unit に既存の `alloc.c` / `symbol.c` を include して内部の header と static 配列を観測します。この2つは当該 executable の別 source 一覧から除き、vendor ファイル、製品 API、通常 runner の build は変更しません。実行が失敗した場合や必須6段階が出ない場合は `check.sh` が失敗します。
+
 Ruby、C compiler、Make、Python 3、Git、Node.js、GNU timeout が必要です。
 emsdk は公式 repository の tag `7.0.0` に固定します。任意の作業領域で次を実行し、環境を読み込んでください。
 

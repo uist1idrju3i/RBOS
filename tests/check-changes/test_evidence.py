@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 import unittest
 
-from bytecode_fixture import make_bytecode_bundle
+from bytecode_fixture import make_bytecode_bundle, make_layout_fixture
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -36,6 +36,7 @@ class EvidenceTests(unittest.TestCase):
                 path.write_text(content)
             (build / "linked.signed.bin").symlink_to(build / "secret.pem")
             bytecode = make_bytecode_bundle(build / 'firmware/bytecode', 'a' * 40)
+            make_layout_fixture(build / 'firmware/bytecode', build / 'firmware/zephyr')
             for blob in bytecode['blobs']:
                 target = build / 'firmware' / blob['build_output']
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -56,6 +57,8 @@ class EvidenceTests(unittest.TestCase):
             self.assertTrue((output / "firmware/zephyr/zephyr.dts").is_file())
             self.assertTrue((output / "firmware/zephyr/zephyr.map").is_file())
             self.assertTrue((output / 'firmware/bytecode/manifest.json').is_file())
+            self.assertTrue((output / 'firmware/bytecode-layout.json').is_file())
+            self.assertFalse((output / 'firmware/zephyr/zephyr.elf').exists())
             self.assertTrue((output / 'firmware/bytecode/generated/rbos_adc_bytecode.c').is_file())
             self.assertTrue((output / 'firmware/bytecode/inputs/src/rbos/adc.rb').is_file())
             self.assertEqual((output / "build.log").read_text(), build_log.read_text())

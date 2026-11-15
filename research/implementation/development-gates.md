@@ -58,6 +58,12 @@ python3 tools/bm-build/verify-evidence.py "<evidence-directory>" --profile debug
 
 検査対象は source SHA と dirty 状態、固定 SDK/module の path と SHA、checksum の完全性、MCUboot header の magic・長さ・版・flags、profile 別の `.config`、秘密鍵の file/content 不在、symlink と危険な checksum path、map と build log の使用量、IRQ vector です。IRQ 213/218/268 は map の `saadc_irq` / `button_irq20` / `button_irq30` の Thumb address と照合します。
 
+bytecode は manifest の全 symbol を ELF32/ELF64 の symbol table から取得し、address・size・section と実 byte を検査します。固定 section 名には依存せず、map の Memory Configuration にある FLASH region の範囲内、file-backed な allocated section、`SHF_WRITE` が立っていないこと、生成 bytecode と ELF の byte 一致を必須にします。RAM 上の `.data` の load address が FLASH にあるだけでは通過しません。FLASH address をコード内に固定しません。
+
+収集時の `bytecode-layout.py` が失敗すると evidence の収集も失敗します。配置 report は `firmware/bytecode-layout.json` に対象 symbol の address・size・section metadata・byte hash と FLASH region だけを保存し、ELF 全体はコピーしません。verifier は report の必須項目・在庫・範囲・section flags を再検査し、map の symbol address、manifest の bytecode、署名済み image の当該範囲を照合します。report 自体も `SHA256SUMS` の対象です。元 ELF の section metadata は収集時に検査する証拠であり、元 ELF を保存せずに独立再抽出する機能や暗号学的な証明ではありません。
+
+BM の既存 linker は FLASH を含む `PT_LOAD` に RWE を付けます。これは section の writable 判定とは区別し、対象 section の `SHF_WRITE` と実行時 address の FLASH 内配置を gate とします。この検査は既存 CI の全四 profile の collect/verify から必ず実行されます。Wasm の段階別 RAM 分類は [test 専用 harness](../../tools/mrubyc-wasm/README.md#ram-の段階計測)を参照してください。ARM の RAM 測定とは扱いません。
+
 RAM は Memory Configuration の容量ではなく、RAM origin から最後の output section の終端までで計算します。FLASH は `_flash_used`、分類は text/rodata/data/bss/noinit です。build log は sysbuild の `firmware` block だけを選び、loader/installer の表と取り違えません。
 
 四構成をまとめて確認する場合は、各 directory を `firmware-evidence-<profile>-<revision>` の名前で一つの親 directory に置きます。四構成の欠落を拒否し、debug との差分も返します。

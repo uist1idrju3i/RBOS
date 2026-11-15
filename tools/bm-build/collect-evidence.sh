@@ -72,6 +72,7 @@ with (out / 'cmake-commands.txt').open('w') as target:
                 target.write(f'{source.relative_to(build)}: {line.strip()}\n')
 PY
 python3 "$script_dir/bytecode-manifest.py" collect "$build/firmware/bytecode" "$out/firmware/bytecode"
+python3 "$script_dir/bytecode-layout.py" "$build/firmware/zephyr" "$out/firmware/bytecode" "$out/firmware/bytecode-layout.json"
 (
   cd -- "$workspace"
   # Inactive internal projects are not cloned in the public BM workspace.

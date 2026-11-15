@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 import runpy
+import struct
 
 ROOT = Path(__file__).resolve().parents[2]
 manifest_tool = runpy.run_path(str(ROOT / 'tools/bm-build/bytecode-manifest.py'))
@@ -42,3 +43,45 @@ def make_bytecode_bundle(root, revision, profile='debug', tasks=None):
                                   'generated_c': generated, 'bytecode': binary})
     (root / 'manifest.json').write_text(json.dumps(manifest))
     return manifest
+
+
+def make_layout_fixture(bundle, app):
+    manifest = json.loads((bundle / 'manifest.json').read_text())
+    address = 0xae00
+    data, names, entries = bytearray(), bytearray(b'\0'), bytearray(24)
+    mapping = (app / 'zephyr.map').read_text()
+    if 'Memory Configuration' not in mapping:
+        mapping = 'Memory Configuration\nFLASH 0xa000 0x149000 xr\nRAM 0x20004400 0x3b400 xw\nLinker script and memory map\n'
+    for blob in manifest['blobs']:
+        binary = (bundle / blob['bytecode']['path']).read_bytes()
+        entries.extend(struct.pack('<IBBHQQ', len(names), 0x11, 0, 1, address + len(data), len(binary)))
+        names.extend(blob['symbol'].encode() + b'\0')
+        mapping += f" 0x{address + len(data):x} {blob['symbol']}\n"
+        data.extend(binary)
+    sections = b'\0.frozen_payload\0.strtab\0.symtab\0.shstrtab\0'
+    noff, eoff = 128 + len(data), 128 + len(data) + len(names)
+    soff = eoff + len(entries)
+    shoff = soff + len(sections)
+    ident = b'\x7fELF\x02\x01\x01' + bytes(9)
+    elf = bytearray(struct.pack('<16sHHIQQQIHHHHHH', ident, 2, 62, 1, 0, 64, shoff, 0, 64, 56, 1, 64, 5, 4))
+    elf.extend(struct.pack('<IIQQQQQQ', 1, 4, 128, address, address, len(data), len(data), 1))
+    elf.extend(bytes(128 - len(elf)))
+    elf.extend(data + names + entries + sections)
+    elf.extend(bytes(64))
+    for n, kind, flags, addr, offset, size, link, entry in [
+        (1, 1, 2, address, 128, len(data), 0, 0),
+        (17, 3, 0, 0, noff, len(names), 0, 0),
+        (25, 2, 0, 0, eoff, len(entries), 2, 24),
+        (33, 3, 0, 0, soff, len(sections), 0, 0),
+    ]:
+        elf.extend(struct.pack('<IIQQQQIIQQ', n, kind, flags, addr, offset, size, link, 0, 1, entry))
+    (app / 'zephyr.elf').write_bytes(elf)
+    (app / 'zephyr.map').write_text(mapping)
+    image_path = app / 'zephyr.signed.bin'
+    image = bytearray(image_path.read_bytes() if image_path.exists() else bytes(4096))
+    image[0xe00:0xe00 + len(data)] = data
+    image_path.write_bytes(image)
+    tool = runpy.run_path(str(ROOT / 'tools/bm-build/bytecode-layout.py'))
+    report = tool['collect'](bytes(elf), bundle, mapping, bytes(image))
+    (app.parent / 'bytecode-layout.json').write_text(json.dumps(report))
+    return report

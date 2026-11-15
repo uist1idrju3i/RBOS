@@ -147,6 +147,22 @@ emcc -O1 -Wall -Wextra -Wno-unused-parameter \
   "$root/tools/mrubyc-wasm/test_bytecode.c" "${sources[@]}" \
   "$build/mrubyc/hal/emscripten/hal.c" -o "$build/test-bytecode.js"
 timeout 30s node "$build/test-bytecode.js" | tee "$build/bytecode.log"
+ram_sources=()
+for source in "${sources[@]}"; do
+  case "$source" in */alloc.c|*/symbol.c) ;; *) ram_sources+=("$source") ;; esac
+done
+emcc -O1 -Wall -Wextra -Wno-unused-parameter \
+  -include "$root/tools/mrubyc-wasm/runner_config.h" \
+  -I"$build" -I"$build/mrubyc/src" -I"$build/mrubyc/hal/emscripten" \
+  -DMAX_VM_COUNT=32 -sASYNCIFY -sENVIRONMENT=node -sEXIT_RUNTIME=1 \
+  -sASSERTIONS=1 -sSTACK_SIZE=1048576 \
+  "$root/tools/mrubyc-wasm/test_ram.c" "${ram_sources[@]}" \
+  "$build/mrubyc/hal/emscripten/hal.c" -o "$build/test-ram.js"
+timeout 30s node "$build/test-ram.js" | tee "$build/ram.log"
+grep -Fxq 'PASS: Wasm RAM stages and accounting' "$build/ram.log"
+for stage in init tcb load begin string_new string_changed; do
+  grep -q "^RAM: Wasm stage=$stage " "$build/ram.log"
+done
 for marker in \
   'const empty Ruby accepted' 'bytecode String changed' \
   'bytecode rescue executed' 'bytecode ensure executed' \

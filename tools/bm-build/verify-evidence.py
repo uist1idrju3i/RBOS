@@ -10,6 +10,7 @@ import struct
 
 HERE = Path(__file__).resolve().parent
 verify_bytecode = runpy.run_path(str(HERE / 'bytecode-manifest.py'))['verify']
+verify_layout = runpy.run_path(str(HERE / 'bytecode-layout.py'))['verify']
 PROFILES = ("debug", "release", "stress", "oom")
 IRQS = {213: "saadc_irq", 218: "button_irq20", 268: "button_irq30"}
 HEX = r"0x[0-9a-fA-F]+"
@@ -168,6 +169,8 @@ def verify(root, revision, version, profile, expected_modules, baseline=None, ex
         require(struct.unpack_from("<I", image, offset)[0] == symbol(mapping, name) | 1,
                 "IRQ vector mismatch: " + str(irq))
         vectors[str(irq)] = name
+    layout = verify_layout(json.loads((root / 'firmware/bytecode-layout.json').read_text()),
+                           root / 'firmware/bytecode', mapping, image)
     used = log_sizes((root / "build.log").read_text())
     require(all(used[key] == sizes[key] for key in used), "Build-log/map memory mismatch")
     if expected_sizes is not None:
@@ -182,7 +185,7 @@ def verify(root, revision, version, profile, expected_modules, baseline=None, ex
     return {"revision": revision, "image_version": list(version), "profile": profile,
             "sha256": hashlib.sha256(image).hexdigest(), "checksummed_files": count,
             "vectors": vectors, "map": sizes, "build_log": used, "map_delta": delta,
-            "bytecode": bytecode}
+            "bytecode": bytecode, "layout": layout}
 
 
 def version_tuple(text):

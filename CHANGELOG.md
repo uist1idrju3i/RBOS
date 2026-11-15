@@ -6,6 +6,8 @@
 
 ### Added
 
+- bytecode manifest の全 symbol に ELF/map の FLASH 範囲・非 writable section・生成 byte 一致の配置 gate を追加しました。最小限の配置 report を BM evidence で検証し、Wasm 専用 harness で RAM の段階別内訳を出力します。製品 API と vendor は変更しません。
+
 - Wasm 検査の固定 emsdk を 7.0.0 に更新しました。中間版の変更履歴を確認し、既存の全試験と bytecode の mutation 試験を再実行しています。製品 mrbc・firmware・public API は変更しません。
 
 - 四 profile の bytecode manifest を BM evidence に追加しました。入力 Ruby、固定 mrbc の版・実体 hash・正規化した引数、生成 C と bytecode の hash・長さ、task 対応を記録し、収集後にも検証します。ADC/Button と vendor mrblib も対象です。製品 bytecode の生成オプション・API・firmware 版は変更しません。ELF/map の配置 gate は含みません。
