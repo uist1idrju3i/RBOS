@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- 未公開の0.2.0に、app の BLE MCUmgr OS reset 専用入口を追加しました。boot mode 設定、応答通知、切断、warm reboot の順に C maintenance で進め、loader 名を `RBOS_DFU` に固定します。UUID は31 Bの制約から scan response に載せます。security は OPEN で、第三者にも reboot される可能性があります。image の署名は loader が検証し、command 認証は将来の課題です。SoftDevice RAM は SDK sample・loader の設定への包含による推論を根拠とし、実機の RAM 使用量 log での確認は Phase Bです。VERSION は0.2.0のままです。
+
 ### Changed
 
 - 未公開の0.2.0で app の BLE 名を固定の `RBOS` から DEVICEID 由来の `RBOS_XXXX` へ変更します。prefix は Kconfig、suffix は OpenBlink と同じ reflected CRC16 と大文字16進4桁です。一意性・認証の保証はありません。広告は FAST 10秒から無期限 SLOW へ移り、切断後の再開を維持します。app の DLE TX/RX を251、ATT MTU を247とし、相手の要求へ自動応答する一方、自分から交渉を始めません。loader は変更せず、VERSION は0.2.0のままです。実機の広告・交渉・消費電力は未確認です。

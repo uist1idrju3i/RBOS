@@ -4,6 +4,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/logging/log_ctrl.h>
 #include "runtime.h"
+#include "mcumgr_reset.h"
 #include "rbos/native.h"
 #include "rbos/bindings.h"
 
@@ -65,6 +66,7 @@ void rbos_maintenance(bool idle)
 	else ++supervisor_count;
 	uint32_t drain_start = k_cycle_get_32();
 	bm_scheduler_process();
+	rbos_mcumgr_poll();
 	rbos_bindings_service();
 	uint32_t drain_us = k_cyc_to_us_floor32(k_cycle_get_32() - drain_start);
 	if (drain_us > drain_max_us) drain_max_us = drain_us;

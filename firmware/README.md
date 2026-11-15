@@ -8,9 +8,44 @@ app の広告名は `RBOS_XXXX` です。`CONFIG_RBOS_BLE_NAME_PREFIX` の既定
 
 広告は起動時に FAST（10秒、20 ms間隔）を開始し、その後は SLOW（40 ms間隔）を無期限に続けます。`CONFIG_BLE_ADV_SLOW_ADVERTISING_TIMEOUT=0` を SDK が duration に渡し、S115 の general discoverable mode では0が無期限を意味します。timeout による IDLE へは移らず、接続時は広告を終了し、切断後は既存の SDK 設定で FAST から再開します。広告エラーに対する独自の再試行は追加していません。
 
-app は DLE TX/RX の上限を251 bytes、ATT MTU を247 bytesに設定します。相手からの要求には SDK が自動応答しますが、接続時に自分から交渉を開始しません。実効値は相手の対応にも依存します。loader は別 image で、その名前・広告・DLE/MTU 設定を変更しません。app の MCUmgr/DFU 入口も今回の対象外です。
+app は DLE TX/RX の上限を251 bytes、ATT MTU を247 bytesに設定します。相手からの要求には SDK が自動応答しますが、接続時に自分から交渉を開始しません。実効値は相手の対応にも依存します。loader は別 image で、その DLE/MTU 設定を変更しません。
 
 広告名が変わる利用者向けの変更を、未公開の0.2.0に含めます。VERSION と TWEAK は据え置きます。BM evidence の前後比較は静的 RAM 配置の比較です。MTU による SoftDevice 内部の必要 RAM は実行時に確認するため、map の差分だけで余裕を保証しません。実機での名前・無期限広告・切断後再開・BLE 交渉・消費電力は未確認です。
+
+## MCUmgr reset と loader（0.2.0）
+
+app の BLE MCUmgr は OS group（0）の reset（5）の write だけを有効にします。echo、parameters、bootloader info、info、IMAGE、SETTINGS は無効です。reset は常に loader への遷移を要求し、通常起動や任意の boot mode を選ぶ API ではありません。GPREGRET1 の boot mode を `BOOT_MODE_TYPE_BOOTLOADER` に書いた後、SDK sample と同様に応答の `BLE_GATTS_EVT_HVN_TX_COMPLETE`、切断、warm reboot の順に処理します。通知前に相手が切断した場合は通知を待たずに reboot します。boot mode の書込み失敗や処理中の再要求はエラー応答です。
+
+待機は C maintenance の state machine で行い、Ruby や supervisor を block しません。通知が来なければ切断まで待ち、切断 API が失敗したら maintenance で再試行します。切断要求が成功した後は実際の切断 event を待ちます。保守処理が完了する限り、既存の WDT feed を維持します。
+
+Ver 1 の security は OPEN です。**他人に reboot される可能性があります。image の署名は loader が検証します。認証は将来の課題です。** app 自体に image upload はありません。loader の名前は `sysbuild/firmware_loader.conf` で `RBOS_DFU` に固定し、retention clipboard による名前の引継ぎは有効にしません。
+
+MCUmgr の128-bit service UUID は SDK sample に倣い scan response だけに載せます。既定の名前 AD は11 B、Flags は3 B、UUID AD は18 Bで、同じ広告に入れると32 Bになり31 Bを超えます。scan response の UUID AD は18 Bで収まります。UUID の取得には active scan が必要です。
+
+### SoftDevice RAM の包含による判断
+
+固定 SDK の `samples/boot/mcuboot_recovery_entry` を同じ nRF54L15 S115/MCUboot board で build し、生成 `.config` と DT を app・loader と比較しました。MCUmgr 追加後の app も、全対象項目で sample と loader 以下です。以下は `nrf_sdh_ble.c` の `sd_ble_cfg_set()` に渡す全設定項目と、DLE の比較です。ゼロ初期化される未使用 field も同じです。
+
+| 項目 | RBOS app（追加前→追加後） | SDK recovery sample / loader |
+|---|---|---|
+| connection tag | 99 → 99 | 99 |
+| 接続数 | 1 → 1 | 1 |
+| GAP event length | 3 → 3 | 10 |
+| peripheral role / central role / central secure | 1 / 0 / 0 → 同じ | 1 / 0 / 0 |
+| 広告セット数 | 1 → 1 | 1 |
+| ATT MTU | 247 → 247 | 498 |
+| vendor UUID 数 | 0 → 2 | 2 |
+| GATT attribute table | 1408 B → 1408 B | 1408 B |
+| Service Changed | 無効 → 無効 | 無効 |
+| DLE TX / RX | 251 / 251 → 同じ | 251 / 251 |
+| `sd_ble_cfg_set()` に渡す app RAM 開始位置 | `0x20004400` → 同じ | `0x20004400` |
+| DT の SoftDevice 領域 | 17,280 B → 同じ | 17,280 B |
+
+根拠は固定 SDK の `subsys/softdevice_handler/nrf_sdh_ble.c:155-237`、`boards/nordic/bm_nrf54l15dk/bm_nrf54l15dk_nrf54l15_cpuapp_s115_softdevice_mcuboot.dts:87-105` と各 build の生成物です。`s115_10.0.1_release-notes.rst:19-25` の4.1 kBは最小値で、設定別の上限や算出式ではありません。調査した S115 文書には、この構成の必要量を確定できる算出式・表は見つかりませんでした。
+
+これは「出荷 sample が同じ配置で動く設定に包含される」という**推論であり、実機での確認ではありません。実機の RAM 使用量 log での確認は Phase B**です。app は起動時に `sd_ble_enable()` が返す必要開始位置と DT の開始位置を照合します。Phase B では `sd_ble_cfg_set()` の設定エラーがないこと、BLE 初期化の成功、必要開始位置が `0x20004400` 以下であることを確認します。MCUmgr 通知・切断・reboot・loader 起動・署名検証も実機では未確認です。
+
+未公開の0.2.0への機能追加として、VERSION と TWEAK は変更しません。公開済みの版からの更新互換性を確認したという意味ではありません。
 
 ## WDT・fatal・reset reason（0.2.0）
 
