@@ -65,12 +65,14 @@ TWEAK の一意化は rollback 対策ではありません。BM MCUmgr の upgra
 
 ## 未決事項
 
+2026-11-15 の A2 判断として、重要な操作を C に寄せ、mruby/c 実行環境は一つ、その上は user Ruby のみとします。[設計・試作・未確認条件](../implementation/a2-p3-design.md)を参照してください。製品の移行は未実装です。
+
 | 項目 | 現時点の提案と残る確認 |
 |---|---|
 | compiler 配布 | vendor/mruby 4.0.0 を build。配布 OS、再現用 toolchain、生成物 hash を決める |
 | console の将来拡張 | 現行は承認済みの UARTE20。RTT/BLE への変更や別の buffer 設計は今回採用していない |
-| system-task 認証 | 初期は署名済み firmware 内コードを信頼。将来の外部コードには HMAC 等を設計 |
-| 権限単位 | callback で VM 権限を検査。子 task、VM ID 再利用、破棄時の失効を決める |
+| 外部 code の認証 | Ver 1 に system Ruby の認証・昇格は導入しない。将来転送の bytecode HMAC と操作承認は [未実装の候補](../implementation/a2-p3-authentication.md) |
+| C policy と故障回復 | system pin、資源上限、native 管理周期と WDT を実装・検証する。lease/handle の寿命と user 同士の干渉は別に評価 |
 | RAM と alignment | const blob とは別に IREP/文字列等を見積もり、配置と access 条件を検証 |
 
 [埋め込み設計](../dfu/embedded-bytecode.md)、[HMAC](../openblink/hmac-authentication.md)、[将来の storage 検討](../openblink/future-support.md)を参照してください。storage backend は初期 RBOS の未決事項ではありません。emscripten HAL の Ruby 検査 CI は実装済みです。[検査手順](../../tools/mrubyc-wasm/README.md)を参照してください。

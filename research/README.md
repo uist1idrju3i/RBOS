@@ -66,12 +66,13 @@ P2 の [資源予約と配送 context](implementation/resource-reservations.md)�
 | 2026-11-08 | ファームウェア A/B とバイトコード A/B は検討して不採用 | [判断の記録](architecture/decisions.md) |
 | 2026-11-08 | central 不使用、S115 固定。OpenBlink 対応は将来 | [判断の記録](architecture/decisions.md) |
 
-方式決定の根拠は利用者の指示です。調査更新日は 2026-11-08 JST です。権限の具体策は未決定です。emscripten HAL の Ruby 検査 CI は後続作業で実装しました。[検査手順](../tools/mrubyc-wasm/README.md)を参照してください。
+方式決定の根拠は利用者の指示です。この表は 2026-11-08 JST 時点の記録です。権限の扱いは後述の2026-11-15 A2 判断で C/user-only を選び、実装の詳細と受け入れを残しています。emscripten HAL の Ruby 検査 CI は後続作業で実装しました。[検査手順](../tools/mrubyc-wasm/README.md)を参照してください。
 
 ## 文書一覧
 
 ### 2026-11-15 のセッション再確認
 
+- A2/P3: [C/user-only の設計と Wasm 試作](implementation/a2-p3-design.md)、[Ver 1 と将来転送の脅威モデル・認証候補](implementation/a2-p3-authentication.md)、[特権操作の棚卸し](implementation/a2-p3-privileged-inventory.md)、[HMAC wrapper・PSA/CRACEN/KMU 評価](openblink/hmac-evaluation.md)、[source・実行証拠](implementation/a2-p3-evidence/README.md)。重要処理を C に寄せ、mruby/c 実行環境は一つ、Ruby は user のみとする利用者判断です。製品への実装と実機検証は未実施です。
 - ZMS: [直接参照の根拠・訂正・未確認条件](dfu/zms-direct-execution.md)、[原報告の履歴](dfu/zms-session-original.md)。既存の保存方式の決定は変えていません。
 - mruby/c: [minify・圧縮・圧縮メモリと再測定](mrubyc/bytecode-compression.md)、[入力・生成物 hash と測定データ](mrubyc/bytecode-size-results.json)。
 - Wasm toolchain: [emsdk 7.0.0 の更新評価・変更履歴の採否・回帰比較](mrubyc/emsdk-7-update.md)。

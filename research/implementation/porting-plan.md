@@ -69,6 +69,8 @@ GPIO/Button・温度・三電源 ADC と資源診断は実装済みです。[調
 
 ## P3: system-task と権限
 
+**2026-11-15 の方針更新**：[C/user-only の A2 設計](a2-p3-design.md)を優先します。以下は system Ruby を置く従来計画の記録であり、role registry・全 Task 自己限定をそのまま実装する指示ではありません。製品への移行と受け入れは未実施で、C 管理・policy・WDT の実装時に計画項目を置き換えます。
+
 - firmware 内の system bytecode と user bytecode を区別する。
 - VM ID だけの永続認証ではなく、生成時に付与し破棄時に消す権限情報を設計する。
 - 特権 method の全てで caller を検査し、class 名の秘匿に頼らない。
