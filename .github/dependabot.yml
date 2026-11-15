@@ -10,6 +10,10 @@ updates:
       prefix: "依存更新:"
   - package-ecosystem: gitsubmodule
     directory: "/"
+    ignore:
+      - dependency-name: vendor/mrubyc
+      - dependency-name: vendor/mruby
+      - dependency-name: vendor/sdk-nrf-bm
     schedule:
       interval: weekly
     commit-message:

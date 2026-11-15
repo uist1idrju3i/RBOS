@@ -6,6 +6,8 @@
 
 ### Added
 
+- mruby・mruby/c・sdk-nrf-bm を Dependabot の対象から外し、正式 release tag の固定確認と新版の検出を週1回行う CI を追加しました。新版は依存ごとの issue に通知し、gitlink は自動更新しません。yomiyasu は Dependabot に残します。
+
 - P4/A1 の host/build 受け入れ記録に、PR #45〜#50、四 profile の CI 配置結果、Phase B の残件を対応付けました。Wasm 専用 RAM harness は空 Ruby に加えて製品 Button の const 配列を load し、子 IREP・symbol ID・実際の String literal の生成と変更を分類計測します。製品 API・vendor は変更せず、実機の受け入れ完了とは扱いません。
 
 - bytecode manifest の全 symbol に ELF/map の FLASH 範囲・非 writable section・生成 byte 一致の配置 gate を追加しました。最小限の配置 report を BM evidence で検証し、Wasm 専用 harness で RAM の段階別内訳を出力します。製品 API と vendor は変更しません。
