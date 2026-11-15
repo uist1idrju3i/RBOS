@@ -117,7 +117,7 @@ class BytecodeManifestTests(unittest.TestCase):
         changed['blobs'][0]['inputs'][0] = manifest_tool['descriptor'](name, b'')
         self.assertEqual(self.verify(changed)['blobs'], 8)
 
-    def test_compile_and_bundle_record_actual_arguments(self):
+    def test_compile_records_actual_arguments(self):
         base = Path(self.directory.name)
         repo, build = base / 'repo', base / 'build'
         repo.mkdir()
@@ -144,9 +144,22 @@ class BytecodeManifestTests(unittest.TestCase):
         subprocess.run(command, check=True, capture_output=True)
         record = json.loads(Path(str(output) + '.record.json').read_text())
         self.assertEqual(record['blob']['inputs'][0]['length'], 0)
-        self.assertEqual(record['blob']['argv'], ['vendor/mruby/build/host/bin/mrbc', '-Brbos_adc_bytecode',
+        self.assertEqual(record['compiler']['path'], 'external/mrbc')
+        self.assertEqual(record['blob']['argv'], ['external/mrbc', '-Brbos_adc_bytecode',
                                                 '-o', 'build/rbos_adc_bytecode.c', 'src/rbos/adc.rb'])
         self.assertNotIn(str(base), json.dumps(record))
+        for path, expected in [(repo / 'vendor/mruby/mrbc', 'vendor/mruby/mrbc'),
+                               (build / 'mruby-host/mrbc', 'build/mruby-host/mrbc')]:
+            with self.subTest(compiler=expected):
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(compiler.read_bytes())
+                path.chmod(0o755)
+                command[command.index('--compiler') + 1] = str(path)
+                subprocess.run(command, check=True, capture_output=True)
+                record = json.loads(Path(str(output) + '.record.json').read_text())
+                self.assertEqual(record['compiler']['path'], expected)
+                self.assertEqual(record['blob']['argv'][0], expected)
+                self.assertNotIn(str(base), json.dumps(record))
         failed = subprocess.run(command[:command.index('--') + 1], capture_output=True, text=True)
         self.assertNotEqual(failed.returncode, 0)
         self.assertIn('incomplete compiler command', failed.stderr)

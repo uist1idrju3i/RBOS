@@ -38,6 +38,15 @@ def descriptor(path, data):
     return {'path': relative(path), 'sha256': digest(data), 'length': len(data)}
 
 
+def compiler_path(path, repo, build):
+    path = path.resolve()
+    if path.is_relative_to(build):
+        return 'build/' + path.relative_to(build).as_posix()
+    if path.is_relative_to(repo):
+        return path.relative_to(repo).as_posix()
+    return relative('external/' + path.name)
+
+
 def bytecode(source, symbol):
     CHECK(source)
     arrays = re.findall(r'const uint8_t (\w+)\[\] = \{([^{}]*)\};', source)
@@ -108,11 +117,12 @@ def compile_blob(args):
     require([item['path'] for item in inputs] == names, 'unexpected inputs')
     revisions = {name: subprocess.check_output(['git', '-C', str(path), 'rev-parse', 'HEAD'], text=True).strip()
                  for name, path in [('rbos', repo), ('mruby', repo / 'vendor/mruby'), ('mrubyc', repo / 'vendor/mrubyc')]}
+    compiler = compiler_path(args.compiler, repo, build)
     record = {'schema': 1, 'profile': args.profile, 'revisions': revisions,
-              'compiler': {'path': 'vendor/mruby/build/host/bin/mrbc', 'version': version,
+              'compiler': {'path': compiler, 'version': version,
                            'sha256': digest(args.compiler.read_bytes())},
               'blob': {'symbol': symbol, 'role': role, 'task': task, 'inputs': inputs,
-                       'argv': ['vendor/mruby/build/host/bin/mrbc', *normalized], 'options': options,
+                       'argv': [compiler, *normalized], 'options': options,
                        'build_output': output.relative_to(build).as_posix(),
                        'generated_c': descriptor('generated/' + symbol + '.c', source),
                        'bytecode': descriptor('bytecode/' + symbol + '.mrb', data)}}
@@ -153,9 +163,10 @@ def verify(root, revision, profile):
     require(revisions['rbos'] == revision, 'source revision mismatch')
     compiler = manifest['compiler']
     require(isinstance(compiler, dict) and set(compiler) == {'path', 'version', 'sha256'} and
-            compiler['path'] == 'vendor/mruby/build/host/bin/mrbc' and
+            isinstance(compiler['path'], str) and
             isinstance(compiler['version'], str) and re.fullmatch(r'mruby 4\.0\.0 \([0-9-]+\)', compiler['version']) and
             isinstance(compiler['sha256'], str) and re.fullmatch('[a-f0-9]{64}', compiler['sha256']), 'invalid compiler')
+    relative(compiler['path'])
     files = {'manifest.json'}
 
     def check_file(item, name):
