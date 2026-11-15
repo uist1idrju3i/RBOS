@@ -6,6 +6,8 @@
 
 ### Added
 
+- const bytecode の空 Ruby・String 変更時の不変・task 削除後の symbol/method 寿命、header 不正と VM ID 枯渇の拒否を Wasm で検査します。既存 OOM fault task の runtime 検査も追加しました。製品 API・bytecode 生成オプション・firmware 版は変更しません。RRAM 配置や実機の受け入れは未確認です。
+
 - 開発時の BM preflight、公開 API と RBS・異常系・寿命試験の在庫検査、firmware 四構成の成果物 verifier を追加しました。source/SDK、image header、checksum、秘密鍵不在、IRQ vector、map と build log を CI で照合します。Wasm の完了待ちは条件と期限で判定し、必須 PASS の欠落を失敗にします。実装・host/Wasm・BM build・実機受け入れの状態を分離しました。Ruby API・board の契約と firmware 版は変更しません。
 
 - 0.1.4 向けに物理値で統一した GPIO API と、Integer/String/DeviceTree node label・sw alias の pin 解決を追加しました。既定は DK の LED/Button 8 pinだけを許可し、console pin と Button 所有中の再設定を保護します。Button は `poll` / `wait` / `each_event` / `pressed?` / `close` を備え、GPIOTE IRQ から16件の固定 ring、foreground mailbox、呼出し task の順で配送します。RBS、Wasm の寿命・overflow・VM ID 再利用試験、nRF adapter の host 試験、自己検査後の Ruby 診断 task、BLE 起動前の BM queue 容量・復帰 probe を追加しました。console は利用者承認で UARTE20 を維持し、pairing/bonding は引き続き非対応です。実機の GPIO/IRQ・電圧/温度精度・BLE/tick・SD RAM/queue・stack/pool の受け入れは未完了で、P2 全体の完了を意味しません。
