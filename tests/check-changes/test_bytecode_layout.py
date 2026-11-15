@@ -32,6 +32,70 @@ class BytecodeLayoutTests(unittest.TestCase):
         self.assertEqual(self.verify(self.report)['status'], 'PASS')
         self.assertEqual(self.report['symbols'][0]['section']['name'], '.frozen_payload')
 
+    def elf32(self):
+        (self.app / 'zephyr.map').write_text('fixture')
+        report = make_layout_fixture(self.bundle, self.app, elf_class=32)
+        self.assertEqual(report, self.report)
+        return (self.app / 'zephyr.elf').read_bytes()
+
+    def test_elf32_arm_little_endian(self):
+        elf = self.elf32()
+        self.assertEqual(elf[:7], b'\x7fELF\x01\x01\x01')
+        self.assertEqual(struct.unpack_from('<H', elf, 18)[0], 40)
+        report = tool['collect'](elf, self.bundle, self.mapping, self.image)
+        self.assertEqual(report, self.report)
+        self.assertEqual(self.verify(report)['status'], 'PASS')
+
+    def test_elf32_corrupt_header(self):
+        original = self.elf32()
+        for mutation, message in [('short', 'invalid ELF'), ('magic', 'invalid ELF'),
+                                  ('encoding', 'unsupported ELF encoding'),
+                                  ('section-offset', 'truncated ELF metadata'),
+                                  ('section-entry-size', 'invalid section entry size'),
+                                  ('string-index', 'missing section table')]:
+            with self.subTest(mutation=mutation):
+                elf = bytearray(original)
+                if mutation == 'short': elf = elf[:32]
+                if mutation == 'magic': elf[0] = 0
+                if mutation == 'encoding': elf[5] = 0
+                if mutation == 'section-offset': struct.pack_into('<I', elf, 32, len(elf) - 8)
+                if mutation == 'section-entry-size': struct.pack_into('<H', elf, 46, 39)
+                if mutation == 'string-index': struct.pack_into('<H', elf, 50, 5)
+                with self.assertRaisesRegex(ValueError, message):
+                    tool['collect'](bytes(elf), self.bundle, self.mapping, self.image)
+
+    def test_elf32_corrupt_section_table(self):
+        original = self.elf32()
+        shoff = struct.unpack_from('<I', original, 32)[0]
+        for mutation, message in [('payload-offset', 'truncated ELF data'),
+                                  ('symbol-string-link', 'invalid symbol string table'),
+                                  ('symbol-entry-size', 'invalid symbol entry size')]:
+            with self.subTest(mutation=mutation):
+                elf = bytearray(original)
+                if mutation == 'payload-offset': struct.pack_into('<I', elf, shoff + 40 + 16, len(elf))
+                if mutation == 'symbol-string-link': struct.pack_into('<I', elf, shoff + 3 * 40 + 24, 5)
+                if mutation == 'symbol-entry-size': struct.pack_into('<I', elf, shoff + 3 * 40 + 36, 24)
+                with self.assertRaisesRegex(ValueError, message):
+                    tool['collect'](bytes(elf), self.bundle, self.mapping, self.image)
+
+    def test_elf32_corrupt_symbol_table(self):
+        original = self.elf32()
+        shoff = struct.unpack_from('<I', original, 32)[0]
+        symoff = struct.unpack_from('<I', original, shoff + 3 * 40 + 16)[0]
+        symsize = struct.unpack_from('<I', original, shoff + 3 * 40 + 20)[0]
+        for mutation, message in [('truncated-entry', 'truncated symbol table'),
+                                  ('name-offset', 'invalid ELF string'),
+                                  ('address', 'object outside section'),
+                                  ('section-index', 'missing ELF symbol')]:
+            with self.subTest(mutation=mutation):
+                elf = bytearray(original)
+                if mutation == 'truncated-entry': struct.pack_into('<I', elf, shoff + 3 * 40 + 20, symsize - 1)
+                if mutation == 'name-offset': struct.pack_into('<I', elf, symoff + 16, 0xffffffff)
+                if mutation == 'address': struct.pack_into('<I', elf, symoff + 16 + 4, 0x20004400)
+                if mutation == 'section-index': struct.pack_into('<H', elf, symoff + 16 + 14, 0)
+                with self.assertRaisesRegex(ValueError, message):
+                    tool['collect'](bytes(elf), self.bundle, self.mapping, self.image)
+
     def test_report_mutations(self):
         for mutation in ('ram', 'writable', 'byte', 'outside', 'missing', 'empty', 'schema'):
             with self.subTest(mutation=mutation):
