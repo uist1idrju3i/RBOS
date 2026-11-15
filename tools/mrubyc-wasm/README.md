@@ -43,7 +43,15 @@ runner は `.mrb` ごとに task を作り、Node.js の NODERAWFS で読みま�
 
 例外時に VM は `mrbc_run()` へ 2 を返し（`vendor/mrubyc/src/vm.c:3307-3335`）、scheduler はその終了状態を保持します（`vendor/mrubyc/src/rrt0.c:391-400`）。通常の task は終了時に例外を解放するため（`vendor/mrubyc/src/vm.c:362-371`）、runner は公開 hook `MRBC_ABORT_BY_EXCEPTION` で解放前に記録・表示し、同じ参照を解放します。permanence task も scheduler の戻り値で失敗とします。flag_permanence を runner から変更せず、Task.value の通常の戻り値を保ちます（`vendor/mrubyc/src/vm.c:1734-1745`）。
 
-bytecode の buffer は VM 終了まで保持します。runner は信頼するローカル compiler の生成物を対象とし、不正な任意 binary を安全に処理する validator や sandbox ではありません。実行後の資源はプロセス終了時に回収します。
+bytecode の buffer はプロセス終了まで保持します。task 終了後も symbol や method が入力を参照するため、task の削除だけでは解放しません。runner は信頼するローカル compiler の生成物を対象とし、不正な任意 binary を安全に処理する validator や sandbox ではありません。実行後の資源はプロセス終了時に回収します。
+
+### const bytecode の受け入れ
+
+`test_bytecode.c` は mrbc が生成した const C 配列を直接 `mrbc_create_task` に渡します。空 Ruby の正常終了、String の変更と blob 全体の不変、子 IREP を含む命令・catch table・pool の入力内参照を検査します。不変検査用の snapshot は作りますが、実行用の blob コピーではありません。producer task の終了・削除後に別 task が定義済み method と symbol を使用し、symbol の文字列が producer の const 配列内を参照することも確かめます。配列はプロセス終了まで保持します。
+
+同じ harness で magic/version 不正の task 作成拒否と、32 VM を確保した後の VM ID 枯渇による NULL を検査します。file の欠損・空・宣言サイズ不一致は既存 runner の試験です。OOM は既存の `firmware/ruby/fault/oom.rb` を runner で実行し、exit 1 と `Fatal error: Out of memory.` を照合します。timeout や signal 終了は合格にしません。
+
+これらは `check.sh` で毎回実行し、Ruby の必須 PASS も照合します。header 以外の任意破損 binary の安全な拒否、BM の RRAM 配置・alignment・RAM 内訳、実機 OOM 後の復旧はこの試験の対象外です。製品 bytecode のオプションは変更しません。
 
 ## RBOS の Ruby API を追加する
 

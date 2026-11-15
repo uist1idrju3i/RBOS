@@ -122,6 +122,40 @@ for profile in stress fault; do
 done
 echo 'PASS: compiled stress spinners and OOM fault task (compile only)'
 
+for fixture in empty bytecode_mutation bytecode_lifetime bytecode_lifetime_consumer; do
+  symbol="${fixture#bytecode_}"
+  "$mrbc" "-Bbytecode_$symbol" -o "$build/bytecode_$symbol.c" "$root/tests/mruby/$fixture.rb"
+done
+python3 - "$build" <<'PY'
+from pathlib import Path
+import re
+import sys
+build = Path(sys.argv[1])
+source = (build / 'bytecode_empty.c').read_text()
+for name, index in [('wrong_magic', 0), ('wrong_version', 4)]:
+    tokens = list(re.finditer(r'0x[0-9a-fA-F]{2}', source))
+    token = tokens[index]
+    changed = source[:token.start()] + '0x00' + source[token.end():]
+    (build / f'bytecode_{name}.c').write_text(changed.replace('bytecode_empty', f'bytecode_{name}'))
+PY
+emcc -O1 -Wall -Wextra -Wno-unused-parameter \
+  -include "$root/tools/mrubyc-wasm/runner_config.h" \
+  -I"$build" -I"$build/mrubyc/src" -I"$build/mrubyc/hal/emscripten" \
+  -DMAX_VM_COUNT=32 -sASYNCIFY -sENVIRONMENT=node -sEXIT_RUNTIME=1 \
+  -sASSERTIONS=1 -sSTACK_OVERFLOW_CHECK=1 -sCHECK_NULL_WRITES=1 \
+  -sSTACK_SIZE=1048576 -sASYNCIFY_STACK_SIZE=65536 \
+  "$root/tools/mrubyc-wasm/test_bytecode.c" "${sources[@]}" \
+  "$build/mrubyc/hal/emscripten/hal.c" -o "$build/test-bytecode.js"
+timeout 30s node "$build/test-bytecode.js" | tee "$build/bytecode.log"
+for marker in \
+  'const empty Ruby accepted' 'bytecode String changed' \
+  'const blob unchanged after String mutation' 'bytecode lifetime producer' \
+  'bytecode lifetime consumer' 'const symbol and method retained after producer deletion' \
+  'const bad magic task rejected' 'const bad version task rejected' \
+  'task creation refused on VM ID exhaustion'; do
+  grep -Fxq "PASS: $marker" "$build/bytecode.log"
+done
+
 mutex_case() {
   local expected=$1 log="$build/mutex-$1.log"
   shift
@@ -169,6 +203,7 @@ expect_failure 2 'Unsupported int64 (set MRBC_INT64 in vm_config)' "$build/idiom
 expect_failure 2 'Usage:'
 expect_failure 2 'Cannot open bytecode:' "$build/missing.mrb"
 expect_failure 2 'Invalid bytecode size:' "$root/tests/mruby/empty.rb"
+expect_failure 1 'Fatal error: Out of memory.' "$build/p1-fault-oom.mrb"
 python3 - "$build/empty.mrb" "$build/wrong-version.mrb" <<'PY'
 from pathlib import Path
 import sys
