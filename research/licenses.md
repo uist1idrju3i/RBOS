@@ -41,6 +41,16 @@ MPIG の community-library 紹介部分は MPIG 文書ライセンスの対象�
 
 OpenBlink の実装からコードを転用する場合は ViXion の表示を保持します。パターンだけを参考に新規実装したファイルへ、転用していないコードの著作権表示を機械的に追加しません。引用する設計根拠と、コピーするソースを区別します。
 
-現在は submodule の固定と調査文書のみです。ファームウェア配布物、署名鍵の管理、SDK バイナリの同梱方法は未実装です。製品化前に依存一覧と同梱ライセンス一覧を成果物へ含めることを受け入れ条件にします。
+## firmware の配布 notice
+
+app 更新 image と初期導入 image の両方に、`THIRD_PARTY_NOTICES` と `third-party/` を添付します。[collector](../tools/bm-build/collect-evidence.sh) は各 build 後に vendor・固定 workspace・実際の compiler の license 本文を読み直します。[部品定義](../tools/bm-build/third-party-components.json)を使う[生成器](../tools/bm-build/third-party-notices.py)が inventory と本文を生成し、通常の CI artifact と release evidence の両方に同梱します。vendor は変更しません。
+
+`third-party/inventory.json` は部品ごとの license、元ファイルの相対 path・SHA256、project revision、適用 image、map の archive/member と map の SHA256 を記録します。非ゼロの output section を根拠に選び、discarded section、ゼロ長 section、`LOAD` だけの archive は除きます。LTO は選択された plugin 入力も記録するため、個別 object の最終的な残存とは区別します。新しい未分類 archive が現れた場合は収集を止めます。
+
+配布区分は app 更新（app・loader）と初期導入（app・loader・MCUboot・installer・S115）です。installer も実行 code を含むため対象にします。S115 は ELF の link 対象ではなく HEX であり、元 HEX の SHA256 と data 領域を記録し、署名済み S115 と `production.hex` の payload を照合します。host mrbc・emsdk・toolchain binary は再配布しないため、この inventory の部品には含めません。compiler runtime の libgcc と picolibc は image に link されるので含めます。
+
+MCUboot の NOTICE、S115 の agreement と ARM attribution、picolibc の COPYING 類、libgcc の GPL 本文と runtime exception を同梱します。Mbed TLS と Oberon の Mbed TLS 由来部分は Apache-2.0 を選びます。この選択は Oberon の Nordic 5-Clause 部分を変更しません。S115 の Nordic IC 製品・更新向けの表示例外に依存せず、ARM の BSD-3-Clause 表示も添付します。
+
+[verifier](../tools/bm-build/verify-evidence.py) は map と inventory を再照合し、必須 license・NOTICE の欠落、本文の変更、適用 image の不一致を拒否します。これは技術的な収集・整合性検査です。header 由来の code、ファイル単位の例外、LTO 後の全 object を含めた最終的な license 適合は未確認であり、正式配布前の確認事項として残します。署名鍵の管理と実機更新の受入れも、notice の検査とは別です。
 
 [調査索引へ戻る](README.md)

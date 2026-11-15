@@ -13,6 +13,7 @@ verify_bytecode = runpy.run_path(str(HERE / 'bytecode-manifest.py'))['verify']
 verify_layout = runpy.run_path(str(HERE / 'bytecode-layout.py'))['verify']
 verify_supervisor = runpy.run_path(str(HERE / 'check-supervisor.py'))['verify']
 verify_watchdog = runpy.run_path(str(HERE / 'check-watchdog.py'))['verify']
+verify_notices = runpy.run_path(str(HERE / 'third-party-notices.py'))['verify']
 PROFILES = ("debug", "release", "stress", "oom")
 IRQS = {213: "saadc_irq", 218: "button_irq20", 268: "button_irq30"}
 HEX = r"0x[0-9a-fA-F]+"
@@ -192,10 +193,12 @@ def verify(root, revision, version, profile, expected_modules, baseline=None, ex
         before = map_sizes((baseline / "firmware/zephyr/zephyr.map").read_text())
         delta = {key: value - before[key] for key, value in sizes.items()
                  if value is not None and before[key] is not None}
+    notices = verify_notices(root)
     return {"revision": revision, "image_version": list(version), "profile": profile,
             "sha256": hashlib.sha256(image).hexdigest(), "checksummed_files": count,
             "vectors": vectors, "map": sizes, "build_log": used, "map_delta": delta,
-            "bytecode": bytecode, "layout": layout, "supervisor": supervisor, "watchdog": watchdog}
+            "bytecode": bytecode, "layout": layout, "supervisor": supervisor, "watchdog": watchdog,
+            "third_party": notices}
 
 
 def version_tuple(text):

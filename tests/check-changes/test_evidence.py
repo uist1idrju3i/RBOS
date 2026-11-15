@@ -7,6 +7,7 @@ import tempfile
 import unittest
 
 from bytecode_fixture import make_bytecode_bundle, make_layout_fixture
+from notice_fixture import prepare
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -75,6 +76,7 @@ class EvidenceTests(unittest.TestCase):
                 path = binaries / name
                 path.write_text(fake)
                 path.chmod(0o755)
+            prepare(build, workspace, base)
             result = subprocess.run([
                 "bash", str(ROOT / "tools/bm-build/collect-evidence.sh"),
                 str(workspace), str(build), str(output), str(build_log),
@@ -86,6 +88,8 @@ class EvidenceTests(unittest.TestCase):
             self.assertTrue((output / 'firmware/bytecode-layout.json').is_file())
             self.assertTrue((output / 'firmware/supervisor-link.json').is_file())
             self.assertTrue((output / 'firmware/watchdog.json').is_file())
+            self.assertTrue((output / 'THIRD_PARTY_NOTICES').is_file())
+            self.assertTrue((output / 'third-party/inventory.json').is_file())
             self.assertFalse((output / 'firmware/zephyr/zephyr.elf').exists())
             self.assertTrue((output / 'firmware/bytecode/generated/rbos_adc_bytecode.c').is_file())
             self.assertTrue((output / 'firmware/bytecode/inputs/src/rbos/adc.rb').is_file())

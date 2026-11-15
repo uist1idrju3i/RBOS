@@ -9,6 +9,7 @@ import tempfile
 import unittest
 
 from bytecode_fixture import make_bytecode_bundle, make_layout_fixture
+from notice_fixture import bundle
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location("verify_evidence", ROOT / "tools/bm-build/verify-evidence.py")
@@ -85,10 +86,17 @@ def fixture(root, profile="debug"):
     (root / "build.log").write_text(LOG)
     make_bytecode_bundle(root / 'firmware/bytecode', REVISION, profile)
     make_layout_fixture(root / 'firmware/bytecode', app)
+    bundle(root)
     rehash(root)
 
 
 class VerifyEvidenceTests(unittest.TestCase):
+    def test_missing_notice_is_rejected_after_rehash(self):
+        (self.root / "THIRD_PARTY_NOTICES").unlink()
+        rehash(self.root)
+        with self.assertRaises(FileNotFoundError):
+            self.verify()
+
     def test_watchdog_configuration_must_match_elf_evidence(self):
         path = self.root / 'firmware/zephyr/.config'
         path.write_text(path.read_text().replace('CONFIG_RBOS_WDT_TIMEOUT_MS=2000', 'CONFIG_RBOS_WDT_TIMEOUT_MS=2100'))

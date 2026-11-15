@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "components": {
+    "mrubyc": {"license": "BSD-3-Clause", "root": "mrubyc", "files": [["LICENSE"]]},
+    "sdk-nrf-bm": {"license": "LicenseRef-Nordic-5-Clause", "root": "nrf-bm", "files": [["LICENSE"]]},
+    "sdk-nrf": {"license": "LicenseRef-Nordic-5-Clause", "root": "nrf", "files": [["LICENSE"]]},
+    "zephyr": {"license": "Apache-2.0", "root": "zephyr", "files": [["LICENSE"]]},
+    "mcuboot": {"license": "Apache-2.0", "root": "mcuboot", "files": [["LICENSE"], ["NOTICE"]]},
+    "nrfx": {"license": "BSD-3-Clause", "root": "hal_nordic", "files": [["nrfx/drivers/src/nrfx_saadc.c", 1, 31]]},
+    "zcbor": {"license": "Apache-2.0", "root": "zcbor", "files": [["LICENSE"]]},
+    "mbedtls": {"license": "Apache-2.0", "root": "mbedtls", "files": [["LICENSE"]]},
+    "oberon-psa": {"license": "LicenseRef-Nordic-5-Clause AND Apache-2.0", "root": "oberon-psa-crypto", "files": [["LICENSE"], ["library/psa_crypto.c", 1, 11], ["mbedtls:LICENSE"]]},
+    "picolibc": {"license": "LicenseRef-picolibc-bundle", "root": "toolchain", "files": [["arm-zephyr-eabi/share/licenses/picolibc/COPYING.picolibc"], ["arm-zephyr-eabi/share/licenses/picolibc/COPYING.NEWLIB"], ["arm-zephyr-eabi/share/licenses/picolibc/COPYING.GPL2"]]},
+    "libgcc": {"license": "GPL-3.0-or-later WITH GCC-exception-3.1", "root": "toolchain", "files": [["arm-zephyr-eabi/share/licenses/gcc/COPYING3"], ["arm-zephyr-eabi/share/licenses/gcc/COPYING.RUNTIME"]]},
+    "s115": {"license": "LicenseRef-Nordic-5-Clause AND BSD-3-Clause", "root": "nrf-bm", "files": [["components/softdevice/nrf54l/s115/s115_10.0.1_license-agreement.txt"], ["components/softdevice/nrf54l/s115/s115_10.0.1_license-attribution.txt"]]}
+  }
+}
