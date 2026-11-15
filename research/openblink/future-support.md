@@ -4,6 +4,8 @@
 
 ## 再検討する項目
 
+2026-11-15 の追加調査: [ZMS の直接参照と GC・symbol 寿命・整合性の訂正](../dfu/zms-direct-execution.md)、[minify・圧縮メモリの測定と未確認条件](../mrubyc/bytecode-compression.md)。いずれも将来案の資料で、保存方式の採用決定ではありません。
+
 | 項目 | 将来の検討内容 |
 |---|---|
 | 転送 | BLE service/独自 MCUmgr group、offset、長さ、再送、権限、host tool |
