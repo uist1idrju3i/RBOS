@@ -132,4 +132,4 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/bytecode/manifest.json"
   DEPENDS ${bytecode_records} ${bytecode_outputs} "${bytecode_manifest}" "${RBOS_ROOT}/tools/bm-build/check-bytecode.py"
   VERBATIM)
 add_custom_target(rbos_bytecode_manifest ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/bytecode/manifest.json")
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${bytecode_manifest}" "${RBOS_ROOT}/tools/bm-build/check-bytecode.py")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${bytecode_manifest}" "${RBOS_ROOT}/tools/bm-build/check-bytecode.py" "${RBOS_MRBC}")

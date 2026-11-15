@@ -89,6 +89,44 @@ class BytecodeManifestTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'no compiler records'):
             manifest_tool['bundle'](SimpleNamespace(records=[]))
 
+    def test_cmake_reconfigures_mrblib_after_external_compiler_replacement(self):
+        base = Path(self.directory.name)
+        source, build = base / 'cmake', base / 'build'
+        source.mkdir()
+        compiler = base / 'mrbc'
+        header = '0x52,0x49,0x54,0x45,0x30,0x34,0x30,0x30,0x00,0x00,0x00,0x0c'
+        compiler.write_text('#!/usr/bin/env python3\nimport sys\nfrom pathlib import Path\n'
+                            'args = sys.argv[1:]\n'
+                            'if args == ["--version"]: print("mruby 4.0.0 (2026-04-20)")\n'
+                            'else:\n'
+                            ' symbol = next(arg[2:] for arg in args if arg.startswith("-B"))\n'
+                            ' option = next(arg for arg in args if arg.startswith("-o"))\n'
+                            ' output = args[args.index(option)+1] if option == "-o" else option[2:]\n'
+                            f' Path(output).write_text("#include <stdint.h>\\nconst uint8_t " + symbol + "[] = {{{header}}};\\n")\n')
+        compiler.chmod(0o755)
+        (source / 'CMakeLists.txt').write_text(
+            'cmake_minimum_required(VERSION 3.20)\nproject(bytecode_dependency C)\n'
+            'add_library(app STATIC)\n'
+            f'set(CMAKE_CURRENT_SOURCE_DIR "{ROOT}/firmware")\n'
+            f'set(RBOS_MRBC "{compiler}" CACHE FILEPATH "")\n'
+            'set(CONFIG_RBOS_TEST_PROFILE_OOM ON)\n'
+            f'include("{ROOT}/firmware/cmake/mrubyc.cmake")\n')
+
+        def run(*args):
+            result = subprocess.run(['cmake', *map(str, args)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+        run('-S', source, '-B', build, '-G', 'Ninja')
+        run('--build', build, '--target', 'rbos_bytecode_manifest')
+        first = json.loads((build / 'bytecode/manifest.json').read_text())
+        compiler.write_text(compiler.read_text() + '\n# replacement binary\n')
+        run('--build', build, '--target', 'rbos_bytecode_manifest')
+        second = json.loads((build / 'bytecode/manifest.json').read_text())
+        self.assertNotEqual(first['compiler']['sha256'], second['compiler']['sha256'])
+        self.assertEqual(second['compiler']['sha256'], manifest_tool['digest'](compiler.read_bytes()))
+        record = json.loads((build / 'mrubyc/src/mrblib.c.record.json').read_text())
+        self.assertEqual(record['compiler'], second['compiler'])
+
     def test_empty_duplicate_wrong_profile_and_metadata(self):
         for field, value in [('schema', 2), ('schema', True), ('profile', 'oom'), ('blobs', []), ('blobs', None)]:
             changed = copy.deepcopy(self.manifest)
