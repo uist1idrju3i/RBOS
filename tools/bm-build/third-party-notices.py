@@ -47,10 +47,10 @@ def linked(mapping):
         for size, member in re.findall(r"0x[0-9a-fA-F]+\s+(0x[0-9a-fA-F]+)\s+(" + ARCHIVE + r")", line):
             if int(size, 16):
                 members.add(member)
-    # LTO merges input sections: preserve the map's selected plugin inputs too.
+    # LTO merges input sections: retain the map's selected archive inputs too.
     if ".ltrans" in output:
         inputs = mapping.split("Discarded input sections", 1)[0]
-        members.update(re.findall(r"(" + ARCHIVE + r")(?:\s*\n)?[^\n]*symbol from plugin", inputs))
+        members.update(re.findall(r"^(" + ARCHIVE + r")", inputs, re.M))
     require(members, "No linked archive contributions")
     return sorted(members)
 

@@ -45,7 +45,7 @@ OpenBlink の実装からコードを転用する場合は ViXion の表示を�
 
 app 更新 image と初期導入 image の両方に、`THIRD_PARTY_NOTICES` と `third-party/` を添付します。[collector](../tools/bm-build/collect-evidence.sh) は各 build 後に vendor・固定 workspace・実際の compiler の license 本文を読み直します。[部品定義](../tools/bm-build/third-party-components.json)を使う[生成器](../tools/bm-build/third-party-notices.py)が inventory と本文を生成し、通常の CI artifact と release evidence の両方に同梱します。vendor は変更しません。
 
-`third-party/inventory.json` は部品ごとの license、元ファイルの相対 path・SHA256、project revision、適用 image、map の archive/member と map の SHA256 を記録します。非ゼロの output section を根拠に選び、discarded section、ゼロ長 section、`LOAD` だけの archive は除きます。LTO は選択された plugin 入力も記録するため、個別 object の最終的な残存とは区別します。新しい未分類 archive が現れた場合は収集を止めます。
+`third-party/inventory.json` は部品ごとの license、元ファイルの相対 path・SHA256、project revision、適用 image、map の archive/member と map の SHA256 を記録します。非 LTO では非ゼロの output section を根拠に選び、discarded section、ゼロ長 section、`LOAD` だけの archive は除きます。LTO は選択された archive 入力も記録するため、個別 object の最終的な残存とは区別します。新しい未分類 archive が現れた場合は収集を止めます。
 
 配布区分は app 更新（app・loader）と初期導入（app・loader・MCUboot・installer・S115）です。installer も実行 code を含むため対象にします。S115 は ELF の link 対象ではなく HEX であり、元 HEX の SHA256 と data 領域を記録し、署名済み S115 と `production.hex` の payload を照合します。host mrbc・emsdk・toolchain binary は再配布しないため、この inventory の部品には含めません。compiler runtime の libgcc と picolibc は image に link されるので含めます。
 

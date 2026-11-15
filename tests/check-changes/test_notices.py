@@ -65,8 +65,9 @@ class NoticeTests(unittest.TestCase):
 
     def test_lto_plugin_inputs_are_recorded(self):
         text = "plugin.a(a.o) (symbol from plugin) (function)\nDiscarded input sections\n"
+        text = "app/libapp.a(main.c.obj) (--whole-archive)\n" + text
         text += "Linker script and memory map\n .text 0x1000 0x10 /tmp/cc.ltrans0.o\n"
-        self.assertEqual(notices["linked"](text), ["plugin.a(a.o)"])
+        self.assertEqual(notices["linked"](text), ["app/libapp.a(main.c.obj)", "plugin.a(a.o)"])
 
     def test_changed_map_notice_or_s115_is_rejected(self):
         for relative in ("firmware/zephyr/zephyr.map", "THIRD_PARTY_NOTICES", "production.hex"):
