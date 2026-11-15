@@ -6,7 +6,9 @@
 
 ### Changed
 
-- 0.2.0 向けに、Ruby の system task を C supervisor へ置き換えました。VM quantum 復帰と idle から期限付きで maintenance を実行し、全 user task が終了しても C の管理を続けます。統計の `service=` は `supervisor=` へ改名し、`idle=` とともに実際の maintenance 実行回数を数えます。LTO を拒否し、BM evidence で wrapper の実呼出しを照合します。Task API・LED0 の予約・WDT・fatal の挙動は変更しません。実機動作は未確認です。
+- 0.2.0で LED0 を C の状態表示専用に予約します。GPIO と Button からの取得・設定・読出し・書込みは pin の指定形式によらず `RuntimeError: Pin is reserved` となります。起動中と HAL の fatal 直前は点灯、scheduler 開始後の正常時は消灯とし、診断 Ruby は LED1 へ移しました。他の LED・Button pin、Task API、WDT は変更しません。実機の表示は未確認です。利用可能な pin が減る非互換 MINOR ですが、未公開の A3 PR 1 と同じ0.2.0に含め、VERSION は変更しません。
+
+- 0.2.0 向けに、Ruby の system task を C supervisor へ置き換えました。VM quantum 復帰と idle から期限付きで maintenance を実行し、全 user task が終了しても C の管理を続けます。統計の `service=` は `supervisor=` へ改名し、`idle=` とともに実際の maintenance 実行回数を数えます。LTO を拒否し、BM evidence で wrapper の実呼出しを照合します。Task API・WDT は変更しません。実機動作は未確認です。
 
 ### Removed
 

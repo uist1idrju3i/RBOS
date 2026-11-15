@@ -11,7 +11,7 @@ end
 button_error(ArgumentError) { Button.new }
 button_error(ArgumentError) { Button.new(:sw0, bad: 1) }
 button_error(TypeError) { Button.new(nil) }
-button_error(NotImplementedError) { Button.new(:led0) }
+button_error(NotImplementedError) { Button.new(:led1) }
 button_error(TypeError) { RBOSButtonSubscription.new }
 button = Button.new(:sw0)
 raise 'Button idle poll' unless button.poll.nil?

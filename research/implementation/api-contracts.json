@@ -15,7 +15,7 @@
       "keywords": "すべて拒否する。検査失敗時は backend を呼ばない。",
       "effects": "pin は物理電位で扱う。DT の active-low で反転しない。出力設定の初期値は low。",
       "waiting": "短い同期処理。協調待機・queue はない。",
-      "busy": "Button が所有する pin の設定・書込みは RuntimeError。",
+      "busy": "Button が所有する pin の設定・書込みは RuntimeError。system LED0 の物理 pin は backend/board が予約し、全 pin 形式・全 GPIO 操作を RuntimeError（Pin is reserved）として hardware access 前に拒否する。",
       "cancellation": "非同期要求を作らないため取消しはない。",
       "cleanup": "GPIO instance は lease を持たず、破棄時に pin 設定を変更しない。",
       "reuse": "Button の同期解放完了後に再利用できる。",
@@ -33,7 +33,7 @@
       "keywords": "すべて拒否する。",
       "effects": "DK の押下は物理値0。ISR は固定 ring に積み、foreground が配送する。Ruby Proc・task pointer・VM ID を native で保持しない。",
       "waiting": "poll は非待機。wait/each_event は sleep_ms で他 task に実行機会を譲る。",
-      "busy": "二重購読・所有 pin の変更を RuntimeError として拒否する。",
+      "busy": "二重購読・所有 pin の変更を RuntimeError として拒否する。system LED0 は全 pin 形式で RuntimeError（Pin is reserved）となり購読しない。",
       "cancellation": "close または task 終了で停止する。native が解除に失敗した場合は lease を保持する。",
       "cleanup": "partial unwatch の成功箇所を重ねて解放せず、再試行後に lease を返す。",
       "reuse": "generation の異なる旧 event を破棄し、VM ID 再利用先へ配送しない。",
@@ -441,6 +441,7 @@
         "gpio"
       ],
       "required_pass": [
+        "PASS: system LED reserved for all pin forms without hardware access",
         "PASS: GPIO pin modes physical levels errors and ownership"
       ]
     },

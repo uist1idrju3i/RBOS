@@ -1,5 +1,5 @@
 sleep_ms(10) until $p1_done
-led = GPIO.new(:led0, GPIO::OUT)
+led = GPIO.new(:led1, GPIO::OUT)
 led.write(1)
 buttons = [:sw0, :sw1, :sw2, :sw3].map { |pin| Button.new(pin) }
 rails = [:dvdd, :avdd, :vdd]

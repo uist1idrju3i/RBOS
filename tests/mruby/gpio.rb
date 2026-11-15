@@ -35,14 +35,31 @@ gpio_error(TypeError) { GPIO.new(:sw0, nil) }
 gpio_error(RangeError) { GPIO.new(:sw0, -1) }
 raise 'GPIO invalid input changed hardware' unless NativeFixture.gpio_calls == before
 
-led = GPIO.new(:led0, GPIO::OUT, **{})
+[:led0, 73, 'P2.9', 'P2.09'].each do |pin|
+  [Proc.new { GPIO.new(pin, GPIO::OUT) }, Proc.new { GPIO.setmode(pin, GPIO::IN) },
+   Proc.new { GPIO.read_at(pin) }, Proc.new { GPIO.high_at?(pin) }, Proc.new { GPIO.low_at?(pin) },
+   Proc.new { GPIO.write_at(pin, 1) }, Proc.new { Button.new(pin) }].each do |operation|
+    caught = false
+    begin
+      operation.call
+    rescue RuntimeError => error
+      raise 'GPIO reserved message' unless error.message == 'Pin is reserved'
+      caught = true
+    end
+    raise 'GPIO system LED must be reserved' unless caught
+  end
+end
+raise 'GPIO system LED touched hardware' unless NativeFixture.gpio_calls == before
+puts 'PASS: system LED reserved for all pin forms without hardware access'
+
+led = GPIO.new(:led1, GPIO::OUT, **{})
 raise 'GPIO write return' unless led.write(1).nil?
-raise 'GPIO physical equivalent' unless GPIO.read_at('P2.09') == 1 && GPIO.high_at?(73)
+raise 'GPIO physical equivalent' unless GPIO.read_at('P1.10') == 1 && GPIO.high_at?(42)
 raise 'GPIO predicate' unless led.high? && !led.low?
 raise 'GPIO read is integer' unless led.read == 1
-GPIO.write_at(73, 0)
-raise 'GPIO write_at equivalent' unless led.read == 0 && GPIO.low_at?(:led0)
-NativeFixture.gpio_level(73, 1)
+GPIO.write_at(42, 0)
+raise 'GPIO write_at equivalent' unless led.read == 0 && GPIO.low_at?(:led1)
+NativeFixture.gpio_level(42, 1)
 raise 'GPIO must read input, not latch' unless led.read == 1
 
 button = GPIO.new(:sw0, GPIO::IN | GPIO::PULL_UP)
@@ -87,8 +104,13 @@ NativeFixture.gpio_status = 0
 led.write(1)
 raise 'GPIO failed configure changed cached mode' unless led.read == 1
 500.times do
-  gpio = GPIO.new('P2.9', GPIO::OUT)
+  gpio = GPIO.new('P1.10', GPIO::OUT)
   gpio.write(1)
   raise 'GPIO repeated access' unless gpio.high?
+end
+[:led2, :led3].each do |pin|
+  other = GPIO.new(pin, GPIO::OUT)
+  other.write(1)
+  raise 'GPIO other LED must remain available' unless other.high?
 end
 puts 'PASS: GPIO pin modes physical levels errors and ownership'

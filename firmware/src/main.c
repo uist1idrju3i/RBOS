@@ -1,6 +1,4 @@
 #include <app_version.h>
-#include <board-config.h>
-#include <hal/nrf_gpio.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/logging/log_ctrl.h>
@@ -10,6 +8,7 @@
 #include "embedded.h"
 #include "runtime.h"
 #include "supervisor.h"
+#include "status_led.h"
 
 LOG_MODULE_REGISTER(rbos, CONFIG_RBOS_LOG_LEVEL);
 static uint8_t vm_pool[CONFIG_RBOS_VM_POOL_SIZE] __aligned(8);
@@ -18,8 +17,7 @@ int main(void)
 {
 	rbos_stack_paint();
 	LOG_INF("RBOS %s", APP_VERSION_EXTENDED_STRING);
-	nrf_gpio_cfg_output(BOARD_PIN_LED_0);
-	nrf_gpio_pin_write(BOARD_PIN_LED_0, BOARD_LED_ACTIVE_STATE);
+	rbos_status_led(true);
 
 	if (rbos_resources_probe()) mrbc_hal_abort("BM scheduler capacity probe failed\n");
 	if (rbos_ble_init()) mrbc_hal_abort("BLE initialization failed\n");
@@ -32,6 +30,7 @@ int main(void)
 		mrbc_set_task_name(task, rbos_tasks[i].name);
 	}
 	rbos_supervisor_start();
+	rbos_status_led(false);
 	int status = mrbc_run();
 	LOG_INF("Ruby scheduler returned %d; native supervisor continues", status);
 	while (1) {

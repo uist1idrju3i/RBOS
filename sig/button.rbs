@@ -1,4 +1,5 @@
 class Button
+  # System LED0 is rejected with RuntimeError("Pin is reserved").
   def self.new: (Integer | String | Symbol) -> Button
   def self.stats: () -> [Integer, Integer, Integer, Integer]
   def poll: () -> [Integer, Integer]?

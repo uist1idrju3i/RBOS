@@ -1,4 +1,6 @@
 class GPIO
+  # System LED0 is reserved by the board backend in every pin form.
+  # Access raises RuntimeError("Pin is reserved") before hardware access.
   IN: Integer
   OUT: Integer
   HIGH_Z: Integer
