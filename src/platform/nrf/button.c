@@ -7,6 +7,9 @@
 #include "runtime.h"
 #include "gpio.h"
 #include "button.h"
+#if defined(CONFIG_RBOS_SATURATION_FIXTURE)
+#include "rbos_fixture.h"
+#endif
 
 #define PIN(node) DT_PROP(node, pin)
 static nrfx_gpiote_t gpiote20 = NRFX_GPIOTE_INSTANCE(NRF_GPIOTE20);
@@ -26,6 +29,9 @@ BUILD_ASSERT(DT_PROP(DT_ALIAS(sw0), active_low) && DT_PROP(DT_ALIAS(sw1), active
 
 ISR_DIRECT_DECLARE(button_irq20)
 {
+#if defined(CONFIG_RBOS_SATURATION_FIXTURE)
+  rbos_fixture_irq();
+#endif
   nrfx_gpiote_irq_handler(&gpiote20);
   return 0;
 }
@@ -44,7 +50,12 @@ static void changed(nrfx_gpiote_pin_t pin, nrfx_gpiote_trigger_t trigger, void *
     if (!watches[i].active || watches[i].pin != pin) continue;
     struct rbos_event event = { .type = RBOS_EVENT_BUTTON, .source = pin,
       .value = nrf_gpio_pin_read(pin), .generation = watches[i].generation };
-    rbos_event_post(&event);
+    bool accepted = rbos_event_post(&event);
+#if defined(CONFIG_RBOS_SATURATION_FIXTURE)
+    rbos_fixture_edge(pin, event.value, accepted);
+#else
+    (void)accepted;
+#endif
     return;
   }
 }
@@ -81,7 +92,23 @@ enum rbos_status rbos_nrf_button_watch(void *context, uint32_t pin, uint32_t gen
   nrfx_gpiote_handler_config_t handler = { .handler = changed };
   nrfx_gpiote_input_pin_config_t config = { .p_trigger_config = &trigger,
     .p_handler_config = &handler };
-  if (nrfx_gpiote_input_configure(instance, pin, &config)) {
+  int configured;
+#if defined(CONFIG_RBOS_SATURATION_FIXTURE)
+  if (pin == RBOS_FIXTURE_PIN) {
+    nrfx_gpiote_output_config_t output = { .drive = NRF_GPIO_PIN_S0S1,
+      .input_connect = NRF_GPIO_PIN_INPUT_CONNECT, .pull = NRF_GPIO_PIN_NOPULL };
+    nrfx_gpiote_task_config_t task = { .task_ch = channel,
+      .polarity = NRF_GPIOTE_POLARITY_TOGGLE, .init_val = NRF_GPIOTE_INITIAL_VALUE_LOW };
+    trigger.p_in_channel = NULL;
+    configured = nrfx_gpiote_output_configure(instance, pin, &output, &task);
+    if (!configured) configured = nrfx_gpiote_input_configure(instance, pin, &config);
+    if (!configured) configured = rbos_fixture_connect(nrfx_gpiote_out_task_address_get(instance, pin));
+  } else
+#endif
+  {
+    configured = nrfx_gpiote_input_configure(instance, pin, &config);
+  }
+  if (configured) {
     nrfx_gpiote_pin_uninit(instance, pin);
     nrfx_gpiote_channel_free(instance, channel);
     port->PIN_CNF[local_pin] = previous;
@@ -89,13 +116,22 @@ enum rbos_status rbos_nrf_button_watch(void *context, uint32_t pin, uint32_t gen
     return RBOS_IO_ERROR;
   }
   /* Configure electrical input only after all fallible allocation/configuration. */
-  nrf_gpio_cfg_input(pin, NRF_GPIO_PIN_PULLUP);
+#if defined(CONFIG_RBOS_SATURATION_FIXTURE)
+  if (pin != RBOS_FIXTURE_PIN)
+#endif
+    nrf_gpio_cfg_input(pin, NRF_GPIO_PIN_PULLUP);
   watches[i].instance = instance;
   watches[i].generation = generation;
   watches[i].channel = channel;
   watches[i].unconfigured = false;
   watches[i].active = true;
   nrfx_gpiote_trigger_enable(instance, pin, true);
+#if defined(CONFIG_RBOS_SATURATION_FIXTURE)
+  if (pin == RBOS_FIXTURE_PIN) {
+    nrfx_gpiote_out_task_enable(instance, pin);
+    rbos_fixture_begin(pin, generation);
+  }
+#endif
   irq_unlock(key);
   return RBOS_OK;
 }
@@ -107,6 +143,9 @@ enum rbos_status rbos_nrf_button_unwatch(void *context, uint32_t pin, uint32_t g
   for (unsigned int i = 0; i < 4; ++i) {
     if (!watches[i].active || watches[i].pin != pin || watches[i].generation != generation) continue;
     if (!watches[i].unconfigured) {
+#if defined(CONFIG_RBOS_SATURATION_FIXTURE)
+      if (pin == RBOS_FIXTURE_PIN) rbos_fixture_disconnect();
+#endif
       nrfx_gpiote_trigger_disable(watches[i].instance, pin);
       if (nrfx_gpiote_pin_uninit(watches[i].instance, pin)) { irq_unlock(key); return RBOS_IO_ERROR; }
       watches[i].unconfigured = true;

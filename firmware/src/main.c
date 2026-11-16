@@ -10,6 +10,7 @@
 #include "supervisor.h"
 #include "status_led.h"
 #include "rbos/watchdog.h"
+#include "rbos_fixture.h"
 
 LOG_MODULE_REGISTER(rbos, CONFIG_RBOS_LOG_LEVEL);
 static uint8_t vm_pool[CONFIG_RBOS_VM_POOL_SIZE] __aligned(8);
@@ -23,6 +24,9 @@ int main(void)
 
 	if (rbos_resources_probe()) mrbc_hal_abort("BM scheduler capacity probe failed\n");
 	if (rbos_ble_init()) mrbc_hal_abort("BLE initialization failed\n");
+#if defined(CONFIG_RBOS_RETENTION_FIXTURE)
+	rbos_retention_start();
+#endif
 	rbos_resources_log();
 	mrbc_init(vm_pool, sizeof(vm_pool));
 	rbos_define_classes(rbos_nrf_backend());

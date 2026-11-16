@@ -2,6 +2,9 @@
 #include <limits.h>
 #include "rbos/button.h"
 #include "rbos/gpio.h"
+#if defined(CONFIG_RBOS_SATURATION_FIXTURE)
+#include "rbos_fixture.h"
+#endif
 
 extern const uint8_t rbos_button_bytecode[];
 static const struct rbos_backend *device;
@@ -127,6 +130,9 @@ static void poll(mrbc_vm *vm, mrbc_value v[], int argc)
   mrbc_value count = mrbc_integer_value(buttons[i].count);
   mrbc_array_push(&array, &level);
   mrbc_array_push(&array, &count);
+#if defined(CONFIG_RBOS_SATURATION_FIXTURE)
+  rbos_fixture_delivery(buttons[i].pin, buttons[i].level, buttons[i].count);
+#endif
   buttons[i].count = 0;
   rbos_return_owned(&v[0], array);
 }

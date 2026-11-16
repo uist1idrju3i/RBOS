@@ -23,7 +23,7 @@ S115 の予約は `vendor/sdk-nrf-bm/components/softdevice/nrf54l/s115/s115_API/
 | UARTE20 / SERIAL20 IRQ198 | BM console/logging、既定 NVIC priority5 | TX=P1.04、任意 CTS=P1.07。SPIM/TWIM 等の同じ SERIAL20 instance と共有しない |
 | UARTE30 / SERIAL30 IRQ260 | BOARD_APP と BOARD_SHELL の両方の既定 | TX/RX=P0.00/P0.01、任意 RTS/CTS=P0.02/P0.03。現 app の shell は無効。将来 application UART と shell を同時に有効化しない |
 | TIMER24 IRQ206 | NFC の nrfx_nfct が使う候補 | NFC を採用した構成では予約し、汎用 timer と重ねない。現 app で NFC は初期化していない |
-| GPIOTE20 IRQ0=218、GPIOTE30 IRQ0=268、各 NVIC priority7 | Button backend が instance を所有 | P1 Button0..2 は20、P0 Button3 は30。watch ごとに IN channel を allocator から確保し、unwatch で解放。PORT/SENSE/DPPI は使わない |
+| GPIOTE20 IRQ0=218、GPIOTE30 IRQ0=268、各 NVIC priority7 | Button backend が instance を所有 | 通常 image は P1 Button0..2 が20、P0 Button3 が30。watch ごとに IN channel を確保・解放し、PORT/SENSE/DPPI は使わない。[A7 fixture](a7-fixtures.md)限定で sw0 を P1.11 の OUT＋PORT/SENSE に置換し、TIMER21→DPPIC20 の接続を動的確保する |
 | GPIO P0/P1/P2 | DT メタデータに列挙した8 pinだけを GPIO へ公開 | LED0..3=73/42/71/46、Button0..3=45/41/40/4。全 pin 表記で物理値。Button 所有中は再設定・write を busy にし、その他の pin は reserved |
 | SAADC channel0、IRQ213 / NVIC priority7、4-byte aligned static sample | 電源 ADC backend | S115 の上記予約には含まれない。DVDD/AVDD/VDD は一つの owner で排他し、後発は busy。外部 pin ADC も将来この owner を使う。[停止確認と寿命](adc-api.md) |
 | LED0=P2.09 | 起動 C、自己検査後は Ruby 診断 task | GPIO API へ引き渡して点灯。現行 board の LED は active-high |
