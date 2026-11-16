@@ -79,4 +79,4 @@ fixture は内部試験用の既定無効機能で、通常の Ruby API・board 
 
 ## BM/toolchain の定期確認
 
-`.github/workflows/vendor-release-watch.yml` は毎週月曜03:23 UTC（日本時間12:23）に実行され、`tools/vendor-release-watch.py` が sdk-nrf-bm を含む正式 release tag を監視して Issue 通知します。**toolchain image digest/bundle や sdk-nrf の新版そのものは、独立した監視対象ではありません。** BM の正式更新を検出したら manifest と対応 toolchain を併せて評価する運用です。v3.4.x LTS への更新条件は [toolchain 方針](toolchain-container.md)を参照してください。今回は監視範囲を追加していません。
+`.github/workflows/vendor-release-watch.yml` は毎週月曜03:23 UTC（日本時間12:23）に実行されます。`tools/vendor-release-watch.py` は sdk-nrf-bm を含む正式 release tag を監視し、新しい BM の sdk-nrf revision・対応 bundle・image digest を BM の Issue 本文に記載します。固定 bundle tag の digest 変化や、新 BM に対応する bundle/digest と固定値の差分は、toolchain の Issue に通知します。**通知のみで、固定値は自動更新しません。** sdk-nrf 単独の新版一覧や全 toolchain tag の変化は対象外です。公開 metadata・重複抑止・対象外の詳細は [現在の監視範囲](vendor-watch-toolchain.md)、v3.4.x LTS への更新条件は [toolchain 方針](toolchain-container.md)を参照してください。
