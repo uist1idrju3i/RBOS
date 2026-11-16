@@ -15,6 +15,8 @@ SDK の build は [BM の再現手順と P1 map 比較](implementation/bm-build.
 
 P4 の [host/build 受け入れ記録（A1）](implementation/p4-host-acceptance.md)に、PR #45〜#50 の試験、四 profile の CI layout 結果、空・製品 Button の Wasm RAM 内訳をまとめました。実機 pointer、high-water、OOM 後の復旧、DFU、FLASH segment の RWE は Phase B に残しています。
 
+A5 の [toolchain container 評価](implementation/toolchain-container.md)に、公式 image と bundle の四構成比較、hash、CI 移行の理由、BM release に合わせる LTS 方針を記録しました。
+
 ## Ruby らしさと共通 I/O API
 
 P2 の [調査判断・検証結果と振り返り](implementation/retrospective-P2.md)に、採用・不採用の理由、四構成の証拠、改善4項目と文書への反映確認をまとめました。P2 のコード実装と CLI 検査は実施済みですが、実機受け入れは未完了です。

@@ -1,0 +1,442 @@
+{
+  "base_commit": "c250ccfd05b778a2401dc6db5685d27e73b88178",
+  "image": "ghcr.io/nrfconnect/sdk-nrf-toolchain@sha256:f24d8932ff081ebcd8da9c248f4449bdabe461c0620a7a4ac9e95eb577ba2276",
+  "safe": true,
+  "results": [
+    {
+      "profile": "debug",
+      "artifact": "firmware/zephyr/zephyr.elf",
+      "bundle_sha256": "d814bbfcaf911c0882a07c1894a87669c3465be16e69bdae7aac65dcc88eb265",
+      "container_sha256": "86774e95651869ea206a7ce7e38caf02207aba249135c2caff2f84c5e7fde772",
+      "equal": false,
+      "stripped_bundle_sha256": "ab6aa174f8765eb379b340a992606c86ce7965dfcb2eaae0978db0ecbe33877e",
+      "stripped_container_sha256": "ab6aa174f8765eb379b340a992606c86ce7965dfcb2eaae0978db0ecbe33877e",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "debug",
+      "artifact": "firmware/zephyr/zephyr.hex",
+      "bundle_sha256": "b2859a66aa748799c1af5646906b36b31dacc6ea570d71ed9292f7307aa363a3",
+      "container_sha256": "b2859a66aa748799c1af5646906b36b31dacc6ea570d71ed9292f7307aa363a3",
+      "equal": true
+    },
+    {
+      "profile": "debug",
+      "artifact": "firmware_loader/zephyr/zephyr.elf",
+      "bundle_sha256": "e0e6ad761deb4c09ad546111482047456c8129e32673a738a217e29d9f1cdce8",
+      "container_sha256": "fc14b4d34b16a685261b2fdb26c700e7e8d6172f0b0f5d7647d4b2ed82e88d5f",
+      "equal": false,
+      "stripped_bundle_sha256": "4603b87e4a8cdd892f1fd89abfcff99bd51918fe9c83652c231a26a79190e522",
+      "stripped_container_sha256": "4603b87e4a8cdd892f1fd89abfcff99bd51918fe9c83652c231a26a79190e522",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "debug",
+      "artifact": "firmware_loader/zephyr/zephyr.hex",
+      "bundle_sha256": "70d6a686653926b221416854c2978e22700fc25faac3914b7d38580419078249",
+      "container_sha256": "70d6a686653926b221416854c2978e22700fc25faac3914b7d38580419078249",
+      "equal": true
+    },
+    {
+      "profile": "debug",
+      "artifact": "installer/zephyr/zephyr.elf",
+      "bundle_sha256": "4da111f2618cfe086c90511bea685968ec602e67bf019730d526e89460aaa0cf",
+      "container_sha256": "ce49190708714d3c13ed4460228191dd185958cb700648cd6d9b1dbc721fd166",
+      "equal": false,
+      "stripped_bundle_sha256": "e21ef484478ed2fe765e142be61cdc6a9478a0bdddd659d8ee782f55c8f56b83",
+      "stripped_container_sha256": "e21ef484478ed2fe765e142be61cdc6a9478a0bdddd659d8ee782f55c8f56b83",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "debug",
+      "artifact": "installer/zephyr/zephyr.hex",
+      "bundle_sha256": "9aeceddd352026bc270378ecaaac77bfdaccc8bee6332d9e1b0d5407e767862f",
+      "container_sha256": "9aeceddd352026bc270378ecaaac77bfdaccc8bee6332d9e1b0d5407e767862f",
+      "equal": true
+    },
+    {
+      "profile": "debug",
+      "artifact": "mcuboot/zephyr/zephyr.elf",
+      "bundle_sha256": "cec280ec624cc17da3f4d2ed7b4fea6dd49f7e99aaa540c5fee4016075383830",
+      "container_sha256": "074c13d1a8a7afdf4d2b4b3304f513c58c4dda603bdf504ee46a5c7d7c26c3c3",
+      "equal": false,
+      "stripped_bundle_sha256": "ec7f44e94b7d2e2335a5c93086f73bddc76771cec1812b740463c58bb2480fda",
+      "stripped_container_sha256": "ec7f44e94b7d2e2335a5c93086f73bddc76771cec1812b740463c58bb2480fda",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line",
+        ".strtab",
+        ".symtab"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "debug",
+      "artifact": "mcuboot/zephyr/zephyr.hex",
+      "bundle_sha256": "804574a20f64d124cbeb69a92d3fd682dc9d3149785093d803eae0f05724c427",
+      "container_sha256": "804574a20f64d124cbeb69a92d3fd682dc9d3149785093d803eae0f05724c427",
+      "equal": true
+    },
+    {
+      "profile": "release",
+      "artifact": "firmware/zephyr/zephyr.elf",
+      "bundle_sha256": "3785e05b3781a1fd2b605ed94634a22d330502aff482fb8a47b85947fdd8fb76",
+      "container_sha256": "975ed0661615a283865153a369ee2d3c3d76ffebeb5ec42084f3fa9ee9e179cb",
+      "equal": false,
+      "stripped_bundle_sha256": "822d6178f6f55d297b0b52b8d86aa7156543efaf832b59592487a42bed3ae1ba",
+      "stripped_container_sha256": "822d6178f6f55d297b0b52b8d86aa7156543efaf832b59592487a42bed3ae1ba",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "release",
+      "artifact": "firmware/zephyr/zephyr.hex",
+      "bundle_sha256": "29e938997290b9143490482e8e298be10c89b1ce8edc8f9fbce58177dd6fa2e9",
+      "container_sha256": "29e938997290b9143490482e8e298be10c89b1ce8edc8f9fbce58177dd6fa2e9",
+      "equal": true
+    },
+    {
+      "profile": "release",
+      "artifact": "firmware_loader/zephyr/zephyr.elf",
+      "bundle_sha256": "a21db7bd51f5628c17332a8eff8c013d9e04e4f3e2209e89e773995e30a8922c",
+      "container_sha256": "387452ceae821ba9869e3ddb00edf51595d5cc804880f52d4ee78494bd60871b",
+      "equal": false,
+      "stripped_bundle_sha256": "4603b87e4a8cdd892f1fd89abfcff99bd51918fe9c83652c231a26a79190e522",
+      "stripped_container_sha256": "4603b87e4a8cdd892f1fd89abfcff99bd51918fe9c83652c231a26a79190e522",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "release",
+      "artifact": "firmware_loader/zephyr/zephyr.hex",
+      "bundle_sha256": "70d6a686653926b221416854c2978e22700fc25faac3914b7d38580419078249",
+      "container_sha256": "70d6a686653926b221416854c2978e22700fc25faac3914b7d38580419078249",
+      "equal": true
+    },
+    {
+      "profile": "release",
+      "artifact": "installer/zephyr/zephyr.elf",
+      "bundle_sha256": "643ad8c4805552dbec6f42c479bf16e44a4aeece585c6845cfda54dd7cc1e61d",
+      "container_sha256": "e780b12027917b5ae6bcea41f62f0df44ebca6b454634ae48080577b81a04e19",
+      "equal": false,
+      "stripped_bundle_sha256": "e21ef484478ed2fe765e142be61cdc6a9478a0bdddd659d8ee782f55c8f56b83",
+      "stripped_container_sha256": "e21ef484478ed2fe765e142be61cdc6a9478a0bdddd659d8ee782f55c8f56b83",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "release",
+      "artifact": "installer/zephyr/zephyr.hex",
+      "bundle_sha256": "9aeceddd352026bc270378ecaaac77bfdaccc8bee6332d9e1b0d5407e767862f",
+      "container_sha256": "9aeceddd352026bc270378ecaaac77bfdaccc8bee6332d9e1b0d5407e767862f",
+      "equal": true
+    },
+    {
+      "profile": "release",
+      "artifact": "mcuboot/zephyr/zephyr.elf",
+      "bundle_sha256": "ca2ddc0e65eccacaa47941d0ff483c62654a9fc2db56e7759eb311ded172767a",
+      "container_sha256": "8b2e623b59c5bee0e4932fa76366203c8b717561576a4d5e04c1a24f44da76d2",
+      "equal": false,
+      "stripped_bundle_sha256": "ec7f44e94b7d2e2335a5c93086f73bddc76771cec1812b740463c58bb2480fda",
+      "stripped_container_sha256": "ec7f44e94b7d2e2335a5c93086f73bddc76771cec1812b740463c58bb2480fda",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line",
+        ".strtab",
+        ".symtab"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "release",
+      "artifact": "mcuboot/zephyr/zephyr.hex",
+      "bundle_sha256": "804574a20f64d124cbeb69a92d3fd682dc9d3149785093d803eae0f05724c427",
+      "container_sha256": "804574a20f64d124cbeb69a92d3fd682dc9d3149785093d803eae0f05724c427",
+      "equal": true
+    },
+    {
+      "profile": "stress",
+      "artifact": "firmware/zephyr/zephyr.elf",
+      "bundle_sha256": "ff322db3d9c9d6757546e31b5d372c47e3cd5c21821a287cf836500e536be0d7",
+      "container_sha256": "a8825ab6758dfd443a80d6190a37a5652aa7fca0dd572366b0600f73f2c1b13d",
+      "equal": false,
+      "stripped_bundle_sha256": "a04e7851dd3935bac59c8a895a832f7ace9446009deff912b0cbceb31c01a578",
+      "stripped_container_sha256": "a04e7851dd3935bac59c8a895a832f7ace9446009deff912b0cbceb31c01a578",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "stress",
+      "artifact": "firmware/zephyr/zephyr.hex",
+      "bundle_sha256": "34b32489bb780c13c7fca9edd1cfd2ae50345942c50a482e84067c9d2e132e2e",
+      "container_sha256": "34b32489bb780c13c7fca9edd1cfd2ae50345942c50a482e84067c9d2e132e2e",
+      "equal": true
+    },
+    {
+      "profile": "stress",
+      "artifact": "firmware_loader/zephyr/zephyr.elf",
+      "bundle_sha256": "6abe15213db58c1d72a196c57e8e24fac2874330bbeb66eff8a16689a4a8dadf",
+      "container_sha256": "377ff51f4c3109d618c1d061fce14e314956828e8f0ab28257b2b3b3fb79635e",
+      "equal": false,
+      "stripped_bundle_sha256": "4603b87e4a8cdd892f1fd89abfcff99bd51918fe9c83652c231a26a79190e522",
+      "stripped_container_sha256": "4603b87e4a8cdd892f1fd89abfcff99bd51918fe9c83652c231a26a79190e522",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "stress",
+      "artifact": "firmware_loader/zephyr/zephyr.hex",
+      "bundle_sha256": "70d6a686653926b221416854c2978e22700fc25faac3914b7d38580419078249",
+      "container_sha256": "70d6a686653926b221416854c2978e22700fc25faac3914b7d38580419078249",
+      "equal": true
+    },
+    {
+      "profile": "stress",
+      "artifact": "installer/zephyr/zephyr.elf",
+      "bundle_sha256": "e117c13c79bbea058213c0eb38bef9e79e71344635c7eb5332462c5e6de99186",
+      "container_sha256": "dd296569b2efd074bcae1ad83f10a43ec35fc3f76b07cc4ed3ae31e4c2db69e8",
+      "equal": false,
+      "stripped_bundle_sha256": "e21ef484478ed2fe765e142be61cdc6a9478a0bdddd659d8ee782f55c8f56b83",
+      "stripped_container_sha256": "e21ef484478ed2fe765e142be61cdc6a9478a0bdddd659d8ee782f55c8f56b83",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "stress",
+      "artifact": "installer/zephyr/zephyr.hex",
+      "bundle_sha256": "9aeceddd352026bc270378ecaaac77bfdaccc8bee6332d9e1b0d5407e767862f",
+      "container_sha256": "9aeceddd352026bc270378ecaaac77bfdaccc8bee6332d9e1b0d5407e767862f",
+      "equal": true
+    },
+    {
+      "profile": "stress",
+      "artifact": "mcuboot/zephyr/zephyr.elf",
+      "bundle_sha256": "3f4031b8e124cc4ae7383e064624bd387dd4e65003bb1c6c5d71466e78db40ce",
+      "container_sha256": "adc49b57e6e27395335e9d07e4ec75bc01950ea1edcf14e705cee841f8defcf2",
+      "equal": false,
+      "stripped_bundle_sha256": "ec7f44e94b7d2e2335a5c93086f73bddc76771cec1812b740463c58bb2480fda",
+      "stripped_container_sha256": "ec7f44e94b7d2e2335a5c93086f73bddc76771cec1812b740463c58bb2480fda",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line",
+        ".strtab",
+        ".symtab"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "stress",
+      "artifact": "mcuboot/zephyr/zephyr.hex",
+      "bundle_sha256": "804574a20f64d124cbeb69a92d3fd682dc9d3149785093d803eae0f05724c427",
+      "container_sha256": "804574a20f64d124cbeb69a92d3fd682dc9d3149785093d803eae0f05724c427",
+      "equal": true
+    },
+    {
+      "profile": "oom",
+      "artifact": "firmware/zephyr/zephyr.elf",
+      "bundle_sha256": "31e6182e70eb8ec7db8de6914ccf7bb9fa4901e2bad913f420d73fc670803ce8",
+      "container_sha256": "eaed091e5427719587137d2de54d39d30e3cb228e1c9ae980de5e54771a7bd1e",
+      "equal": false,
+      "stripped_bundle_sha256": "4da66566b98ba7af95f8e77aa506e4e6d6d373a75d6cb791a97e91a249de9cfa",
+      "stripped_container_sha256": "4da66566b98ba7af95f8e77aa506e4e6d6d373a75d6cb791a97e91a249de9cfa",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "oom",
+      "artifact": "firmware/zephyr/zephyr.hex",
+      "bundle_sha256": "bc6fbb2dbbe120ca1a13128c64b4208d5fa14bb96263000520be26d2be5b2393",
+      "container_sha256": "bc6fbb2dbbe120ca1a13128c64b4208d5fa14bb96263000520be26d2be5b2393",
+      "equal": true
+    },
+    {
+      "profile": "oom",
+      "artifact": "firmware_loader/zephyr/zephyr.elf",
+      "bundle_sha256": "c05702b07fbbd623a2f1f29305b8292940d6db8d6dbbf20c15028dadec909d2b",
+      "container_sha256": "98f8789e0fba9d0bda394b1d0cac5e375fd02782456645d4782bf19e30e594ea",
+      "equal": false,
+      "stripped_bundle_sha256": "4603b87e4a8cdd892f1fd89abfcff99bd51918fe9c83652c231a26a79190e522",
+      "stripped_container_sha256": "4603b87e4a8cdd892f1fd89abfcff99bd51918fe9c83652c231a26a79190e522",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "oom",
+      "artifact": "firmware_loader/zephyr/zephyr.hex",
+      "bundle_sha256": "70d6a686653926b221416854c2978e22700fc25faac3914b7d38580419078249",
+      "container_sha256": "70d6a686653926b221416854c2978e22700fc25faac3914b7d38580419078249",
+      "equal": true
+    },
+    {
+      "profile": "oom",
+      "artifact": "installer/zephyr/zephyr.elf",
+      "bundle_sha256": "fc393f973544c605e80500905cbe33c248dd93065bf9a4420c6935d9cc9ed9ee",
+      "container_sha256": "dbc5895938776cdc1f9bec39db02b94fa0cfee5ceee4c462e4ef228b49778b89",
+      "equal": false,
+      "stripped_bundle_sha256": "e21ef484478ed2fe765e142be61cdc6a9478a0bdddd659d8ee782f55c8f56b83",
+      "stripped_container_sha256": "e21ef484478ed2fe765e142be61cdc6a9478a0bdddd659d8ee782f55c8f56b83",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "oom",
+      "artifact": "installer/zephyr/zephyr.hex",
+      "bundle_sha256": "9aeceddd352026bc270378ecaaac77bfdaccc8bee6332d9e1b0d5407e767862f",
+      "container_sha256": "9aeceddd352026bc270378ecaaac77bfdaccc8bee6332d9e1b0d5407e767862f",
+      "equal": true
+    },
+    {
+      "profile": "oom",
+      "artifact": "mcuboot/zephyr/zephyr.elf",
+      "bundle_sha256": "6c12cdb7093b18c925237222e32f8410e90c0bdd908201e11c2ca9aec03adb8f",
+      "container_sha256": "17e959091cfd45d2890f4dec4a20dc1bdf5119d0d1b8dc5c1ee8461de7e75684",
+      "equal": false,
+      "stripped_bundle_sha256": "ec7f44e94b7d2e2335a5c93086f73bddc76771cec1812b740463c58bb2480fda",
+      "stripped_container_sha256": "ec7f44e94b7d2e2335a5c93086f73bddc76771cec1812b740463c58bb2480fda",
+      "different_sections": [
+        ".debug_info",
+        ".debug_line",
+        ".strtab",
+        ".symtab"
+      ],
+      "nondebug_symbols_equal": true,
+      "runtime_equal": true
+    },
+    {
+      "profile": "oom",
+      "artifact": "mcuboot/zephyr/zephyr.hex",
+      "bundle_sha256": "804574a20f64d124cbeb69a92d3fd682dc9d3149785093d803eae0f05724c427",
+      "container_sha256": "804574a20f64d124cbeb69a92d3fd682dc9d3149785093d803eae0f05724c427",
+      "equal": true
+    }
+  ],
+  "schema": 1,
+  "verification": [
+    {
+      "mode": "bundle",
+      "profile": "debug",
+      "status": "PASS",
+      "checksummed_files": 87,
+      "app_signed_sha256": "5aa375d3fd1986ec4bc0f091df90399bb467332c513b270e37ae88efc1a6a55d",
+      "flash": 149428,
+      "ram": 96180
+    },
+    {
+      "mode": "bundle",
+      "profile": "release",
+      "status": "PASS",
+      "checksummed_files": 87,
+      "app_signed_sha256": "779d83ed842507bf9da58f6d45cdd715c9712da6aef984a0b784e1ed6f7d94d6",
+      "flash": 127852,
+      "ram": 95996
+    },
+    {
+      "mode": "bundle",
+      "profile": "stress",
+      "status": "PASS",
+      "checksummed_files": 93,
+      "app_signed_sha256": "4c0724339648302091f8b84b946079358a0e433ea5fd4e39cc7a5abc2d857c9e",
+      "flash": 150228,
+      "ram": 96180
+    },
+    {
+      "mode": "bundle",
+      "profile": "oom",
+      "status": "PASS",
+      "checksummed_files": 78,
+      "app_signed_sha256": "d17af578ccee09c246a22eaa205d615e2a5d5eec56c3943a1815692eee63f832",
+      "flash": 145804,
+      "ram": 96180
+    },
+    {
+      "mode": "container",
+      "profile": "debug",
+      "status": "PASS",
+      "checksummed_files": 87,
+      "app_signed_sha256": "5aa375d3fd1986ec4bc0f091df90399bb467332c513b270e37ae88efc1a6a55d",
+      "flash": 149428,
+      "ram": 96180
+    },
+    {
+      "mode": "container",
+      "profile": "release",
+      "status": "PASS",
+      "checksummed_files": 87,
+      "app_signed_sha256": "779d83ed842507bf9da58f6d45cdd715c9712da6aef984a0b784e1ed6f7d94d6",
+      "flash": 127852,
+      "ram": 95996
+    },
+    {
+      "mode": "container",
+      "profile": "stress",
+      "status": "PASS",
+      "checksummed_files": 93,
+      "app_signed_sha256": "4c0724339648302091f8b84b946079358a0e433ea5fd4e39cc7a5abc2d857c9e",
+      "flash": 150228,
+      "ram": 96180
+    },
+    {
+      "mode": "container",
+      "profile": "oom",
+      "status": "PASS",
+      "checksummed_files": 78,
+      "app_signed_sha256": "d17af578ccee09c246a22eaa205d615e2a5d5eec56c3943a1815692eee63f832",
+      "flash": 145804,
+      "ram": 96180
+    }
+  ]
+}

@@ -34,6 +34,8 @@ firmware は RBOS の `firmware/` に置きます。`src/rbos/` の共有 bindin
 
 ## 版の固定
 
+CI は [A5 の比較結果](toolchain-container.md)に基づき、同じ bundle を含む Nordic 公式 image を digest 固定で使います。以下の nrfutil によるローカル導入手順は比較用に残します。
+
 | 対象 | 版 | 確認方法 |
 |---|---|---|
 | nRF Connect SDK Bare Metal | v2.0.1 / `51484143c09199e19bccc16fa3b437f7a502a72b` | `vendor/sdk-nrf-bm` の submodule と同じ commit |
@@ -289,11 +291,11 @@ hash は SDK の開発用鍵で署名した debug のものです。release の 
 
 `firmware.yml` は debug / release / stress / oom の matrix を並列に動かします。一つが失敗しても他は止めません。stress/oom は debug に overlay を追加します。release 側だけで試験用 ED25519 鍵を作り、成功・失敗にかかわらず削除します。成果物名は `firmware-evidence-<variant>-<sha>` です。`production.hex`、`.config`、map、SHA256SUMS を含む証拠を保存し、保存前に PEM と `keyfile.json` がないことを検査します。workspace 保存は従来どおり debug だけです。
 
-toolchain は bundle ID、workspace は BM v2.0.1 と `modules.txt` の hash で cache を分けます。workspace cache の保存は main の debug job だけです。復元時は init を省きますが、west update と全 module の SHA・clean tree 検査は毎回行います。log に restore / init / update / check の秒数を残します。GitHub 上の warm cache と fresh 取得の比較は未実施です。復元が遅ければ workspace cache を外します。
+toolchain は公式 image の digest で固定し、別の bundle cache は使いません。workspace は image digest の先頭、BM v2.0.1 と `modules.txt` の hash で cache を分けます。workspace cache の保存は main の debug job だけです。復元時は init を省きますが、west update と全 module の SHA・clean tree 検査は毎回行います。log に restore / init / update / check の秒数を残します。GitHub 上の warm cache と fresh 取得の比較は未実施です。復元が遅ければ workspace cache を外します。
 
-compiler cache は variant、bundle ID、module hash、run ID・attempt ごとに保存し、同じ prefix の main cache を PR でも復元します。保存は main への push だけです。容量は variant ごとに 512 MB に制限し、統計を build 前にリセットして終了後に表示します。`CCACHE_BASEDIR` は RBOS と BM workspace の共通親、cache 自体は runner の一時領域に置きます。鍵や build directory は cache に含めません。
+compiler cache は image digest の先頭、variant、bundle ID、module hash、run ID・attempt ごとに保存し、同じ prefix の main cache を PR でも復元します。保存は main への push だけです。容量は variant ごとに 512 MB に制限し、統計を build 前にリセットして終了後に表示します。`CCACHE_BASEDIR` は RBOS と BM workspace の共通親、cache 自体は runner の一時領域に置きます。鍵や build directory は cache に含めません。
 
-`firmware-release.yml` は最初に Secret の有無を確かめます。Environment、ref 制限、署名鍵の検査と削除、成果物の保存は維持します。compiler cache は `CCACHE_DISABLE=1` で無効にし、workspace cache も使いません。固定 toolchain の cache だけは従来どおり使います。flash / erase は行いません。main の firmware CI は ref ごとに直列化し、実行中の build を取り消しません。
+`firmware-release.yml` は最初に Secret の有無を確かめます。Environment、ref 制限、署名鍵の検査と削除、成果物の保存は維持します。compiler cache は `CCACHE_DISABLE=1` で無効にし、workspace cache も使いません。toolchain は同じ固定 container を使います。flash / erase は行いません。main の firmware CI は ref ごとに直列化し、実行中の build を取り消しません。
 
 ### Actions 更新の確認
 
