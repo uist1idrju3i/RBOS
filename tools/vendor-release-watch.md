@@ -1,6 +1,8 @@
-# vendor の正式 release 監視
+# vendor の正式 release と toolchain の監視
 
 mruby・mruby/c・sdk-nrf-bm を正式 release tag に固定し、週1回、新しい正式版を検出します。yomiyasu と GitHub Actions の更新検知は Dependabot を維持します。固定 SHA や submodule の shallow 設定は変更しません。
+
+BM 新版の sdk-nrf revision と対応 toolchain、固定 bundle tag の image digest 変化も確認します。[公開 metadata・監視範囲・通知規則](../research/implementation/vendor-watch-toolchain.md)を参照してください。
 
 ## ローカルで確認する
 
@@ -29,7 +31,8 @@ rc・pre 等は除外します。annotated tag は `^{}` の commit SHA、lightw
 
 - 依存ごとの固定 title `依存更新: <name> の正式 release` で、open/closed の既存 issue を検索します。PR は対象外です。
 - open issue は本文を更新し、同じ本文なら再書込みしません。closed issue は、本文の表に記録した最新 tag より新しい正式版が出たときだけ再開します。同じ版以下、または記録した版を読み取れない場合は、本文も状態も変更しません。
-- 新版がなければ issue を作成・更新しません。既存 issue の自動 close もしません。
+- toolchain 差分は固定 title `依存更新: Nordic toolchain の bundle/digest` にまとめます。同一 fingerprint の closed issue は維持し、異なる差分なら再開します。
+- 新しい正式版も toolchain 差分もなければ issue を作成・更新しません。既存 issue の自動 close もしません。
 - schedule と手動実行は直列化し、同時実行による重複作成を防ぎます。
 
 通知は更新の承認ではありません。変更履歴・互換性・ライセンス・回帰試験を評価し、人が採否を判断します。gitlink の更新や merge は自動化しません。

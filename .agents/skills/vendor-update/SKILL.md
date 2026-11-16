@@ -5,7 +5,7 @@ description: RBOSの依存（vendor/のshallow submodule）を追加・更新し
 
 # vendor-update（依存関係の更新）
 
-application、library、依存を更新するときは、対象の変更履歴とライセンスを確認し、更新前後の結果を比べます。GitHub Actions と yomiyasu は Dependabot、mrubyc・mruby・sdk-nrf-bm は vendor-release-watch が週1回更新を検出します。更新 PR を自動採用せず、vendor-release-watch の通知 issue も含めて以下の手順でレビューし、日本語で採否と検査結果を記録します。
+application、library、依存を更新するときは、対象の変更履歴とライセンスを確認し、更新前後の結果を比べます。GitHub Actions と yomiyasu は Dependabot、mrubyc・mruby・sdk-nrf-bm は vendor-release-watch が週1回更新を検出します。watcher は新しい BM 正式版の sdk-nrf revision と対応 bundle/image digest、固定 bundle tag の digest 変化も通知します。詳細は [監視範囲](../../../research/implementation/vendor-watch-toolchain.md)を参照してください。更新 PR を自動採用せず、vendor-release-watch の通知 issue も含めて以下の手順でレビューし、日本語で採否と検査結果を記録します。
 
 ## 対象と変更履歴の参照先
 
