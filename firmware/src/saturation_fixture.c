@@ -189,14 +189,15 @@ void rbos_fixture_poll(void)
 		launch();
 		return;
 	}
+	uint32_t seen = measured;
 	if (pulse && nrf_timer_event_check(timer.p_reg, NRF_TIMER_EVENT_COMPARE0)) {
 		nrf_timer_event_clear(timer.p_reg, NRF_TIMER_EVENT_COMPARE0);
 		nrfx_timer_disable(&timer);
 		++generated;
 		pulse = false;
 	}
-	if (k_uptime_get() > deadline || measured > generated) { fail("irq_timeout_or_extra"); return; }
-	if (pulse || measured != generated) return;
+	if (k_uptime_get() > deadline || seen > generated) { fail("irq_timeout_or_extra"); return; }
+	if (pulse || seen != generated) return;
 	if (phase == 2 && generated == 1) {
 		if (!fill(RBOS_EVENT_QUEUE_CAPACITY - 1)) { fail("prefill"); return; }
 		rbos_event_snapshot(&before);

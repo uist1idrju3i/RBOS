@@ -183,7 +183,7 @@ void nrfx_gppi_conn_free(uint32_t,uint32_t,nrfx_gppi_handle_t);
 NRF_TIMER_Type fake_timer;
 static struct rbos_event_queue queue;
 static unsigned level, logs, errors, allocation, enables, frees;
-static bool enabled, powered;
+static bool enabled, powered, inject_after_check;
 static int timer_error, gppi_error;
 static int64_t now;
 int64_t k_uptime_get(void) { return now; }
@@ -203,7 +203,16 @@ void nrfx_timer_clear(nrfx_timer_t *t) {}
 void nrfx_timer_enable(nrfx_timer_t *t) { assert(!enabled && !powered); enabled=powered=true; ++enables; }
 void nrfx_timer_disable(nrfx_timer_t *t) { assert(powered); enabled=powered=false; }
 void nrf_timer_event_clear(NRF_TIMER_Type *t,int cc) { t->event=false; }
-bool nrf_timer_event_check(NRF_TIMER_Type *t,int cc) { return t->event; }
+bool nrf_timer_event_check(NRF_TIMER_Type *t,int cc) {
+  bool observed=t->event;
+  if(inject_after_check) {
+    inject_after_check=false; t->event=true; enabled=false; level^=1;
+    rbos_fixture_irq();
+    struct rbos_event e={.type=RBOS_EVENT_BUTTON,.source=43,.value=level,.generation=1};
+    rbos_fixture_edge(43,level,rbos_event_post(&e));
+  }
+  return observed;
+}
 int nrfx_gppi_conn_alloc(uint32_t event,uint32_t task,nrfx_gppi_handle_t *h) {
   assert(event==0x1234 && task==0x5678); if(gppi_error) return gppi_error; *h=7; ++allocation; return 0;
 }
@@ -222,6 +231,7 @@ static void reset(void) {
   connected=timer_initialized=holding=started=pulse=waiting=finished=false;
   source=token=phase=generated=initial_level=interrupts=measured=accepted=latest=0;
   level=logs=errors=allocation=enables=frees=0; now=0; timer_error=gppi_error=0;
+  inject_after_check=false;
 }
 static void setup(void) { assert(!rbos_fixture_connect(0x5678)); rbos_fixture_begin(43,1); }
 int main(void) {
@@ -242,6 +252,9 @@ int main(void) {
   }
   assert(finished && !errors && logs==8 && enables==15 && frees==1 && !allocation);
   assert(queue.size==0 && queue.overflow==5 && queue.coalesced==8);
+  reset(); setup(); rbos_fixture_poll(); inject_after_check=true;
+  rbos_fixture_poll(); assert(!errors && measured==1 && generated==0);
+  rbos_fixture_poll(); assert(!errors && generated==1 && enables==2);
   reset(); timer_error=-1; assert(rbos_fixture_connect(0x5678)==-1 && !allocation);
   reset(); gppi_error=-1; assert(rbos_fixture_connect(0x5678)==-1 && !timer_initialized);
   reset(); setup(); rbos_fixture_poll(); now=1001; rbos_fixture_poll(); assert(errors==1 && !allocation);
