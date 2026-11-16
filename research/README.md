@@ -57,6 +57,8 @@ P2 の [開発・証拠検査](implementation/development-gates.md)では、BM p
 
 P2 の [資源予約と配送 context](implementation/resource-reservations.md)には、S115 の DPPI/PPIB 保護、GRTC/IRQ 検査、SD RAM と BM scheduler の診断・未確認項目をまとめています。
 
+[A7 fixture](implementation/a7-fixtures.md)は、配線不要の OUT→PORT/SENSE と ring 飽和、storage0 sentinel の DFU 前後比較の手順です。製品 IN・bonding/settings の保持とは区別します。
+
 ## 決定事項
 
 | 日付 | 決定 | 文書 |

@@ -7,6 +7,9 @@
 #include "mcumgr_reset.h"
 #include "rbos/native.h"
 #include "rbos/bindings.h"
+#if defined(CONFIG_RBOS_SATURATION_FIXTURE) || defined(CONFIG_RBOS_RETENTION_FIXTURE)
+#include "rbos_fixture.h"
+#endif
 
 LOG_MODULE_REGISTER(rbos_runtime, CONFIG_RBOS_LOG_LEVEL);
 K_THREAD_STACK_DECLARE(z_main_stack, CONFIG_MAIN_STACK_SIZE);
@@ -29,6 +32,9 @@ bool rbos_event_post(const struct rbos_event *event)
 
 bool rbos_event_take(struct rbos_event *event)
 {
+#if defined(CONFIG_RBOS_SATURATION_FIXTURE)
+	if (rbos_fixture_holds_events()) return false;
+#endif
 	unsigned int key = irq_lock();
 	bool available = rbos_event_queue_pop(&event_queue, event);
 	irq_unlock(key);
@@ -67,6 +73,12 @@ void rbos_maintenance(bool idle)
 	uint32_t drain_start = k_cycle_get_32();
 	bm_scheduler_process();
 	rbos_mcumgr_poll();
+#if defined(CONFIG_RBOS_SATURATION_FIXTURE)
+	rbos_fixture_poll();
+#endif
+#if defined(CONFIG_RBOS_RETENTION_FIXTURE)
+	rbos_retention_poll();
+#endif
 	rbos_bindings_service();
 	uint32_t drain_us = k_cyc_to_us_floor32(k_cycle_get_32() - drain_start);
 	if (drain_us > drain_max_us) drain_max_us = drain_us;

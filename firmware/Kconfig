@@ -45,6 +45,31 @@ config RBOS_PERIPHERAL_EXERCISE
 	default y
 	depends on RBOS_GPIO && !RBOS_TEST_PROFILE_OOM
 
+config RBOS_SATURATION_FIXTURE
+	bool "A7 TIMER/PORT and synthetic ring saturation fixture"
+	depends on RBOS_GPIO && !RBOS_TEST_PROFILE_OOM && !RBOS_FAULT_WDT
+	select NRFX_TIMER
+	select NRFX_GPPI
+	default n
+
+config RBOS_RETENTION_FIXTURE
+	bool "A7 storage0 retention fixture"
+	depends on !RBOS_TEST_PROFILE_OOM && !RBOS_FAULT_WDT
+	select BM_STORAGE
+	select RING_BUFFER
+	select CRC
+	default n
+
+config RBOS_RETENTION_SEED
+	bool "Allow one explicit seed with physical Button1 held at boot"
+	depends on RBOS_RETENTION_FIXTURE
+	default n
+
+config RBOS_RETENTION_NONCE
+	hex "Retention trial identifier (same nonzero value in images A and B)"
+	depends on RBOS_RETENTION_FIXTURE
+	default 0
+
 choice RBOS_TEST_PROFILE
 	prompt "Ruby test profile"
 	default RBOS_TEST_PROFILE_SELFTEST

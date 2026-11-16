@@ -69,9 +69,9 @@
 
 ### A7. 実機試験 fixture の準備（Phase B の前提）
 
-- ring 飽和を deterministic に作る fixture image: GPIOTE の timer 駆動 edge 生成 or GPIO 出力→入力配線の二案を設計し、安全な信号源として利用者と選ぶ。
-- P5 データ保持試験: 更新前後で残すべきデータ（MCUboot/loader 設定、peer data、settings）の観測点を設計。必要なら試験用の最小 storage 書き込みを試験 image に入れる。
-- P2 `check-p2-log.py` と fixture 側の診断行を fixture image 用に拡張。
+- 承認済みの [A7 fixture](a7-fixtures.md)：配線不要の TIMER21→GPIOTE20 OUT→PORT/SENSE、製品 IN は物理 Button 押下、ring 満杯は C の非 coalesce event 事前投入に分ける。
+- P5 は storage0 の明示 seed と read-only verify、peer_manager の read-only CRC32 前後比較。bonding/settings 保持とは呼ばない。
+- `check-a7-log.py` で fixture の構造化行を検査。通常 P2 の `check-p2-log.py` とは分離する。
 - 手戻りリスク: 中。実機 fixture 自体が Phase B で初めて動く。
 
 ### Phase A の順序（推奨）
@@ -98,7 +98,7 @@ Phase B は利用者の DK 作業枠に分割し、各枠で必要な image を�
 7. `resources` と SD RAM log・生成 DTS・`.config`・map を照合。
 8. `python3 tools/bm-build/check-dk-log.py debug.log --profile selftest --json` と `check-p2-log.py debug.log --limits limits.json --min-samples 3`。
 9. IRQ・寿命: contract の Ruby 例を診断 task と置き換えた build で `45`/`"P1.13"`/`:sw0` の一致・二重 watch・close 後再設定・task 終了後の generation 抑止を確認。
-10. ring 飽和 fixture image（A7）で newest drop・coalesce・最新 level・overflow/coalesced counter を確認。
+10. [A7 の三分割試験](a7-fixtures.md#b-1三つに分ける理由)で newest drop・coalesce・最新 level・overflow/coalesced counter を確認。自動 OUT→PORT/SENSE を製品 IN 経路の証拠にしない。
 11. `stress` image で完全接続窓5分 + Button 操作と反復 ADC/温度を並走 → `check-dk-log.py --profile stress --require-connected 300` + `check-p2-log.py`。
 12. 完了時: checklist の空欄へ証拠を転記し、retrospective-P2 を受け入れ完了に更新する PR を出す。
 
@@ -115,7 +115,7 @@ Phase B は利用者の DK 作業枠に分割し、各枠で必要な image を�
 5. `ERASE_NONE` での更新を実機で検証。
 6. release 鍵で準備した DK（または erase + KMU 再 provision）で release image の起動・通常更新を確認。
 7. 三入口（BUTTON0+RESET、MCUmgr reset、retention）の動作確認。
-8. storage/peer data が意図せず消えないことを確認（A7 の観測点）。
+8. [A7 の storage0 sentinel A/B 試験](a7-fixtures.md#b-2storage0-sentinel-の-ab-試験)と peer_manager CRC32 の比較で、試験データが意図せず消えないことを確認。bonding/settings は対象外。
 9. `x-provision-keys` の erase なし初回準備を別 DK/状態で確認できれば P0 の空欄も埋める。
 
 所要目安: 1日（DFU 試行と fault injection が変動する）。
@@ -171,7 +171,7 @@ Phase B は利用者の DK 作業枠に分割し、各枠で必要な image を�
 1. Phase A の順序: 推奨（A1→A2→A6→A3→A4→A7→A5）で進めてよいか。
 2. dependabot PR の採否: 評価して提案するか、固定版維持で close するか。
 3. P5 デバイス名: `RBOS_XXXX` の4桁生成規則（A4 着手時に選択肢を提示）。
-4. ring 飽和 fixture: timer 駆動 GPIOTE（配線不要）か GPIO 出力→入力配線か（A7 で提示）。
+4. ring 飽和 fixture：配線不要・PORT/SENSE 自動試験＋製品 IN の物理押下＋C 事前投入を承認済み。[A7 手順](a7-fixtures.md)で実機確認する。
 5. 実機枠の予定: B-1 の目安時期。fixture と image を揃える時点を合わせたい。
 
 ## 6. 記録の注意点
