@@ -61,6 +61,8 @@ P2 の [資源予約と配送 context](implementation/resource-reservations.md)�
 
 ## 決定事項
 
+[BM/toolchain の更新監視](implementation/vendor-watch-toolchain.md)には、公開 index と GHCR の対応、通知と重複抑止、監視対象外を記録しています。
+
 | 日付 | 決定 | 文書 |
 |---|---|---|
 | 2026-11-08 | mruby/c を OS の中核とし、rrt0 で Ruby タスクを多重化 | [タスク](mrubyc/task-scheduler.md) |
