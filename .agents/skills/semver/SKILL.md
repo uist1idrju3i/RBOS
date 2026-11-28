@@ -51,6 +51,8 @@ TWEAK の増加は一意化であり、SemVer の順序や rollback 防止では
 3. 対応表に SemVer 全文、git commit、board/設定、署名 image の X.Y.Z+TWEAK、security counter（未使用・未検証も明記）、artifact の SHA-256 を記録します。最終 .config、生成 header、実際の signing command、署名 artifact の header を照合します。
 4. 変更を覆う repo の検査、必要な firmware build・署名・更新試験を行い、結果と未確認の条件を報告します。未実施なら公開可能と判断しません。Ruby の検査は [ruby-idiomatic](../ruby-idiomatic/SKILL.md)、API の契約は [io-api-guideline](../io-api-guideline/SKILL.md)も使います。
 5. 管理者が tag ruleset の v* 作成権限・bypass 方針を確認します。調査時点では全 tag 作成が制限されています。agent は ruleset を変更せず、tag 作成・GitHub Release 公開も行いません。
-6. 管理者が対象 commit に tag を作成し、CHANGELOG に対応する説明、成果物、hash を公開します。公開済みの版・tag・成果物を書き換えず、修正は新しい版にします。
+6. 管理者が検証済みの `main` コミットに署名なしの `vX.Y.Z` タグを作成し、push します。ファームウェアの署名ワークフローは正式版のタグだけで起動します。
+7. `production` に承認者を指定し、管理者バイパスを無効にして、許可するタグを `v*` のみに設定します。管理者は `RBOS_RELEASE_SIGNING_KEY` をこの環境だけに登録し、対象と版を確認してから署名ジョブを承認します。
+8. 管理者が署名済み成果物とハッシュを照合し、CHANGELOG に対応する説明とともに公開します。公開済みの版・タグ・成果物は変更せず、修正は新しい版で公開します。
 
 完了条件は、影響する契約と増分の根拠、必要な CHANGELOG、版の対応、検査結果と未確認の条件が PR に揃い、agent が tag/release を作成していないことです。

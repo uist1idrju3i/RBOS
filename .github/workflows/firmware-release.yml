@@ -1,20 +1,39 @@
 name: firmware-release
 
 on:
-  workflow_dispatch:
+  push:
+    tags: ["v*"]
 
-permissions:
-  contents: read
+permissions: {}
 
 concurrency:
   group: firmware-release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  build:
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
-    environment: release
+  validate:
     runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: タグと production の設定を検査する
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/check-release-policy.py
+
+  build:
+    needs: validate
+    environment: production
+    runs-on: ubuntu-26.04
+    permissions:
+      actions: read
+      contents: read
     container:
       image: ghcr.io/nrfconnect/sdk-nrf-toolchain@sha256:f24d8932ff081ebcd8da9c248f4449bdabe461c0620a7a4ac9e95eb577ba2276
     timeout-minutes: 60
@@ -24,6 +43,15 @@ jobs:
       run:
         shell: bash
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 承認後に production の設定を再検査する
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/check-release-policy.py --production-only
+
       - name: release の秘密鍵が設定されていることを確かめる
         env:
           RELEASE_SIGNING_KEY: ${{ secrets.RBOS_RELEASE_SIGNING_KEY }}
@@ -32,10 +60,6 @@ jobs:
             echo '::error::RBOS_RELEASE_SIGNING_KEY is empty or unavailable.'
             exit 1
           fi
-
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
 
       - name: BM の build 環境を用意する
         uses: ./.github/actions/ncs-bm-setup
