@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+import re
 import runpy
 import subprocess
 from tempfile import TemporaryDirectory
@@ -15,7 +16,9 @@ POLICY = runpy.run_path(str(ROOT / ".github/scripts/check-release-policy.py"))
 class ProductionPolicyTest(unittest.TestCase):
     def test_workflow_only_triggers_on_core_version_tags(self):
         workflow = (ROOT / ".github/workflows/firmware-release.yml").read_text(encoding="utf-8")
-        self.assertIn('on:\n  push:\n    tags: ["v[0-9]+.[0-9]+.[0-9]+"]\n', workflow)
+        trigger = re.search(r"^on:\n(.*?)(?=^[^#\s]|\Z)", workflow, re.MULTILINE | re.DOTALL)
+        self.assertIsNotNone(trigger)
+        self.assertEqual(trigger[1].rstrip(), '  push:\n    tags: ["v[0-9]+.[0-9]+.[0-9]+"]')
 
     def test_requires_exact_production_policy(self):
         good_environment = {
