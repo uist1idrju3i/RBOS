@@ -1,0 +1,33 @@
+name: Workflow lint
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  lint:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install and run actionlint
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+        run: |
+          base="https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}"
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          sums="actionlint_${ACTIONLINT_VERSION}_checksums.txt"
+          curl -fsSLO "$base/$archive"
+          curl -fsSLO "$base/$sums"
+          grep -F "$archive" "$sums" | sha256sum -c -
+          tar xzf "$archive" actionlint
+          ./actionlint
+      - name: Test the release policy
+        run: python3 -m unittest discover -s tests/release-policy

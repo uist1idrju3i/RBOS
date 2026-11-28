@@ -46,14 +46,14 @@ MCUboot は KMU に書かれた公開鍵で image を検証します。KMU の�
 
 ## 正式 release の鍵（GitHub Actions）
 
-RBOS の正式 release は `.github/workflows/firmware-release.yml` で build します。鍵は Environment `release` の Secret `RBOS_RELEASE_SIGNING_KEY` に PEM の全文を登録します。workflow は管理者が手動で起動し、main か `v*` tag の上でだけ動きます。鍵は runner の一時 directory に権限 600 で書き、job の終わりに消します。成果物に PEM と `keyfile.json` を入れません。tag の作成と release の公開は管理者が行います。
+管理者が検証済みの `main` コミットに署名なしの正式版タグ `vX.Y.Z` を作成して push すると、`.github/workflows/firmware-release.yml` が起動します。管理者は対象の版とコミットを確認し、`production` の署名ジョブを承認します。鍵は runner の一時ディレクトリに権限 600 で書き、ジョブの終わりに消します。成果物に PEM と `keyfile.json` を入れません。GitHub Release の公開は管理者が行います。
 
 管理者が一度だけ行う設定は次のとおりです。
 
-1. GitHub の Settings → Environments で `release` を作り、Required reviewers に管理者を、Deployment branches and tags に `main` と `v*` を設定します。
+1. GitHub の Settings の Environments で `production` を作成するか、既存の設定を確認します。Required reviewers に承認者を指定し、管理者バイパスを無効にします。Deployment branches and tags では Tag の `v*` だけを許可します。
 2. 鍵を上の利用者の手順 1 と同じ方法で作り、オフラインに保管します。
-3. Environment `release` の画面の Environment secrets で、名前 `RBOS_RELEASE_SIGNING_KEY` の Secret を追加し、PEM の全文（`BEGIN` と `END` の行を含む）を値に貼ります。`gh secret set RBOS_RELEASE_SIGNING_KEY --env release < rbos-release.pem` でも登録できます。repository の Secret には登録しません。repository の Secret は、書き込み権限のある人が branch の workflow を書き換えると読み出せます。
-4. Environment `release` を作る前に `firmware-release.yml` を起動しません。GitHub は、保護のない Environment `release` を自動で作ります。
+3. `production` の Environment secrets に `RBOS_RELEASE_SIGNING_KEY` を追加し、PEM の全文（`BEGIN` と `END` の行を含む）を登録します。`gh secret set RBOS_RELEASE_SIGNING_KEY --env production < rbos-release.pem` でも登録できます。承認前のジョブに鍵を渡さないため、Repository secrets には登録しません。
+4. `production` の保護設定と Secret の登録を確認してからタグを push します。ワークフローは保護設定を構築前と承認後に検査します。
 5. 登録後、手元の鍵の写しをオフラインの保管先以外から消します。
 
 pull request の CI（`.github/workflows/firmware.yml`）は、job ごとに作る使い捨ての鍵で release の build を確かめます。この鍵の image は配布しません。

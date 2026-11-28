@@ -1,0 +1,104 @@
+import json
+import os
+from pathlib import Path
+import re
+import runpy
+import subprocess
+from tempfile import TemporaryDirectory
+import unittest
+from unittest.mock import patch
+
+
+ROOT = Path(__file__).resolve().parents[2]
+POLICY = runpy.run_path(str(ROOT / ".github/scripts/check-release-policy.py"))
+
+
+class ProductionPolicyTest(unittest.TestCase):
+    def test_workflow_only_triggers_on_core_version_tags(self):
+        workflow = (ROOT / ".github/workflows/firmware-release.yml").read_text(encoding="utf-8")
+        trigger = re.search(r"^on:\n(.*?)(?=^[^#\s]|\Z)", workflow, re.MULTILINE | re.DOTALL)
+        self.assertIsNotNone(trigger)
+        self.assertEqual(trigger[1].rstrip(), '  push:\n    tags: ["v[0-9]+.[0-9]+.[0-9]+"]')
+
+    def test_requires_exact_production_policy(self):
+        good_environment = {
+            "can_admins_bypass": False,
+            "deployment_branch_policy": {
+                "protected_branches": False, "custom_branch_policies": True,
+            },
+            "protection_rules": [{"type": "required_reviewers", "reviewers": [{}]}],
+        }
+        good_policy = {"total_count": 1, "branch_policies": [{"type": "tag", "name": "v*"}]}
+
+        def check(environment, policies):
+            def fetch(endpoint):
+                if endpoint.endswith("/environments/production"):
+                    return environment
+                self.assertTrue(endpoint.endswith("/deployment-branch-policies?per_page=100"))
+                return policies
+            with patch.dict(os.environ, {"GITHUB_REPOSITORY": "owner/repo"}):
+                POLICY["check_production"](fetch)
+
+        check(good_environment, good_policy)
+        for environment, policies in (
+            (good_environment | {"can_admins_bypass": True}, good_policy),
+            (good_environment | {"protection_rules": []}, good_policy),
+            (good_environment, good_policy | {"total_count": 2}),
+            (good_environment, good_policy | {"branch_policies": [{"type": "branch", "name": "v*"}]}),
+        ):
+            with self.subTest(environment=environment, policies=policies):
+                with self.assertRaises(ValueError):
+                    check(environment, policies)
+
+    def test_tag_push_must_match_checkout_and_main(self):
+        original = Path.cwd()
+        with TemporaryDirectory() as tmp:
+            os.chdir(tmp)
+            def git(*args):
+                return subprocess.check_output(
+                    ["git", "-c", "user.name=Test", "-c", "user.email=test@example.invalid", *args],
+                    text=True,
+                ).strip()
+
+            try:
+                git("init", "-q")
+                git("commit", "--allow-empty", "-qm", "main")
+                head = git("rev-parse", "HEAD")
+                git("update-ref", "refs/remotes/origin/main", head)
+                git("-c", "tag.gpgSign=false", "tag", "v1.2.3")
+                event = Path("event.json")
+                event.write_text(json.dumps({"deleted": False}), encoding="utf-8")
+                env = {
+                    "GITHUB_EVENT_NAME": "push", "GITHUB_EVENT_PATH": str(event),
+                    "GITHUB_REF": "refs/tags/v1.2.3", "GITHUB_REF_NAME": "v1.2.3",
+                    "GITHUB_SHA": head,
+                }
+                with patch.dict(os.environ, env):
+                    self.assertEqual(POLICY["check_tag"](), "v1.2.3")
+                    git("commit", "--allow-empty", "-qm", "unmerged")
+                    with self.assertRaises(ValueError):
+                        POLICY["check_tag"]()
+                    git("-c", "tag.gpgSign=false", "tag", "--force", "v1.2.3")
+                    with patch.dict(os.environ, {"GITHUB_SHA": git("rev-parse", "HEAD")}):
+                        with self.assertRaises(subprocess.CalledProcessError):
+                            POLICY["check_tag"]()
+            finally:
+                os.chdir(original)
+
+    def test_firmware_version_must_be_stable_and_match_tag(self):
+        original = Path.cwd()
+        with TemporaryDirectory() as tmp:
+            os.chdir(tmp)
+            try:
+                Path("firmware").mkdir()
+                Path("firmware/VERSION").write_text(
+                    "VERSION_MAJOR = 1\nVERSION_MINOR = 2\nPATCHLEVEL = 3\n"
+                    "VERSION_TWEAK = 0\nEXTRAVERSION =\n", encoding="utf-8",
+                )
+                Path("CHANGELOG.md").write_text("## [1.2.3] - 2026-11-28\n", encoding="utf-8")
+                POLICY["check_version"]("v1.2.3")
+                for tag in ("v1.2.3-rc.1", "v1.2.3+test", "v1.2.4", "v1.02.3"):
+                    with self.subTest(tag=tag), self.assertRaises(ValueError):
+                        POLICY["check_version"](tag)
+            finally:
+                os.chdir(original)
