@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Security
+
+- 脆弱性の報告先を [GitHub の非公開窓口](https://github.com/uist1idrju3i/RBOS/security/advisories/new) に統一しました。
+
 ### Added
 
 - app 更新・初期導入の配布 evidence に、map を根拠とする第三者 inventory と `THIRD_PARTY_NOTICES` を追加しました。MCUboot NOTICE、S115 の agreement・ARM attribution、picolibc と libgcc の本文を各 build 後に収集し、必須 license の欠落を検査します。Mbed TLS と Oberon の Mbed TLS 由来部分は Apache-2.0 を選択します。全 object の最終的な license 適合は未確認です。API と image version の契約は変わらず、VERSION は未公開の0.2.0のままです。
